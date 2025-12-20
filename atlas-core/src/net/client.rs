@@ -27,8 +27,8 @@ impl AtlasNetClient {
         let (mut writer, mut reader) = framed.split();
 
         let (tx, mut rx) = mpsc::channel::<(Packet, oneshot::Sender<Packet>)>(1024);
-        let pending: Arc<Mutex<HashMap<u64, oneshot::Sender<Packet>>>> =
-            Arc::new(Mutex::new(HashMap::new()));
+
+        let pending: Arc<Mutex<HashMap<u64, oneshot::Sender<Packet>>>> = Arc::new(Mutex::new(HashMap::new()));
 
         // 写任务
         let pending_write = pending.clone();
