@@ -1,6 +1,8 @@
 use crate::net::packet::Packet;
+use crate::net::router::Router;
 use anyhow::Result;
 use futures::{SinkExt, StreamExt};
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
 
@@ -12,35 +14,36 @@ use crate::net::codec_rmp::MsgPackCodec as Codec;
 
 pub struct AtlasNetServer {
     addr: String,
+    router: Arc<Router>,
 }
 
 impl AtlasNetServer {
-    pub fn new(addr: &str) -> Self {
+    pub fn new(addr: &str, router: Router) -> Self {
         Self {
             addr: addr.to_string(),
+            router: Arc::new(router),
         }
     }
 
     pub async fn run(&self) -> Result<()> {
         let listener = TcpListener::bind(&self.addr).await?;
         println!("Server listening on {}", self.addr);
-
         loop {
             let (stream, addr) = listener.accept().await?;
             println!("Accepted connection from {}", addr);
-
+            let router = self.router.clone(); // Arc Router
             tokio::spawn(async move {
                 let mut framed = Framed::new(stream, Codec::<Packet>::default());
-
                 while let Some(result) = framed.next().await {
                     match result {
-                        Ok(pkt) => {
-                            println!("Server received: {:?}", pkt);
-                            // Echo back
-                            if framed.send(pkt).await.is_err() {
+                        Ok(Packet::Request(req)) => {
+                            println!("Server received: {:?}", req);
+                            let resp = router.dispatch(req).await;
+                            if framed.send(Packet::Response(resp)).await.is_err() {
                                 break;
                             }
                         }
+                        Ok(_) => {}
                         Err(e) => {
                             eprintln!("Decode error: {:?}", e);
                             break;

@@ -9,6 +9,7 @@ use crate::net::codec_json::JsonCodec as Codec;
 
 #[cfg(not(debug_assertions))]
 use crate::net::codec_rmp::MsgPackCodec as Codec;
+use crate::net::router::{AuthMethod, RouterMethod};
 
 pub struct AtlasNetClient {
     addr: String,
@@ -29,7 +30,7 @@ impl AtlasNetClient {
 
         let msg = Packet::Request(Request {
             id: 1,
-            method: 1,
+            method: AuthMethod::SignIn.wire(),
             payload: b"hello server".to_vec(),
         });
 
