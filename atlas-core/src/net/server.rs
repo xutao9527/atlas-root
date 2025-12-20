@@ -37,7 +37,7 @@ impl AtlasNetServer {
                 while let Some(result) = framed.next().await {
                     match result {
                         Ok(Packet::Request(req)) => {
-                            println!("Server received: {:?}", req);
+                            //println!("Server received: {:?}", req);
                             let resp = router.dispatch(req).await;
                             if framed.send(Packet::Response(resp)).await.is_err() {
                                 break;
