@@ -1,6 +1,14 @@
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
+use crate::net::packet::Packet;
 use anyhow::Result;
+use futures::{SinkExt, StreamExt};
+use tokio::net::TcpListener;
+use tokio_util::codec::Framed;
+
+#[cfg(debug_assertions)]
+use crate::net::codec_json::JsonCodec as Codec;
+
+#[cfg(not(debug_assertions))]
+use crate::net::codec_rmp::MsgPackCodec as Codec;
 
 pub struct AtlasNetServer {
     addr: String,
@@ -8,7 +16,9 @@ pub struct AtlasNetServer {
 
 impl AtlasNetServer {
     pub fn new(addr: &str) -> Self {
-        Self { addr: addr.to_string() }
+        Self {
+            addr: addr.to_string(),
+        }
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -16,22 +26,25 @@ impl AtlasNetServer {
         println!("Server listening on {}", self.addr);
 
         loop {
-            let (mut socket, addr) = listener.accept().await?;
+            let (stream, addr) = listener.accept().await?;
             println!("Accepted connection from {}", addr);
 
             tokio::spawn(async move {
-                let mut buf = vec![0u8; 1024];
-                loop {
-                    match socket.read(&mut buf).await {
-                        Ok(0) => break, // closed
-                        Ok(n) => {
-                            println!("Server received: {:?}", &buf[..n]);
+                let mut framed = Framed::new(stream, Codec::<Packet>::default());
+
+                while let Some(result) = framed.next().await {
+                    match result {
+                        Ok(pkt) => {
+                            println!("Server received: {:?}", pkt);
                             // Echo back
-                            if socket.write_all(&buf[..n]).await.is_err() {
+                            if framed.send(pkt).await.is_err() {
                                 break;
                             }
                         }
-                        Err(_) => break,
+                        Err(e) => {
+                            eprintln!("Decode error: {:?}", e);
+                            break;
+                        }
                     }
                 }
                 println!("Connection {} closed", addr);

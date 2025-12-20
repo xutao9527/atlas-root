@@ -1,6 +1,14 @@
-use tokio::net::TcpStream;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use crate::net::packet::{Packet, Request};
 use anyhow::Result;
+use futures::{SinkExt, StreamExt};
+use tokio::net::TcpStream;
+use tokio_util::codec::Framed;
+
+#[cfg(debug_assertions)]
+use crate::net::codec_json::JsonCodec as Codec;
+
+#[cfg(not(debug_assertions))]
+use crate::net::codec_rmp::MsgPackCodec as Codec;
 
 pub struct AtlasNetClient {
     addr: String,
@@ -8,20 +16,32 @@ pub struct AtlasNetClient {
 
 impl AtlasNetClient {
     pub fn new(addr: &str) -> Self {
-        Self { addr: addr.to_string() }
+        Self {
+            addr: addr.to_string(),
+        }
     }
 
     pub async fn run(&self) -> Result<()> {
-        let mut stream = TcpStream::connect(&self.addr).await?;
+        let stream = TcpStream::connect(&self.addr).await?;
         println!("Client connected to {}", self.addr);
 
-        let msg = b"hello server";
-        stream.write_all(msg).await?;
-        println!("Client sent: {:?}", msg);
+        let mut framed = Framed::new(stream, Codec::<Packet>::default());
 
-        let mut buf = vec![0u8; 1024];
-        let n = stream.read(&mut buf).await?;
-        println!("Client received: {:?}", &buf[..n]);
+        let msg = Packet::Request(Request {
+            id: 1,
+            method: 1,
+            payload: b"hello server".to_vec(),
+        });
+
+        framed.send(msg).await?;
+        println!("Client sent message");
+
+        if let Some(res) = framed.next().await {
+            match res {
+                Ok(pkt) => println!("Client received: {:?}", pkt),
+                Err(e) => eprintln!("Decode error: {:?}", e),
+            }
+        }
 
         Ok(())
     }
