@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "atlas-core",
+    "atlas-gate",
+    "atlas-logic/atlas-blitz",
+    "atlas-registry"
+]
+resolver = "3"
