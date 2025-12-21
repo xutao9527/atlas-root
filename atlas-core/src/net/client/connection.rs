@@ -12,55 +12,53 @@ use tokio_util::codec::Framed;
 
 pub struct AtlasConnection {
     addr: String,
-    channel_reader: Mutex<Option<mpsc::Receiver<Packet>>>,
-    channel_writer: mpsc::Sender<Packet>,
+    channel_writer: Mutex<mpsc::Sender<Packet>>,
     pending: Arc<PendingTable>,
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
-    connected: AtomicBool,
+    connected: Arc<AtomicBool>,
 }
 
 impl AtlasConnection {
     pub async fn new(addr: String) -> anyhow::Result<Self> {
         let pending = Arc::new(PendingTable::new(100 * 1024));
-        let (channel_writer, channel_reader) = mpsc::channel::<Packet>(100 * 1024);
+        let (channel_writer, _channel_reader) = mpsc::channel::<Packet>(100 * 1024);
         Ok(Self {
             addr: addr.to_string(),
-            channel_reader: Mutex::new(Some(channel_reader)),
-            channel_writer,
+            //channel_reader: Mutex::new(Some(channel_reader)),
+            channel_writer: Mutex::new(channel_writer),
             pending,
             notify_connected: Arc::new(Notify::new()),
             notify_disconnected: Arc::new(Notify::new()),
-            connected: AtomicBool::new(false),
+            connected: Arc::new(AtomicBool::new(false)),
         })
     }
 
     pub async fn connect(self: Arc<Self>) {
         let this = self.clone();
-        {
-            let this = this.clone(); // 给这个 spawn 单独 clone 一份
-            tokio::spawn(async move {
-                let mut interval = tokio::time::interval(Duration::from_secs(1));
-                loop {
-                    interval.tick().await;
-                    let pending_count = this.pending.len();
-                    //println!("当前 pending 请求数量: {}", pending_count);
-                }
-            });
-        }
-
+        // {
+        //     let this = this.clone(); // 给这个 spawn 单独 clone 一份
+        //     tokio::spawn(async move {
+        //         let mut interval = tokio::time::interval(Duration::from_secs(1));
+        //         loop {
+        //             interval.tick().await;
+        //             let _pending_count = this.pending.len();
+        //             println!("当前 pending 请求数量: {}", _pending_count);
+        //         }
+        //     });
+        // }
         tokio::spawn(async move {
             let mut attempt = 0u32;
             loop {
                 match this.establish_connection().await{
                     Ok(()) => {
                         attempt = 0;
-                        this.notify_connected.notify_waiters();             // 通知连接成功
-
-                        eprintln!("等待断开连接通知! => connect_loop");
-                        this.notify_disconnected.notified().await;          // 等待通知断线
-                        eprintln!("收到断开连接通知! => connect_loop");
-
+                        eprintln!("✅ 连接成功: {}", this.addr);
+                        if this.connected.load(Ordering::SeqCst) {
+                            eprintln!("[2]等待断开连接通知! => connect_loop");
+                            this.notify_disconnected.notified().await;          // 等待通知断线
+                            eprintln!("[2]收到断开连接通知! => connect_loop");
+                        }
                         this.pending.drain(|slot| {
                             let resp = Response {
                                 id: slot.request_id,
@@ -81,32 +79,47 @@ impl AtlasConnection {
                 }
             }
         });
-        eprintln!("等待连接成功通知! => connect_with_timeout");
-        self.notify_connected.notified().await;
-        eprintln!("收到连接成功通知! => connect_with_timeout");
+        if !self.connected.load(Ordering::SeqCst) {
+            //eprintln!("[1]等待连接成功通知! => connect");
+            self.notify_connected.notified().await;
+            //eprintln!("[1]收到连接成功通知! => connect");
+        }
     }
 
     pub async fn establish_connection(&self) -> anyhow::Result<()> {
         let stream = TcpStream::connect(&self.addr).await?;
         let framed = Framed::new(stream, Codec::<Packet>::default());
         let (mut socket_writer, mut socket_reader) = framed.split();
-        let mut channel_rx = {
-            let mut guard = self.channel_reader.lock().await;
-            guard.take().expect("establish_connection called twice")
-        };
+
+        let (channel_writer, mut channel_reader) = mpsc::channel::<Packet>(100 * 1024);
+        {
+            let mut guard = self.channel_writer.lock().await;
+            *guard = channel_writer.clone(); // 替换成新的 channel
+        }
+
+        self.connected.store(true, Ordering::SeqCst);                       // 标记为已连接
+        self.notify_connected.notify_waiters();                                 // 通知连接成功
+
+        // let mut channel_rx = {
+        //     let mut guard = self.channel_reader.lock().await;
+        //     guard.take().expect("establish_connection called twice")
+        // };
         // ===== 写 socket =====
         let notify_disconnected = self.notify_disconnected.clone();
+        let connected = self.connected.clone();
         tokio::spawn(async move {
-            while let Some(packet) = channel_rx.recv().await {
+            while let Some(packet) = channel_reader.recv().await {
                 if socket_writer.send(packet).await.is_err() {
                     break;
                 }
             }
-            notify_disconnected.notify_waiters();          // 通知连接断线
+            connected.store(false, Ordering::SeqCst);                    // 标记为未连接
+            notify_disconnected.notify_waiters();                        // 通知连接断线
         });
         // ===== 读 socket =====
-        let notify_disconnected = self.notify_disconnected.clone();
         let pending = self.pending.clone();
+        let notify_disconnected = self.notify_disconnected.clone();
+        let connected = self.connected.clone();
         tokio::spawn(async move {
             while let Some(result) = socket_reader.next().await {
                 match result {
@@ -121,7 +134,8 @@ impl AtlasConnection {
                     Err(_) => break,
                 }
             }
-            notify_disconnected.notify_waiters();      // 通知连接断线
+            connected.store(false, Ordering::SeqCst);           // 标记为未连接
+            notify_disconnected.notify_waiters();                   // 通知连接断线
         });
         Ok(())
     }
@@ -144,7 +158,11 @@ impl AtlasConnection {
                 return
             }
             self.pending.insert(req, Box::new(callback));
-            let _ = self.channel_writer.send(packet).await;
+            let channel_writer = {
+                let guard = self.channel_writer.lock().await;
+                guard.clone()
+            };
+            let _ = channel_writer.send(packet).await;
         }
 
     }

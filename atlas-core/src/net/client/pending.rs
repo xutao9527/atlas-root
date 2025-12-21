@@ -43,6 +43,7 @@ impl PendingTable {
         slab.try_remove(slot_index)
     }
 
+    #[warn(dead_code)]
     pub fn len(&self) -> usize {
         self.slab.lock().len()
     }

@@ -25,50 +25,50 @@ async fn main() -> anyhow::Result<()> {
         let recv = recv_total.clone();
         tokio::spawn(async move {
             loop {
-                let s = success.swap(0, Ordering::Relaxed);
-                let f = fail.swap(0, Ordering::Relaxed);
-                let sent_val = sent.load(Ordering::Relaxed);
-                let recv_val = recv.load(Ordering::Relaxed);
-                // println!(
-                //     "QPS: {}, Failures: {}, Sent Total: {}, Recv Total: {}",
-                //     s, f, sent_val, recv_val
-                // );
+                let _s = success.swap(0, Ordering::Relaxed);
+                let _f = fail.swap(0, Ordering::Relaxed);
+                let _sent_val = sent.load(Ordering::Relaxed);
+                let _recv_val = recv.load(Ordering::Relaxed);
+                println!(
+                    "QPS: {}, Failures: {}, Sent Total: {}, Recv Total: {}",
+                    _s, _f, _sent_val, _recv_val
+                );
                 sleep(Duration::from_secs(1)).await;
             }
         });
     }
 
-    let total_requests = 10_0000_0000; // 总共发多少次
+    let total_requests = 10000_0000; // 总共发多少次
     let success = success_counter.clone();
     let fail = fail_counter.clone();
     let sent = sent_total.clone();
     let recv = recv_total.clone();
     let mut client = AtlasRpcClient::new(SERVER_ADDR, 1);
-    let batch_size = 100;
+    let _batch_size = 100;
     if let Ok(_) = client.connect().await {
-        for i in 0..total_requests {
-            let success = success.clone();
-            let fail = fail.clone();
-            let recv = recv.clone();
+        for _i in 0..total_requests {
+            let _success = success.clone();
+            let _fail = fail.clone();
+            let _recv = recv.clone();
             client
                 .send(move |res| {
                     match res {
                         Packet::Response(_resp) => {
-                            success.fetch_add(1, Ordering::Relaxed);
-                            recv.fetch_add(1, Ordering::Relaxed);
+                            _success.fetch_add(1, Ordering::Relaxed);
+                            _recv.fetch_add(1, Ordering::Relaxed);
                             //println!("callback {:?}", resp);
                         }
                         _ => {
-                            fail.fetch_add(1, Ordering::Relaxed);
+                            _fail.fetch_add(1, Ordering::Relaxed);
                         }
                     }
                 })
                 .await;
             sent.fetch_add(1, Ordering::Relaxed);
-            // 每 batch_size 个请求暂停 1 秒
-            if (i + 1) % batch_size == 0 {
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
+            // 每 _batch_size 个请求暂停 1 秒
+            // if (i + 1) % batch_size == 0 {
+            //     tokio::time::sleep(Duration::from_millis(10)).await;
+            // }
         }
     }
     loop {
