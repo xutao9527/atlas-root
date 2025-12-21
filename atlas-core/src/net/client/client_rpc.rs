@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::net::client::connection::AtlasConnection;
 use crate::net::packet::{Packet, Request};
 use crate::net::router::auth::AuthMethod;
@@ -8,8 +9,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 pub struct AtlasRpcClient {
     addr: String,
     next_req_id: AtomicU64,
-    //pending: Arc<PendingTable>,
-    connections: Vec<AtlasConnection>, // 多连接
+    connections: Vec<Arc<AtlasConnection>>, // 多连接
 }
 
 impl AtlasRpcClient {
@@ -17,15 +17,18 @@ impl AtlasRpcClient {
         Self {
             addr: addr.to_string(),
             next_req_id: AtomicU64::new(1),
-            //pending: Arc::new(PendingTable::new(100 * 1024)),
             connections: Vec::with_capacity(conn_num),
         }
     }
 
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         for _ in 0..self.connections.capacity() {
-            let conn = AtlasConnection::connect(self.addr.clone()).await?;
-            self.connections.push(conn);
+            //let connection = AtlasConnection::new(self.addr.clone()).await?;
+            let connection = Arc::new(
+                AtlasConnection::new(self.addr.clone()).await?
+            );
+            connection.clone().connect().await;
+            self.connections.push(connection);
         }
         Ok(())
     }

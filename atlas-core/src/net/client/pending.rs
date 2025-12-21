@@ -42,4 +42,18 @@ impl PendingTable {
         let mut slab = self.slab.lock();
         slab.try_remove(slot_index)
     }
+
+    pub fn len(&self) -> usize {
+        self.slab.lock().len()
+    }
+
+    pub fn drain<F>(&self, mut f: F)
+    where
+        F: FnMut(PendingSlot),
+    {
+        let mut slab = self.slab.lock();
+        for slot in slab.drain() {
+            f(slot);
+        }
+    }
 }
