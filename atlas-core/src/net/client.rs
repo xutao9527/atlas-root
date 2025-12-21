@@ -25,12 +25,8 @@ impl AtlasNetClient {
         let stream = TcpStream::connect(addr).await?;
         let framed = Framed::new(stream, Codec::<Packet>::default());
         let (mut writer, mut reader) = framed.split();
-
         let (tx, mut rx) = mpsc::channel::<(Packet, oneshot::Sender<Packet>)>(1024);
-
         let pending: Arc<Mutex<HashMap<u64, oneshot::Sender<Packet>>>> = Arc::new(Mutex::new(HashMap::new()));
-
-        // 写任务
         let pending_write = pending.clone();
         tokio::spawn(async move {
             while let Some((packet, responder)) = rx.recv().await {
@@ -42,8 +38,6 @@ impl AtlasNetClient {
                 }
             }
         });
-
-        // 读任务
         let pending_read = pending.clone();
         tokio::spawn(async move {
             while let Some(res) = reader.next().await {
@@ -59,7 +53,6 @@ impl AtlasNetClient {
                 }
             }
         });
-
         Ok(Arc::new(AtlasNetClient {
             writer_tx: tx,
             next_id: AtomicU64::new(1),
