@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
             let _fail = fail.clone();
             let _recv = recv.clone();
             client
-                .send(move |res| {
+                .call_cb(move |res| {
                     match res {
                         Packet::Response(_resp) => {
                             _success.fetch_add(1, Ordering::Relaxed);

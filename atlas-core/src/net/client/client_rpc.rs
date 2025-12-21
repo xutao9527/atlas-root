@@ -33,7 +33,7 @@ impl AtlasRpcClient {
         Ok(())
     }
 
-    pub async fn send<F: FnOnce(Packet) + Send + 'static>(&mut self, callback: F) {
+    pub async fn call_cb<F: FnOnce(Packet) + Send + 'static>(&mut self, callback: F) {
         let req_id = self.next_req_id.fetch_add(1, Ordering::Relaxed);
         let req = Request {
             id: req_id,
