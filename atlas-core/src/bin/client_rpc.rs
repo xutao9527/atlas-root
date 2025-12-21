@@ -38,12 +38,12 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
-    let total_requests = 100000_0000; // 总共发多少次
+    let total_requests = 20000_0000; // 总共发多少次
     let success = success_counter.clone();
     let fail = fail_counter.clone();
     let sent = sent_total.clone();
     let recv = recv_total.clone();
-    let mut client = AtlasRpcClient::new(SERVER_ADDR, 1);
+    let mut client = AtlasRpcClient::new(SERVER_ADDR, 4);
     let _batch_size = 100;
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
