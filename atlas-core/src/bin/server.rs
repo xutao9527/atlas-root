@@ -22,6 +22,6 @@ async fn main() -> anyhow::Result<()> {
             .boxed()
         }),
     );
-    let server = AtlasNetServer::new("127.0.0.1:9001", router);
+    let server = AtlasNetServer::new("0.0.0.0:9001", router);
     server.run().await
 }

@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use atlas_core::net::client::client_rpc::AtlasRpcClient;
 use atlas_core::net::packet::Packet;
 
-const SERVER_ADDR: &str = "127.0.0.1:9001";
+const SERVER_ADDR: &str = "192.168.10.188:9001";
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -38,8 +38,7 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
-    let client_count = 1; // 启动8条tcp连接
-    let total_requests = 10000_0000; // 总共发多少次
+    let total_requests = 10_0000_0000; // 总共发多少次
     let success = success_counter.clone();
     let fail = fail_counter.clone();
     let sent = sent_total.clone();
