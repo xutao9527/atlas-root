@@ -22,6 +22,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "serde_json",
+ "slab",
  "tokio",
  "tokio-util",
 ]

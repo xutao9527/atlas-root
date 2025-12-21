@@ -1,3 +1,4 @@
+use crate::net::codec_rmp::MsgPackCodec as Codec;
 use crate::net::packet::Packet;
 use crate::net::router::Router;
 use anyhow::Result;
@@ -5,12 +6,6 @@ use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
-
-#[cfg(debug_assertions)]
-use crate::net::codec_json::JsonCodec as Codec;
-
-#[cfg(not(debug_assertions))]
-use crate::net::codec_rmp::MsgPackCodec as Codec;
 
 pub struct AtlasNetServer {
     addr: String,

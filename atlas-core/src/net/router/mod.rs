@@ -1,3 +1,6 @@
+pub mod auth;
+pub mod chat;
+
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -27,34 +30,6 @@ pub trait RouterMethod: Copy {
     }
 }
 
-#[repr(u16)]
-#[derive(Debug, Copy, Clone)]
-pub enum AuthMethod {
-    SignIn = 1,
-    SignUp = 2,
-}
-
-impl RouterMethod for AuthMethod {
-    const MODULE: Module = Module::Auth;
-    fn id(self) -> u16 {
-        self as u16
-    }
-}
-
-#[repr(u16)]
-#[derive(Debug, Copy, Clone)]
-pub enum ChatMethod {
-    SendMessage = 1,
-    GetHistory = 2,
-}
-
-impl RouterMethod for ChatMethod {
-    const MODULE: Module = Module::Chat;
-    fn id(self) -> u16 {
-        self as u16
-    }
-}
-
 #[derive(Default)]
 pub struct Router {
     routes: HashMap<u32, Handler>,
@@ -75,6 +50,7 @@ impl Router {
             Some(handler) => handler(req).await,
             None => Response {
                 id: req.id,
+                slot_index: req.slot_index,
                 payload: Vec::new(),
                 error: Some("method not found".into()),
             },

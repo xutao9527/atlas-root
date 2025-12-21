@@ -1,0 +1,43 @@
+use slab::Slab;
+use tokio::sync::Mutex;
+use tokio::time::Instant;
+use crate::net::packet::{Packet, Request};
+
+/// 每个 slot 存储回调和元信息
+pub struct PendingSlot {
+    pub request_id: u64,
+    pub callback: Box<dyn FnOnce(Packet) + Send + 'static>,
+    pub _timestamp: Instant,
+}
+
+/// 高性能 PendingTable
+pub struct PendingTable {
+    slab: Mutex<Slab<PendingSlot>>, // Slab存储回调
+}
+
+impl PendingTable {
+    pub fn new(cap: usize) -> Self {
+        Self {
+            slab: Mutex::new(Slab::with_capacity(cap)),
+        }
+    }
+
+    pub async fn insert(
+        &self,
+        req: &mut Request,
+        callback: Box<dyn FnOnce(Packet) + Send + 'static>,
+    ) {
+        let mut slab = self.slab.lock().await;
+        let index = slab.insert(PendingSlot {
+            request_id: req.id,
+            callback,
+            _timestamp: Instant::now(),
+        });
+        req.slot_index = index;
+    }
+
+    pub async fn remove(&self, slot_index: usize) -> Option<PendingSlot> {
+        let mut slab = self.slab.lock().await;
+        slab.try_remove(slot_index)
+    }
+}
