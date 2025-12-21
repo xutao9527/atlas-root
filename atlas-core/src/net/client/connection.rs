@@ -34,7 +34,7 @@ impl AtlasConnection {
             while let Some(result) = reader.next().await {
                 match result {
                     Ok(Packet::Response(resp)) => {
-                        if let Some(slot) = pending_clone.remove(resp.slot_index).await {
+                        if let Some(slot) = pending_clone.remove(resp.slot_index) {
                             if resp.id == slot.request_id {
                                 (slot.callback)(Packet::Response(resp));
                             }
@@ -56,7 +56,7 @@ impl AtlasConnection {
     pub async fn send<F: FnOnce(Packet) + Send + 'static>(&mut self, mut packet: Packet,callback: F)
    {
        if let Packet::Request(ref mut req) = packet {
-           self.pending.insert(req, Box::new(callback)).await;
+           self.pending.insert(req, Box::new(callback));
        }
         let _ = self.writer_tx.send(packet).await;
     }

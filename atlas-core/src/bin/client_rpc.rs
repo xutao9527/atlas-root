@@ -39,39 +39,33 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let client_count = 1; // 启动8条tcp连接
-    let total_requests = 10000_000; // 总共发多少次
-    for _ in 0..client_count {
-        let success = success_counter.clone();
-        let fail = fail_counter.clone();
-        let sent = sent_total.clone();
-        let recv = recv_total.clone();
-        tokio::spawn(async move {
-            let mut client = AtlasRpcClient::new(SERVER_ADDR, 1);
-            if let Ok(_) = client.connect().await {
-                for _ in 0..total_requests {
-                    let success = success.clone();
-                    let fail = fail.clone();
-                    let recv = recv.clone();
-                    client
-                        .send(move |res| {
-                            match res {
-                                Packet::Response(_resp) => {
-                                    success.fetch_add(1, Ordering::Relaxed);
-                                    recv.fetch_add(1, Ordering::Relaxed);
-                                    //println!("callback {:?}", resp);
-                                }
-                                _ => {
-                                    fail.fetch_add(1, Ordering::Relaxed);
-                                }
-                            }
-                        })
-                        .await;
-                    sent.fetch_add(1, Ordering::Relaxed);
-                }
-            }
-        });
+    let total_requests = 10000_0000; // 总共发多少次
+    let success = success_counter.clone();
+    let fail = fail_counter.clone();
+    let sent = sent_total.clone();
+    let recv = recv_total.clone();
+    let mut client = AtlasRpcClient::new(SERVER_ADDR, 4);
+    if let Ok(_) = client.connect().await {
+        for _ in 0..total_requests {
+            let success = success.clone();
+            let fail = fail.clone();
+            let recv = recv.clone();
+            client
+                .send(move |res| {
+                    match res {
+                        Packet::Response(_resp) => {
+                            success.fetch_add(1, Ordering::Relaxed);
+                            recv.fetch_add(1, Ordering::Relaxed);
+                            //println!("callback {:?}", resp);
+                        }
+                        _ => {
+                            fail.fetch_add(1, Ordering::Relaxed);
+                        }
+                    }
+                }).await;
+            sent.fetch_add(1, Ordering::Relaxed);
+        }
     }
-
     loop {
         sleep(Duration::from_secs(60)).await;
     }

@@ -1,5 +1,5 @@
 use slab::Slab;
-use tokio::sync::Mutex;
+use parking_lot::Mutex;
 use tokio::time::Instant;
 use crate::net::packet::{Packet, Request};
 
@@ -22,12 +22,13 @@ impl PendingTable {
         }
     }
 
-    pub async fn insert(
+    #[inline]
+    pub fn insert(
         &self,
         req: &mut Request,
         callback: Box<dyn FnOnce(Packet) + Send + 'static>,
     ) {
-        let mut slab = self.slab.lock().await;
+        let mut slab = self.slab.lock();
         let index = slab.insert(PendingSlot {
             request_id: req.id,
             callback,
@@ -36,8 +37,9 @@ impl PendingTable {
         req.slot_index = index;
     }
 
-    pub async fn remove(&self, slot_index: usize) -> Option<PendingSlot> {
-        let mut slab = self.slab.lock().await;
+    #[inline]
+    pub fn remove(&self, slot_index: usize) -> Option<PendingSlot> {
+        let mut slab = self.slab.lock();
         slab.try_remove(slot_index)
     }
 }
