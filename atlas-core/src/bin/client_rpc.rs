@@ -9,7 +9,7 @@ use atlas_core::net::packet::Packet;
 
 const SERVER_ADDR: &str = "127.0.0.1:9001";
 
-#[tokio::main(flavor = "multi_thread", worker_threads = 8)]
+#[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
     // 每秒统计 QPS
     let success_counter = Arc::new(AtomicUsize::new(0));
@@ -46,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
         let sent = sent_total.clone();
         let recv = recv_total.clone();
         tokio::spawn(async move {
-            let mut client = AtlasRpcClient::new(SERVER_ADDR, 4);
+            let mut client = AtlasRpcClient::new(SERVER_ADDR, 1);
             if let Ok(_) = client.connect().await {
                 for _ in 0..total_requests {
                     let success = success.clone();
