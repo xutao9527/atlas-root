@@ -40,6 +40,7 @@ impl AtlasNetServer {
                         }
                         Ok(_) => {}
                         Err(e) => {
+                            //eprintln!("Connection {} closed: {}", addr, e);
                             eprintln!("Decode error: {:?}", e);
                             break;
                         }

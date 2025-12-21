@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
-    let total_requests = 10000_0000; // 总共发多少次
+    let total_requests = 100000_0000; // 总共发多少次
     let success = success_counter.clone();
     let fail = fail_counter.clone();
     let sent = sent_total.clone();
