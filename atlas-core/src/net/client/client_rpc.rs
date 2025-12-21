@@ -1,9 +1,7 @@
 use crate::net::client::connection::AtlasConnection;
-use crate::net::client::pending::PendingTable;
 use crate::net::packet::{Packet, Request};
-use crate::net::router::RouterMethod;
 use crate::net::router::auth::AuthMethod;
-use std::sync::Arc;
+use crate::net::router::RouterMethod;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 
