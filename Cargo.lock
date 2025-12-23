@@ -42,9 +42,10 @@ name = "atlas-gate"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "futures-util",
  "reqwest",
  "tokio",
- "tower-http",
+ "tokio-tungstenite",
  "tracing",
  "tracing-subscriber",
 ]
@@ -1711,7 +1712,6 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
- "tracing",
 ]
 
 [[package]]

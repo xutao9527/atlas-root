@@ -14,7 +14,7 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .with_timer(LocalTime::rfc_3339())
-        //.with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
     let app = Router::new()
         .route("/", get(http_index))
