@@ -5,7 +5,7 @@ use axum::response::IntoResponse;
 use axum::Router;
 use axum::routing::get;
 use tokio::net::TcpListener;
-use tower_http::trace::TraceLayer;
+// use tower_http::trace::TraceLayer;
 use tracing::{info, warn};
 use tracing_subscriber::fmt::time::LocalTime;
 
