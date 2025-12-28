@@ -30,7 +30,6 @@ async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
 
 async fn handle_ws(mut socket: WebSocket) {
     info!("WS connected");
-
     while let Some(msg) = socket.recv().await {
         match msg {
             Ok(Message::Text(text)) => {
@@ -54,6 +53,5 @@ async fn handle_ws(mut socket: WebSocket) {
             _ => {}
         }
     }
-
     info!("WS disconnected");
 }
