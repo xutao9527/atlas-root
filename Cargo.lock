@@ -42,9 +42,12 @@ name = "atlas-gate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "atlas-core",
  "axum",
+ "bytes",
  "futures-util",
  "reqwest",
+ "rmp-serde",
  "tokio",
  "tokio-tungstenite",
  "tracing",

@@ -1,4 +1,3 @@
-use std::net::SocketAddr;
 use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
@@ -14,11 +13,11 @@ pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Resu
         .route("/ws", get(ws_handler));
 
     let addr = format!("{}:{}", bind_addr, bind_port);
-   
+
     let listener = TcpListener::bind(addr.clone()).await.unwrap();
     info!("Gateway listening on {}", addr);
     Ok(axum::serve(listener, app).await?)
-        
+
 }
 
 async fn http_index() -> impl IntoResponse {
@@ -36,7 +35,6 @@ async fn handle_ws(mut socket: WebSocket) {
         match msg {
             Ok(Message::Text(text)) => {
                 info!("recv text: {}", text);
-
                 // echo
                 if socket.send(Message::Text(format!("echo: {}", text).into())).await.is_err() {
                     break;
