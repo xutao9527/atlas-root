@@ -41,6 +41,7 @@ dependencies = [
 name = "atlas-gate"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "futures-util",
  "reqwest",
