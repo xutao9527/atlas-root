@@ -1,7 +1,7 @@
 use crate::net::codec_rmp::MsgPackCodec as Codec;
 use crate::net::packet::Packet;
 use crate::net::router::Router;
-use anyhow::Result;
+use Result;
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -20,7 +20,7 @@ impl AtlasNetServer {
         }
     }
 
-    pub async fn run(&self) -> Result<()> {
+    pub async fn run(&self) -> anyhow::Result<()> {
         let listener = TcpListener::bind(&self.addr).await?;
         println!("Server listening on {}", self.addr);
         loop {

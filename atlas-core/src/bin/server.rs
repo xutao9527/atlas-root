@@ -10,7 +10,7 @@ async fn main() -> anyhow::Result<()> {
     let mut router = Router::new();
     router.register(
         AuthMethod::SignIn,
-        Arc::new(|req| {
+       |req| {
             async move {
                 Response {
                     id: req.id,
@@ -20,7 +20,7 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
             .boxed()
-        }),
+        },
     );
     let server = AtlasNetServer::new("0.0.0.0:9001", router);
     server.run().await

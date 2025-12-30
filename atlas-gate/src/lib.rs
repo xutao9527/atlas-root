@@ -12,9 +12,9 @@ pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Resu
     let app = Router::new()
         .route("/", get(http_index))
         .route("/ws", get(ws_handler));
-    let addr = format!("{}:{}", bind_addr, bind_port);
-    let listener = TcpListener::bind(addr.clone()).await.unwrap();
-    info!("Gateway listening on {}", addr);
+    let serve_addr = format!("{}:{}", bind_addr, bind_port);
+    let listener = TcpListener::bind(serve_addr.clone()).await.unwrap();
+    info!("Gateway listening on {}", serve_addr);
     Ok(axum::serve(listener, app).await?)
 }
 

@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use crate::net::packet::{Request, Response};
 
-pub type Handler = Arc<dyn Fn(Request) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync>;
+
 
 /// RPC Module
 #[repr(u16)]
@@ -28,6 +28,9 @@ pub trait RouterMethod: Copy {
     }
 }
 
+
+pub type Handler = Arc<dyn Fn(Request) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync>;
+
 #[derive(Default)]
 pub struct Router {
     routes: HashMap<u32, Handler>,
@@ -38,7 +41,15 @@ impl Router {
         Self::default()
     }
 
-    pub fn register<M: RouterMethod>(&mut self, method: M, handler: Handler) {
+    pub fn register<M: RouterMethod, F, Fut>(&mut self, method: M, handler: F)
+    where
+        M: RouterMethod,
+        F: Fn(Request) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output=Response> + Send + 'static,
+    {
+        let handler: Handler = Arc::new(move |req: Request| {
+            Box::pin(handler(req))
+        });
         self.routes.insert(method.wire(), handler);
     }
 

@@ -2,6 +2,7 @@
 members = [
     "atlas-core",
     "atlas-gate",
+    "atlas-logic/atlas-auth",
     "atlas-logic/atlas-blitz",
     "atlas-registry",
     "atlas-toolkit/atlas-http-client",

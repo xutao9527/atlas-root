@@ -4,10 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
+# runtime
 tokio = { workspace = true, features = ["full"] }
+
+# network
 tokio-util = { workspace = true, features = ["codec"] }
 futures = { workspace = true }
 
+# common
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
