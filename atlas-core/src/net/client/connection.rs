@@ -152,25 +152,5 @@ impl AtlasConnection {
             guard.clone()
         };
         let _ = channel_writer.send(AtlasPacket::AtlasRequest(req)).await;
-
-        // if let AtlasPacket::AtlasRequest(ref mut req) = packet {
-        //     if !self.connected.load(Ordering::Acquire) {
-        //         let resp = AtlasResponse {
-        //             id: req.id,
-        //             slot_index: usize::MAX,
-        //             payload: Vec::new(),
-        //             error: Some("connection closed".into()),
-        //         };
-        //         callback(AtlasPacket::AtlasResponse(resp));
-        //         return
-        //     }
-        //     self.pending.insert(req, Box::new(callback));
-        //     let channel_writer = {
-        //         let guard = self.channel_writer.lock().await;
-        //         guard.clone()
-        //     };
-        //     let _ = channel_writer.send(packet).await;
-        // }
-
     }
 }

@@ -57,8 +57,10 @@ async fn main() -> anyhow::Result<()> {
                 payload: vec![],
             };
             //let packet = AtlasPacket::AtlasRequest(req);
-            client.call_cb(req, move |resp| {
-                println!("callback {:?}", resp);
+            client.call_cb(req, move |_resp| {
+                _success.fetch_add(1, Ordering::Relaxed);
+                _recv.fetch_add(1, Ordering::Relaxed);
+                //println!("callback {:?}", resp);
             }).await;
             sent.fetch_add(1, Ordering::Relaxed);
             // 每 _batch_size 个请求暂停 1 秒

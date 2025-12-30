@@ -36,11 +36,5 @@ impl AtlasRpcClient {
         req.id = req_id;
         let idx = (req_id as usize) % self.connections.len();
         self.connections[idx].send(req, callback).await;
-        
-        // if let AtlasPacket::AtlasRequest(ref mut req) = packet{
-        //     req.id = req_id;
-        //     let idx = (req_id as usize) % self.connections.len();
-        //     self.connections[idx].send(packet, callback).await;
-        // }
     }
 }
