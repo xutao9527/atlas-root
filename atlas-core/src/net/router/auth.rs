@@ -1,4 +1,4 @@
-use crate::net::router::{Module, RouterMethod};
+use crate::net::router::{RouterModule, RouterMethod};
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
@@ -8,7 +8,7 @@ pub enum AuthMethod {
 }
 
 impl RouterMethod for AuthMethod {
-    const MODULE: Module = Module::Auth;
+    const MODULE: RouterModule = RouterModule::Auth;
     fn id(self) -> u16 {
         self as u16
     }

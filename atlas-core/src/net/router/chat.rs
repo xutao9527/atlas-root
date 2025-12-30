@@ -1,4 +1,4 @@
-use crate::net::router::{Module, RouterMethod};
+use crate::net::router::{RouterModule, RouterMethod};
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
@@ -8,7 +8,7 @@ pub enum ChatMethod {
 }
 
 impl RouterMethod for ChatMethod {
-    const MODULE: Module = Module::Chat;
+    const MODULE: RouterModule = RouterModule::Chat;
     fn id(self) -> u16 {
         self as u16
     }

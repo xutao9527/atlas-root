@@ -8,22 +8,20 @@ use crate::net::packet::{Request, Response};
 
 pub type Handler = Arc<dyn Fn(Request) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync>;
 
-/// 所有模块（高 16 位）
+/// RPC Module
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum Module {
+pub enum RouterModule {
     Auth = 1,
     Chat = 2,
 }
 
-/// 所有 RPC Method 的公共行为
+/// RPC Method
 pub trait RouterMethod: Copy {
     /// 所属模块
-    const MODULE: Module;
-
+    const MODULE: RouterModule;
     /// 方法号（低 16 位）
     fn id(self) -> u16;
-
     #[inline(always)]
     fn wire(self) -> u32 {
         ((Self::MODULE as u32) << 16) | self.id() as u32

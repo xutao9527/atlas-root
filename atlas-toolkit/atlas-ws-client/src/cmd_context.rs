@@ -1,8 +1,7 @@
-use std::sync::Arc;
-use tokio::{io, select};
+use crate::ws_client::WsClient;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
-use crate::ws_client::WsClient;
+use tokio::{io, select};
 
 pub struct CmdContext {
     pub ws_server_addr: String,
@@ -72,7 +71,7 @@ impl CmdContext {
                     self.client = Some(ws_client);
                 }
             },
-            ["t",text] => {
+            ["text",text] => {
                 if let Some(client) = &self.client {
                     client.send_text(text.to_string()).await
                 }
