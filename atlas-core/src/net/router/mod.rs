@@ -28,9 +28,24 @@ pub trait RouterMethod: Copy {
 }
 
 
+pub trait AsyncHandler: Send + Sync + 'static {
+    fn call(&self, req: Request) -> Pin<Box<dyn Future<Output=Response> + Send>>;
+}
+
+impl<F, Fut> AsyncHandler for F
+where
+    F: Fn(Request) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output=Response> + Send + 'static,
+{
+    fn call(&self, req: Request) -> Pin<Box<dyn Future<Output=Response> + Send>> {
+        Box::pin(self(req))
+    }
+}
+
+
 #[derive(Default)]
 pub struct AtlasRouter {
-    routes: HashMap<u32, Arc<dyn Fn(Request) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync>>,
+    routes: HashMap<u32, Arc<dyn AsyncHandler>>,
 }
 
 impl AtlasRouter {
@@ -38,22 +53,18 @@ impl AtlasRouter {
         Self::default()
     }
 
-    pub fn register<M: RouterMethod, F, Fut>(&mut self, method: M, handler: F)
+    pub fn register<M, H>(&mut self, method: M, handler: H)
     where
         M: RouterMethod,
-        F: Fn(Request) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output=Response> + Send + 'static,
+        H: AsyncHandler,
     {
-        let handler: Arc<dyn Fn(Request) -> Pin<Box<dyn Future<Output=Response> + Send>> + Send + Sync> = Arc::new(move |req: Request| {
-            Box::pin(handler(req))
-        });
-        self.routes.insert(method.wire(), handler);
+        self.routes.insert(method.wire(), Arc::new(handler));
     }
 
     /// 分发（异步）
     pub async fn dispatch(&self, req: Request) -> Response {
         match self.routes.get(&req.method) {
-            Some(handler) => handler(req).await,
+            Some(handler) => handler.call(req).await,
             None => Response {
                 id: req.id,
                 slot_index: req.slot_index,

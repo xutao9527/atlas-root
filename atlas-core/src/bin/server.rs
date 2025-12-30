@@ -1,4 +1,4 @@
-use atlas_core::net::packet::Response;
+use atlas_core::net::packet::{Request, Response};
 use atlas_core::net::router::auth::AuthMethod;
 use atlas_core::net::router::{AtlasRouter};
 use atlas_core::net::server::AtlasNetServer;
@@ -6,7 +6,7 @@ use atlas_core::net::server::AtlasNetServer;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let mut router = AtlasRouter::new();
-    router.register(AuthMethod::SignIn, |req| async move {
+    router.register(AuthMethod::SignIn, |req: Request| async move {
         Response {
             id: req.id,
             slot_index: req.slot_index,
