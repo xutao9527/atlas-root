@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
     let fail = fail_counter.clone();
     let sent = sent_total.clone();
     let recv = recv_total.clone();
-    let mut client = AtlasRpcClient::new("127.0.0.1:9001".into(), 4);
+    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     let _batch_size = 100;
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
