@@ -1,19 +1,20 @@
 use crate::net::codec_rmp::MsgPackCodec as Codec;
 use crate::net::packet::Packet;
-use crate::net::router::Router;
+
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
+use crate::net::router::AtlasRouter;
 
 pub struct AtlasNetServer {
     addr: String,
-    router: Arc<Router>,
+    router: Arc<AtlasRouter>,
 }
 
 impl AtlasNetServer {
-    pub fn new(addr: &str, router: Router) -> Self {
+    pub fn new(addr: &str, router: AtlasRouter) -> Self {
         Self {
             addr: addr.to_string(),
             router: Arc::new(router),
