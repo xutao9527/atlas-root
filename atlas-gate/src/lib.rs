@@ -4,7 +4,7 @@ mod http;
 use axum::Router;
 use axum::routing::get;
 use tokio::net::TcpListener;
-use tracing::{info, warn};
+use tracing::{info};
 use crate::http::http_index;
 use crate::ws::ws_handler;
 
