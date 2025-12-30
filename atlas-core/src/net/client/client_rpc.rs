@@ -44,6 +44,6 @@ impl AtlasRpcClient {
         //self.pending.insert(&mut req, Box::new(callback)).await;
         let packet = Packet::Request(req);
         let idx = (req_id as usize) % self.connections.len();
-        self.connections[idx].send(packet,callback).await;
+        self.connections[idx].send(packet, callback).await;
     }
 }
