@@ -1,6 +1,6 @@
 use atlas_core::net::packet::{AtlasRequest, AtlasResponse};
 use atlas_core::net::router::auth::AuthMethod;
-use atlas_core::net::router::{AtlasRouter};
+use atlas_core::net::router::router_handler::AtlasRouter;
 use atlas_core::net::server::AtlasNetServer;
 
 #[tokio::main]
