@@ -1,6 +1,6 @@
 use crate::net::client::pending::PendingTable;
 use crate::net::codec_rmp::MsgPackCodec as Codec;
-use crate::net::packet::{AtlasPacket, AtlasResponse};
+use crate::net::packet::{AtlasPacket, AtlasRequest, AtlasResponse};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -56,7 +56,7 @@ impl AtlasConnection {
                                 payload: Vec::new(),
                                 error: Some("connection closed".into()),
                             };
-                            (slot.callback)(AtlasPacket::AtlasResponse(resp));
+                            (slot.callback)(resp);
                         });
                     }
                     Err(e) => {
@@ -116,7 +116,7 @@ impl AtlasConnection {
                     Ok(AtlasPacket::AtlasResponse(resp)) => {
                         if let Some(slot) = pending.remove(resp.slot_index) {
                             if resp.id == slot.request_id {
-                                (slot.callback)(AtlasPacket::AtlasResponse(resp));
+                                (slot.callback)(resp);
                             }
                         }
                     }
@@ -131,29 +131,46 @@ impl AtlasConnection {
     }
 
     #[inline]
-    pub async fn send<F: FnOnce(AtlasPacket) + Send + 'static>(
+    pub async fn send<F: FnOnce(AtlasResponse) + Send + 'static>(
         &self,
-        mut packet: AtlasPacket,
+        mut req: AtlasRequest,
         callback: F,
     ) {
-        if let AtlasPacket::AtlasRequest(ref mut req) = packet {
-            if !self.connected.load(Ordering::Acquire) {
-                let resp = AtlasResponse {
-                    id: req.id,
-                    slot_index: usize::MAX,
-                    payload: Vec::new(),
-                    error: Some("connection closed".into()),
-                };
-                callback(AtlasPacket::AtlasResponse(resp));
-                return
-            }
-            self.pending.insert(req, Box::new(callback));
-            let channel_writer = {
-                let guard = self.channel_writer.lock().await;
-                guard.clone()
+        if !self.connected.load(Ordering::Acquire) {
+            let resp = AtlasResponse {
+                id: req.id,
+                slot_index: usize::MAX,
+                payload: Vec::new(),
+                error: Some("connection closed".into()),
             };
-            let _ = channel_writer.send(packet).await;
+            callback(resp);
+            return
         }
+        self.pending.insert(&mut req, Box::new(callback));
+        let channel_writer = {
+            let guard = self.channel_writer.lock().await;
+            guard.clone()
+        };
+        let _ = channel_writer.send(AtlasPacket::AtlasRequest(req)).await;
+
+        // if let AtlasPacket::AtlasRequest(ref mut req) = packet {
+        //     if !self.connected.load(Ordering::Acquire) {
+        //         let resp = AtlasResponse {
+        //             id: req.id,
+        //             slot_index: usize::MAX,
+        //             payload: Vec::new(),
+        //             error: Some("connection closed".into()),
+        //         };
+        //         callback(AtlasPacket::AtlasResponse(resp));
+        //         return
+        //     }
+        //     self.pending.insert(req, Box::new(callback));
+        //     let channel_writer = {
+        //         let guard = self.channel_writer.lock().await;
+        //         guard.clone()
+        //     };
+        //     let _ = channel_writer.send(packet).await;
+        // }
 
     }
 }

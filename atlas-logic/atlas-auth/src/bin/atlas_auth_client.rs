@@ -25,17 +25,10 @@ async fn main() -> anyhow::Result<()> {
         method: AuthMethod::SignIn.wire(),
         payload: vec![],
     };
-    let packet = AtlasPacket::AtlasRequest(req);
+  
 
-    client.call_cb(packet,|res| {
-        match res {
-            AtlasPacket::AtlasResponse(_resp) => {
-                info!("callback {:?}", _resp);
-            }
-            _ => {
-
-            }
-        }
+    client.call_cb(req,|resp| {
+        info!("callback {:?}", resp);
     }).await;
     sleep(Duration::from_secs(3)).await;
     Ok(())

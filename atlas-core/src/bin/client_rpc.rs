@@ -1,11 +1,11 @@
 use std::time::Duration;
 use tokio::time::sleep;
 
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 use atlas_core::net::client::client_rpc::AtlasRpcClient;
-use atlas_core::net::packet::{AtlasPacket, AtlasRequest};
+use atlas_core::net::packet::AtlasRequest;
 use atlas_core::net::router::auth::AuthMethod;
 use atlas_core::net::router::RouterMethod;
 
@@ -56,20 +56,10 @@ async fn main() -> anyhow::Result<()> {
                 method: AuthMethod::SignIn.wire(),
                 payload: vec![],
             };
-            let packet = AtlasPacket::AtlasRequest(req);
-            client.call_cb(packet,move |res| {
-                    match res {
-                        AtlasPacket::AtlasResponse(_resp) => {
-                            _success.fetch_add(1, Ordering::Relaxed);
-                            _recv.fetch_add(1, Ordering::Relaxed);
-                            //println!("callback {:?}", resp);
-                        }
-                        _ => {
-                            _fail.fetch_add(1, Ordering::Relaxed);
-                        }
-                    }
-                })
-                .await;
+            //let packet = AtlasPacket::AtlasRequest(req);
+            client.call_cb(req, move |resp| {
+                println!("callback {:?}", resp);
+            }).await;
             sent.fetch_add(1, Ordering::Relaxed);
             // 每 _batch_size 个请求暂停 1 秒
             // if (i + 1) % batch_size == 0 {
