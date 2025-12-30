@@ -55,8 +55,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "atlas-http-client"
+version = "0.1.0"
+dependencies = [
+ "atlas-core",
+ "reqwest",
+ "tokio",
+]
+
+[[package]]
 name = "atlas-registry"
 version = "0.1.0"
+
+[[package]]
+name = "atlas-ws-client"
+version = "0.1.0"
+dependencies = [
+ "atlas-core",
+ "bytes",
+ "futures-util",
+ "rmp-serde",
+ "tokio",
+ "tokio-tungstenite",
+]
 
 [[package]]
 name = "atomic-waker"

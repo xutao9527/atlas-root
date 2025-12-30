@@ -1,0 +1,17 @@
+[package]
+name = "atlas-ws-client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# local
+atlas-core = { workspace = true }
+
+# runtime
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio-tungstenite = { workspace = true }
+futures-util = { workspace = true }
+
+# common
+rmp-serde = { workspace = true }
+bytes = { workspace = true }
