@@ -26,9 +26,6 @@ async fn main() -> anyhow::Result<()> {
             }
         }
     }).await;
-
-
     sleep(Duration::from_secs(3)).await;
-
     Ok(())
 }

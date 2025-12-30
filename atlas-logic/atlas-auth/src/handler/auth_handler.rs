@@ -4,7 +4,7 @@ pub async fn login(request: Request) -> Response {
     Response {
         id: request.id,
         slot_index: request.slot_index,
-        payload: b"login response".to_vec(),
+        payload: b"SignIn Handler".to_vec(),
         error: None,
     }
 }
