@@ -1,6 +1,6 @@
 use crate::net::client::pending::PendingTable;
 use crate::net::codec_rmp::MsgPackCodec as Codec;
-use crate::net::packet::{Packet, Response};
+use crate::net::packet::{AtlasPacket, AtlasResponse};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -13,7 +13,7 @@ use tracing::{debug, info, warn};
 
 pub struct AtlasConnection {
     addr: String,
-    channel_writer: Mutex<mpsc::Sender<Packet>>,
+    channel_writer: Mutex<mpsc::Sender<AtlasPacket>>,
     pending: Arc<PendingTable>,
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
@@ -23,7 +23,7 @@ pub struct AtlasConnection {
 impl AtlasConnection {
     pub async fn new(addr: String) -> anyhow::Result<Self> {
         let pending = Arc::new(PendingTable::new(100 * 1024));
-        let (channel_writer, _channel_reader) = mpsc::channel::<Packet>(100 * 1024);
+        let (channel_writer, _channel_reader) = mpsc::channel::<AtlasPacket>(100 * 1024);
         Ok(Self {
             addr: addr.to_string(),
             //channel_reader: Mutex::new(Some(channel_reader)),
@@ -50,13 +50,13 @@ impl AtlasConnection {
                             debug!("[2]收到断开连接通知! => connect_loop");
                         }
                         this.pending.drain(|slot| {
-                            let resp = Response {
+                            let resp = AtlasResponse {
                                 id: slot.request_id,
                                 slot_index: usize::MAX,
                                 payload: Vec::new(),
                                 error: Some("connection closed".into()),
                             };
-                            (slot.callback)(Packet::Response(resp));
+                            (slot.callback)(AtlasPacket::AtlasResponse(resp));
                         });
                     }
                     Err(e) => {
@@ -78,10 +78,10 @@ impl AtlasConnection {
 
     pub async fn establish_connection(&self) -> anyhow::Result<()> {
         let stream = TcpStream::connect(&self.addr).await?;
-        let framed = Framed::new(stream, Codec::<Packet>::default());
+        let framed = Framed::new(stream, Codec::<AtlasPacket>::default());
         let (mut socket_writer, mut socket_reader) = framed.split();
 
-        let (channel_writer, mut channel_reader) = mpsc::channel::<Packet>(100 * 1024);
+        let (channel_writer, mut channel_reader) = mpsc::channel::<AtlasPacket>(100 * 1024);
         {
             let mut guard = self.channel_writer.lock().await;
             *guard = channel_writer.clone(); // 替换成新的 channel
@@ -113,10 +113,10 @@ impl AtlasConnection {
         tokio::spawn(async move {
             while let Some(result) = socket_reader.next().await {
                 match result {
-                    Ok(Packet::Response(resp)) => {
+                    Ok(AtlasPacket::AtlasResponse(resp)) => {
                         if let Some(slot) = pending.remove(resp.slot_index) {
                             if resp.id == slot.request_id {
-                                (slot.callback)(Packet::Response(resp));
+                                (slot.callback)(AtlasPacket::AtlasResponse(resp));
                             }
                         }
                     }
@@ -131,20 +131,20 @@ impl AtlasConnection {
     }
 
     #[inline]
-    pub async fn send<F: FnOnce(Packet) + Send + 'static>(
+    pub async fn send<F: FnOnce(AtlasPacket) + Send + 'static>(
         &self,
-        mut packet: Packet,
+        mut packet: AtlasPacket,
         callback: F,
     ) {
-        if let Packet::Request(ref mut req) = packet {
+        if let AtlasPacket::AtlasRequest(ref mut req) = packet {
             if !self.connected.load(Ordering::Acquire) {
-                let resp = Response {
+                let resp = AtlasResponse {
                     id: req.id,
                     slot_index: usize::MAX,
                     payload: Vec::new(),
                     error: Some("connection closed".into()),
                 };
-                callback(Packet::Response(resp));
+                callback(AtlasPacket::AtlasResponse(resp));
                 return
             }
             self.pending.insert(req, Box::new(callback));

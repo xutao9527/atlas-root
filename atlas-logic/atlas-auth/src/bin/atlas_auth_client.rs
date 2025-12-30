@@ -3,7 +3,9 @@ use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
 use atlas_core::net::client::client_rpc::AtlasRpcClient;
-use atlas_core::net::packet::Packet;
+use atlas_core::net::packet::{AtlasPacket, AtlasRequest};
+use atlas_core::net::router::auth::AuthMethod;
+use atlas_core::net::router::RouterMethod;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -16,9 +18,18 @@ async fn main() -> anyhow::Result<()> {
 
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 1);
     client.connect().await?;
-    client.call_cb(|res| {
+
+    let req = AtlasRequest {
+        id: 0,
+        slot_index: 0 as usize,
+        method: AuthMethod::SignIn.wire(),
+        payload: vec![],
+    };
+    let packet = AtlasPacket::AtlasRequest(req);
+
+    client.call_cb(packet,|res| {
         match res {
-            Packet::Response(_resp) => {
+            AtlasPacket::AtlasResponse(_resp) => {
                 info!("callback {:?}", _resp);
             }
             _ => {

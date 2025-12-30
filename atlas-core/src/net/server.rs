@@ -1,5 +1,5 @@
 use crate::net::codec_rmp::MsgPackCodec as Codec;
-use crate::net::packet::Packet;
+use crate::net::packet::AtlasPacket;
 
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
@@ -29,13 +29,13 @@ impl AtlasNetServer {
             debug!("AtlasNetServer accepted connection from {}", addr);
             let router = self.router.clone(); // Arc Router
             tokio::spawn(async move {
-                let mut framed = Framed::new(stream, Codec::<Packet>::default());
+                let mut framed = Framed::new(stream, Codec::<AtlasPacket>::default());
                 while let Some(result) = framed.next().await {
                     match result {
-                        Ok(Packet::Request(req)) => {
+                        Ok(AtlasPacket::AtlasRequest(req)) => {
                             //println!("Server received: {:?}", req);
                             let resp = router.dispatch(req).await;
-                            if framed.send(Packet::Response(resp)).await.is_err() {
+                            if framed.send(AtlasPacket::AtlasResponse(resp)).await.is_err() {
                                 break;
                             }
                         }

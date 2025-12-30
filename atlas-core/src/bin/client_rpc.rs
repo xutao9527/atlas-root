@@ -5,9 +5,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use atlas_core::net::client::client_rpc::AtlasRpcClient;
-use atlas_core::net::packet::Packet;
-
-
+use atlas_core::net::packet::{AtlasPacket, AtlasRequest};
+use atlas_core::net::router::auth::AuthMethod;
+use atlas_core::net::router::RouterMethod;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -50,10 +50,16 @@ async fn main() -> anyhow::Result<()> {
             let _success = success.clone();
             let _fail = fail.clone();
             let _recv = recv.clone();
-            client
-                .call_cb(move |res| {
+            let req = AtlasRequest {
+                id: 0,
+                slot_index: 0 as usize,
+                method: AuthMethod::SignIn.wire(),
+                payload: vec![],
+            };
+            let packet = AtlasPacket::AtlasRequest(req);
+            client.call_cb(packet,move |res| {
                     match res {
-                        Packet::Response(_resp) => {
+                        AtlasPacket::AtlasResponse(_resp) => {
                             _success.fetch_add(1, Ordering::Relaxed);
                             _recv.fetch_add(1, Ordering::Relaxed);
                             //println!("callback {:?}", resp);

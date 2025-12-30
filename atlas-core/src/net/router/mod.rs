@@ -4,7 +4,7 @@ pub mod chat;
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
-use crate::net::packet::{Request, Response};
+use crate::net::packet::{AtlasRequest, AtlasResponse};
 
 
 /// RPC Module
@@ -29,15 +29,15 @@ pub trait RouterMethod: Copy {
 
 
 pub trait AsyncHandler: Send + Sync + 'static {
-    fn call(&self, req: Request) -> Pin<Box<dyn Future<Output=Response> + Send>>;
+    fn call(&self, req: AtlasRequest) -> Pin<Box<dyn Future<Output=AtlasResponse> + Send>>;
 }
 
 impl<F, Fut> AsyncHandler for F
 where
-    F: Fn(Request) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output=Response> + Send + 'static,
+    F: Fn(AtlasRequest) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output=AtlasResponse> + Send + 'static,
 {
-    fn call(&self, req: Request) -> Pin<Box<dyn Future<Output=Response> + Send>> {
+    fn call(&self, req: AtlasRequest) -> Pin<Box<dyn Future<Output=AtlasResponse> + Send>> {
         Box::pin(self(req))
     }
 }
@@ -61,10 +61,10 @@ impl AtlasRouter {
     }
 
     /// 分发（异步）
-    pub async fn dispatch(&self, req: Request) -> Response {
+    pub async fn dispatch(&self, req: AtlasRequest) -> AtlasResponse {
         match self.routes.get(&req.method) {
             Some(handler) => handler.call(req).await,
-            None => Response {
+            None => AtlasResponse {
                 id: req.id,
                 slot_index: req.slot_index,
                 payload: Vec::new(),
