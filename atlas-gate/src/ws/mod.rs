@@ -14,7 +14,6 @@ async fn handle_ws(mut socket: WebSocket) {
         match msg {
             Ok(Message::Text(text)) => {
                 info!("recv text: {}", text);
-                // echo
                 if socket.send(Message::Text(format!("echo: {}", text).into())).await.is_err() {
                     break;
                 }
