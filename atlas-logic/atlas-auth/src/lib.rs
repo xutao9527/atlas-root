@@ -1,5 +1,6 @@
 mod handler;
 
+use tracing::info;
 use atlas_core::net::router::auth::AuthMethod;
 use atlas_core::net::router::Router;
 use atlas_core::net::server::AtlasNetServer;
@@ -11,6 +12,9 @@ pub async fn serve_auth(bind_addr: String, bind_port: String) -> anyhow::Result<
 
     router.register(AuthMethod::SignIn, login);
 
-    let server = AtlasNetServer::new("0.0.0.0:9001", router);
+    let serve_addr = format!("{}:{}", bind_addr, bind_port);
+    let server = AtlasNetServer::new(serve_addr.as_str(), router);
+
+    info!("auth server listening on {}", serve_addr);
     server.run().await
 }

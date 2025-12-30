@@ -13,9 +13,9 @@ pub struct AtlasRpcClient {
 }
 
 impl AtlasRpcClient {
-    pub fn new(addr: &str, conn_num: usize) -> Self {
+    pub fn new(addr: String, conn_num: usize) -> Self {
         Self {
-            addr: addr.to_string(),
+            addr,
             next_req_id: AtomicU64::new(1),
             connections: Vec::with_capacity(conn_num),
         }

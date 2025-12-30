@@ -46,6 +46,7 @@ dependencies = [
  "slab",
  "tokio",
  "tokio-util",
+ "tracing",
 ]
 
 [[package]]

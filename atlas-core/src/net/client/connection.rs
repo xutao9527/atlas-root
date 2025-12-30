@@ -9,6 +9,7 @@ use tokio::net::TcpStream;
 use tokio::sync::{Mutex, Notify, mpsc};
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
+use tracing::{debug, info, warn};
 
 pub struct AtlasConnection {
     addr: String,
@@ -36,28 +37,17 @@ impl AtlasConnection {
 
     pub async fn connect(self: Arc<Self>) {
         let this = self.clone();
-        // {
-        //     let this = this.clone(); // 给这个 spawn 单独 clone 一份
-        //     tokio::spawn(async move {
-        //         let mut interval = tokio::time::interval(Duration::from_secs(1));
-        //         loop {
-        //             interval.tick().await;
-        //             let _pending_count = this.pending.len();
-        //             println!("当前 pending 请求数量: {}", _pending_count);
-        //         }
-        //     });
-        // }
         tokio::spawn(async move {
             let mut attempt = 0u32;
             loop {
                 match this.establish_connection().await{
                     Ok(()) => {
                         attempt = 0;
-                        eprintln!("✅ 连接成功: {}", this.addr);
+                        info!("✅ 连接成功: {}", this.addr);
                         if this.connected.load(Ordering::SeqCst) {
-                            eprintln!("[2]等待断开连接通知! => connect_loop");
+                            debug!("[2]等待断开连接通知! => connect_loop");
                             this.notify_disconnected.notified().await;          // 等待通知断线
-                            eprintln!("[2]收到断开连接通知! => connect_loop");
+                            debug!("[2]收到断开连接通知! => connect_loop");
                         }
                         this.pending.drain(|slot| {
                             let resp = Response {
@@ -73,7 +63,7 @@ impl AtlasConnection {
                         attempt += 1;
                         let delay = Duration::from_secs(2u64.pow(attempt.min(3))); // 2,4,8,16,32,64 秒
                         //let delay = Duration::from_secs(3);
-                        eprintln!("❌ 连接失败: {:?}, 重连间隔 {:?}", e.to_string(), delay);
+                        warn!("❌ 连接失败: {:?}, 重连间隔 {:?}", e.to_string(), delay);
                         sleep(delay).await;
                     }
                 }

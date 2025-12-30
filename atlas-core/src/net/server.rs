@@ -1,11 +1,11 @@
 use crate::net::codec_rmp::MsgPackCodec as Codec;
 use crate::net::packet::Packet;
 use crate::net::router::Router;
-use Result;
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
+use tracing::{debug, warn};
 
 pub struct AtlasNetServer {
     addr: String,
@@ -22,10 +22,10 @@ impl AtlasNetServer {
 
     pub async fn run(&self) -> anyhow::Result<()> {
         let listener = TcpListener::bind(&self.addr).await?;
-        println!("Server listening on {}", self.addr);
+        debug!("AtlasNetServer listening on {}", self.addr);
         loop {
             let (stream, addr) = listener.accept().await?;
-            println!("Accepted connection from {}", addr);
+            debug!("AtlasNetServer accepted connection from {}", addr);
             let router = self.router.clone(); // Arc Router
             tokio::spawn(async move {
                 let mut framed = Framed::new(stream, Codec::<Packet>::default());
@@ -41,12 +41,12 @@ impl AtlasNetServer {
                         Ok(_) => {}
                         Err(e) => {
                             //eprintln!("Connection {} closed: {}", addr, e);
-                            eprintln!("Decode error: {:?}", e);
+                            warn!("decode error: {:?}", e);
                             break;
                         }
                     }
                 }
-                println!("Connection {} closed", addr);
+                warn!("connection {} closed", addr);
             });
         }
     }

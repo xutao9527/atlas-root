@@ -20,3 +20,4 @@ rmp-serde = { workspace = true }
 bytes = { workspace = true }
 slab = { workspace = true }
 parking_lot = { workspace = true }
+tracing = { workspace = true }
