@@ -42,7 +42,6 @@ where
     }
 }
 
-
 #[derive(Default)]
 pub struct AtlasRouter {
     routes: HashMap<u32, Arc<dyn AsyncHandler>>,
