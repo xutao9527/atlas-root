@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 # local
-atlas-core = { workspace = true }
+atlas-core = { workspace = true ,features = ["default"]}
 
 # runtime
 tokio = { workspace = true, features = ["full"] }

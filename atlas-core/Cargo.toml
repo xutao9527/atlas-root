@@ -21,3 +21,9 @@ bytes = { workspace = true }
 slab = { workspace = true }
 parking_lot = { workspace = true }
 tracing = { workspace = true }
+
+
+[features]
+default = ["msgpack_codec"]
+msgpack_codec = []
+json_codec = []
