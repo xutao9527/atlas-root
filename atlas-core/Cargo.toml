@@ -15,15 +15,9 @@ futures = { workspace = true }
 # common
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
+
 rmp-serde = { workspace = true }
 bytes = { workspace = true ,features = ["serde"] }
 slab = { workspace = true }
 parking_lot = { workspace = true }
 tracing = { workspace = true }
-
-
-[features]
-default = ["msgpack_codec"]
-msgpack_codec = []
-json_codec = []

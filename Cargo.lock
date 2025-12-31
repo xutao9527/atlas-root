@@ -23,8 +23,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "atlas-core",
- "bytes",
- "rmp-serde",
  "serde",
  "tokio",
  "tracing",
@@ -45,7 +43,6 @@ dependencies = [
  "parking_lot",
  "rmp-serde",
  "serde",
- "serde_json",
  "slab",
  "tokio",
  "tokio-util",

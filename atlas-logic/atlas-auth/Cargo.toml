@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 # local
-atlas-core = { workspace = true ,features = ["default"]}
+atlas-core = { workspace = true }
 
 # runtime
 tokio = { workspace = true, features = ["full"] }
@@ -15,5 +15,3 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-rmp-serde = { workspace = true }
-bytes = { workspace = true ,features = ["serde"] }

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
-use crate::net::rpc::Codec;
+use crate::net::rpc::codec_rmp::MsgPackCodec;
 use crate::net::rpc::router::AtlasRouter;
 
 pub struct AtlasNetServer {
@@ -30,7 +30,7 @@ impl AtlasNetServer {
             debug!("AtlasNetServer accepted connection from {}", addr);
             let router = self.router.clone(); // Arc Router
             tokio::spawn(async move {
-                let mut framed = Framed::new(stream, Codec::<AtlasPacket>::default());
+                let mut framed = Framed::new(stream, MsgPackCodec::<AtlasPacket>::default());
                 while let Some(result) = framed.next().await {
                     match result {
                         Ok(AtlasPacket::AtlasRequest(req)) => {
