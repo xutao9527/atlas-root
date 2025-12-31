@@ -1,2 +1,2 @@
 pub mod method;
-pub mod handler;
+pub mod auth_handler;

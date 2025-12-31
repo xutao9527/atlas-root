@@ -2,7 +2,7 @@ pub mod rpc;
 
 use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
 
-use crate::rpc::handler::auth_handler::login;
+use rpc::auth_handler::login;
 use crate::rpc::method::AuthMethod;
 use atlas_core::net::rpc::router::AtlasRouter;
 use atlas_core::net::rpc::server::AtlasNetServer;
