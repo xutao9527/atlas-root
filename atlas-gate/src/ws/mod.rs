@@ -3,7 +3,7 @@ use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{mpsc};
 use tracing::{info, warn};
 use atlas_core::AtlasModuleId;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;

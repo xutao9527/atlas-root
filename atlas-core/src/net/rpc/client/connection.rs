@@ -27,7 +27,6 @@ impl AtlasConnection {
         let (channel_writer, _channel_reader) = mpsc::channel::<AtlasPacket>(100 * 1024);
         Ok(Self {
             addr: addr.to_string(),
-            //channel_reader: Mutex::new(Some(channel_reader)),
             channel_writer: Mutex::new(channel_writer),
             pending,
             notify_connected: Arc::new(Notify::new()),

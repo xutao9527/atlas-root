@@ -36,6 +36,8 @@ async fn main() -> anyhow::Result<()> {
         let resp = AtlasResponse::<LoginResp>::from_raw(resp);
         info!("callback {:?}", resp);
     }).await;
-    sleep(Duration::from_secs(3)).await;
+    loop{
+        sleep(Duration::from_secs(3)).await;
+    }
     Ok(())
 }
