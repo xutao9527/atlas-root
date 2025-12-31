@@ -1,6 +1,6 @@
 use crate::net::rpc::client::pending::PendingTable;
 use crate::net::rpc::codec_rmp::MsgPackCodec as Codec;
-use crate::net::rpc::packet::{AtlasPacket, AtlasRequest, AtlasResponse};
+use crate::net::rpc::packet::{AtlasPacket, AtlasRawRequest, AtlasRawResponse, AtlasResponse};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -131,9 +131,9 @@ impl AtlasConnection {
     }
 
     #[inline]
-    pub async fn send<F: FnOnce(AtlasResponse) + Send + 'static>(
+    pub async fn send<F: FnOnce(AtlasRawResponse) + Send + 'static>(
         &self,
-        mut req: AtlasRequest,
+        mut req: AtlasRawRequest,
         callback: F,
     ) {
         if !self.connected.load(Ordering::Acquire) {

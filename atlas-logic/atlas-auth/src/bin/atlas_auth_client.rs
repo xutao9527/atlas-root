@@ -2,9 +2,11 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
+use atlas_auth::rpc::entity::{LoginReq, LoginResp};
 use atlas_auth::rpc::method::AuthMethod;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet::AtlasRequest;
+
+use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 
 #[tokio::main]
@@ -23,11 +25,14 @@ async fn main() -> anyhow::Result<()> {
         id: 0,
         slot_index: 0 as usize,
         method: AuthMethod::Login.wire(),
-        payload: vec![],
+        payload: LoginReq{
+            account: "111".to_string(),
+            password: "2222".to_string(),
+        },
     };
 
-
-    client.call_cb(req,|resp| {
+    client.call_cb(req.into_raw().unwrap(),|resp| {
+        let resp = AtlasResponse::<LoginResp>::from_raw(resp);
         info!("callback {:?}", resp);
     }).await;
     sleep(Duration::from_secs(3)).await;

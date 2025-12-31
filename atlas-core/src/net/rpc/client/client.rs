@@ -1,5 +1,5 @@
 use crate::net::rpc::client::connection::AtlasConnection;
-use crate::net::rpc::packet::{AtlasRequest, AtlasResponse};
+use crate::net::rpc::packet::{AtlasRawRequest, AtlasRawResponse};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
@@ -31,7 +31,7 @@ impl AtlasRpcClient {
         Ok(())
     }
 
-    pub async fn call_cb<F: FnOnce(AtlasResponse) + Send + 'static>(&mut self, mut req: AtlasRequest, callback: F) {
+    pub async fn call_cb<F: FnOnce(AtlasRawResponse) + Send + 'static>(&mut self, mut req: AtlasRawRequest, callback: F) {
         let req_id = self.next_req_id.fetch_add(1, Ordering::Relaxed);
         req.id = req_id;
         let idx = (req_id as usize) % self.connections.len();

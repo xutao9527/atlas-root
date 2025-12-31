@@ -1,21 +1,51 @@
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
-use crate::net::rpc::packet::{AtlasRequest, AtlasResponse};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+use crate::net::rpc::packet::{AtlasRawRequest, AtlasRawResponse, AtlasRequest, AtlasResponse};
 use crate::net::rpc::router_spec::AtlasRouterMethod;
 
 
 pub trait AsyncHandler: Send + Sync + 'static {
-    fn call(&self, req: AtlasRequest) -> Pin<Box<dyn Future<Output=AtlasResponse> + Send>>;
+    fn call(&self, req: AtlasRawRequest) -> Pin<Box<dyn Future<Output=AtlasRawResponse> + Send>>;
 }
 
 impl<F, Fut> AsyncHandler for F
 where
-    F: Fn(AtlasRequest) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output=AtlasResponse> + Send + 'static,
+    F: Fn(AtlasRawRequest) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output=AtlasRawResponse> + Send + 'static,
 {
-    fn call(&self, req: AtlasRequest) -> Pin<Box<dyn Future<Output=AtlasResponse> + Send>> {
+    fn call(&self, req: AtlasRawRequest) -> Pin<Box<dyn Future<Output=AtlasRawResponse> + Send>> {
         Box::pin(self(req))
+    }
+}
+
+pub fn adapter_handler<Req, Resp, F, Fut>(f: F) -> impl Fn(AtlasRawRequest) -> Pin<Box<dyn Future<Output=AtlasRawResponse> + Send>> + Send + Sync + 'static
+where
+    Req: Serialize + DeserializeOwned + Send + 'static,
+    Resp: Serialize + DeserializeOwned + Send + 'static,
+    F: Fn(AtlasRequest<Req>) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output=AtlasResponse<Resp>> + Send + 'static,
+{
+    let f = Arc::new(f);
+    move |raw: AtlasRawRequest| {
+        let f = Arc::clone(&f);
+        Box::pin(async move {
+            let req = match AtlasRequest::<Req>::from_raw(raw.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    return AtlasRawResponse {
+                        id: raw.id,
+                        slot_index: raw.slot_index,
+                        payload: Vec::new(),
+                        error: Some(e),
+                    };
+                }
+            };
+            let resp = f(req).await;
+            resp.into_raw()
+        })
     }
 }
 
@@ -38,7 +68,7 @@ impl AtlasRouter {
     }
 
     /// 分发（异步）
-    pub async fn dispatch(&self, req: AtlasRequest) -> AtlasResponse {
+    pub async fn dispatch(&self, req: AtlasRawRequest) -> AtlasRawResponse {
         match self.routes.get(&req.method) {
             Some(handler) => handler.call(req).await,
             None => AtlasResponse {

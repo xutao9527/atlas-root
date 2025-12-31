@@ -1,4 +1,4 @@
-use crate::net::rpc::packet::{AtlasRequest, AtlasResponse};
+use crate::net::rpc::packet::{AtlasRawRequest, AtlasRawResponse};
 use parking_lot::Mutex;
 use slab::Slab;
 use tokio::time::Instant;
@@ -6,7 +6,7 @@ use tokio::time::Instant;
 /// 每个 slot 存储回调和元信息
 pub struct PendingSlot {
     pub request_id: u64,
-    pub callback: Box<dyn FnOnce(AtlasResponse) + Send + 'static>,
+    pub callback: Box<dyn FnOnce(AtlasRawResponse) + Send + 'static>,
     pub _timestamp: Instant,
 }
 
@@ -25,8 +25,8 @@ impl PendingTable {
     #[inline]
     pub fn insert(
         &self,
-        req: &mut AtlasRequest,
-        callback: Box<dyn FnOnce(AtlasResponse) + Send + 'static>,
+        req: &mut AtlasRawRequest,
+        callback: Box<dyn FnOnce(AtlasRawResponse) + Send + 'static>,
     ) {
         let mut slab = self.slab.lock();
         let index = slab.insert(PendingSlot {
