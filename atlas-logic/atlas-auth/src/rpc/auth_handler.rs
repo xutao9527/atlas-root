@@ -1,5 +1,5 @@
 use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
-use crate::rpc::entity::{LoginReq, LoginResp};
+use crate::rpc::auth_model::{LoginReq, LoginResp};
 
 pub async fn login(request: AtlasRequest<LoginReq>) -> AtlasResponse<LoginResp> {
     AtlasResponse {
@@ -13,11 +13,3 @@ pub async fn login(request: AtlasRequest<LoginReq>) -> AtlasResponse<LoginResp> 
         error: None,
     }
 }
-
-
-// AtlasResponse {
-// id: request.id,
-// slot_index: request.slot_index,
-// payload: b"SignIn Handler".to_vec(),
-// error: None,
-// }

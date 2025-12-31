@@ -2,7 +2,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
-use atlas_auth::rpc::entity::{LoginReq, LoginResp};
+use atlas_auth::rpc::auth_model::{LoginReq, LoginResp};
+
 use atlas_auth::rpc::method::AuthMethod;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 
