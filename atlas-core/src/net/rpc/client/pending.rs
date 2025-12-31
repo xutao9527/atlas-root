@@ -1,4 +1,4 @@
-use crate::net::packet::{AtlasRequest, AtlasResponse};
+use crate::net::rpc::packet::{AtlasRequest, AtlasResponse};
 use parking_lot::Mutex;
 use slab::Slab;
 use tokio::time::Instant;

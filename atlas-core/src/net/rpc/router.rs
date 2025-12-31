@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
-use crate::net::packet::{AtlasRequest, AtlasResponse};
-use crate::net::router::RouterMethod;
+use crate::net::rpc::packet::{AtlasRequest, AtlasResponse};
+use crate::net::rpc::router_spec::AtlasRouterMethod;
+
 
 pub trait AsyncHandler: Send + Sync + 'static {
     fn call(&self, req: AtlasRequest) -> Pin<Box<dyn Future<Output=AtlasResponse> + Send>>;
@@ -30,7 +31,7 @@ impl AtlasRouter {
 
     pub fn register<M, H>(&mut self, method: M, handler: H)
     where
-        M: RouterMethod,
+        M: AtlasRouterMethod,
         H: AsyncHandler,
     {
         self.routes.insert(method.wire(), Arc::new(handler));

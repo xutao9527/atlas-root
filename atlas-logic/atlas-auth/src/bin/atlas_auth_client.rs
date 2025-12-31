@@ -2,10 +2,10 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
-use atlas_core::net::client::client_rpc::AtlasRpcClient;
-use atlas_core::net::packet::{AtlasRequest};
-use atlas_core::net::router::auth::AuthMethod;
-use atlas_core::net::router::RouterMethod;
+use atlas_auth::rpc::method::AuthMethod;
+use atlas_core::net::rpc::client::client_rpc::AtlasRpcClient;
+use atlas_core::net::rpc::packet::AtlasRequest;
+use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,7 +22,7 @@ async fn main() -> anyhow::Result<()> {
     let req = AtlasRequest {
         id: 0,
         slot_index: 0 as usize,
-        method: AuthMethod::SignIn.wire(),
+        method: AuthMethod::Login.wire(),
         payload: vec![],
     };
 

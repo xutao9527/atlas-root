@@ -1,5 +1,5 @@
-use crate::net::codec_rmp::MsgPackCodec as Codec;
-use crate::net::packet::AtlasPacket;
+use crate::net::rpc::codec_rmp::MsgPackCodec as Codec;
+use crate::net::rpc::packet::AtlasPacket;
 
 
 use futures::{SinkExt, StreamExt};
@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
-use crate::net::router::router_handler::AtlasRouter;
+use crate::net::rpc::router::AtlasRouter;
 
 pub struct AtlasNetServer {
     addr: String,

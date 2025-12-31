@@ -1,17 +1,18 @@
-mod handler;
+pub mod rpc;
 
-use crate::handler::auth_handler::login;
-use atlas_core::net::packet::{AtlasRequest, AtlasResponse};
-use atlas_core::net::router::auth::AuthMethod;
-use atlas_core::net::router::router_handler::AtlasRouter;
-use atlas_core::net::server::AtlasNetServer;
+use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
+
+use crate::rpc::handler::auth_handler::login;
+use crate::rpc::method::AuthMethod;
+use atlas_core::net::rpc::router::AtlasRouter;
+use atlas_core::net::rpc::server::AtlasNetServer;
 use tracing::info;
 
 pub async fn serve_auth(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     let mut router = AtlasRouter::new();
 
-    router.register(AuthMethod::SignIn, login);
-    router.register(AuthMethod::SignUp, |req: AtlasRequest| async move {
+    router.register(AuthMethod::Login, login);
+    router.register(AuthMethod::Register, |req: AtlasRequest| async move {
         AtlasResponse {
             id: req.id,
             slot_index: req.slot_index,

@@ -3,11 +3,10 @@ use tokio::time::sleep;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-
-use atlas_core::net::client::client_rpc::AtlasRpcClient;
-use atlas_core::net::packet::AtlasRequest;
-use atlas_core::net::router::auth::AuthMethod;
-use atlas_core::net::router::RouterMethod;
+use atlas_auth::rpc::method::AuthMethod;
+use atlas_core::net::rpc::client::client_rpc::AtlasRpcClient;
+use atlas_core::net::rpc::packet::AtlasRequest;
+use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -53,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
             let req = AtlasRequest {
                 id: 0,
                 slot_index: 0 as usize,
-                method: AuthMethod::SignIn.wire(),
+                method: AuthMethod::Login.wire(),
                 payload: vec![],
             };
             //let packet = AtlasPacket::AtlasRequest(req);

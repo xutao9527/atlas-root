@@ -1,5 +1,5 @@
-use crate::net::client::connection::AtlasConnection;
-use crate::net::packet::{AtlasRequest, AtlasResponse};
+use crate::net::rpc::client::connection::AtlasConnection;
+use crate::net::rpc::packet::{AtlasRequest, AtlasResponse};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
