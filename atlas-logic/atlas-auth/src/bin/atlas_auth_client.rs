@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
         .with_target(false)
         .init();
 
-    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 1);
+    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     client.connect().await?;
 
     let req = AtlasRequest {
@@ -39,5 +39,5 @@ async fn main() -> anyhow::Result<()> {
     loop{
         sleep(Duration::from_secs(3)).await;
     }
-    Ok(())
+    //Ok(())
 }

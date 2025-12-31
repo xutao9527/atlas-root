@@ -69,10 +69,9 @@ impl AtlasConnection {
                 }
             }
         });
+        // 等待连接成功通知!
         if !self.connected.load(Ordering::SeqCst) {
-            //eprintln!("[1]等待连接成功通知! => connect");
             self.notify_connected.notified().await;
-            //eprintln!("[1]收到连接成功通知! => connect");
         }
     }
 
@@ -90,21 +89,19 @@ impl AtlasConnection {
         self.connected.store(true, Ordering::SeqCst);                       // 标记为已连接
         self.notify_connected.notify_waiters();                                 // 通知连接成功
 
-        // let mut channel_rx = {
-        //     let mut guard = self.channel_reader.lock().await;
-        //     guard.take().expect("establish_connection called twice")
-        // };
         // ===== 写 socket =====
-        let notify_disconnected = self.notify_disconnected.clone();
-        let connected = self.connected.clone();
+        // let notify_disconnected = self.notify_disconnected.clone();
+        // let connected = self.connected.clone();
         tokio::spawn(async move {
             while let Some(packet) = channel_reader.recv().await {
                 if socket_writer.send(packet).await.is_err() {
                     break;
                 }
             }
-            connected.store(false, Ordering::SeqCst);                    // 标记为未连接
-            notify_disconnected.notify_waiters();                        // 通知连接断线
+            // 标记为未连接 并 通知连接断线
+            // if connected.swap(false, Ordering::SeqCst) {
+            //     notify_disconnected.notify_waiters();
+            // }
         });
         // ===== 读 socket =====
         let pending = self.pending.clone();
@@ -124,8 +121,10 @@ impl AtlasConnection {
                     Err(_) => break,
                 }
             }
-            connected.store(false, Ordering::SeqCst);           // 标记为未连接
-            notify_disconnected.notify_waiters();                   // 通知连接断线
+            // 标记为未连接 并 通知连接断线
+            if connected.swap(false, Ordering::SeqCst) {
+                notify_disconnected.notify_waiters();
+            }
         });
         Ok(())
     }
