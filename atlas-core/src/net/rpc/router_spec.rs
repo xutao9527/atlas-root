@@ -6,18 +6,14 @@ pub enum AtlasModuleId {
 
 }
 
-pub trait AtlasRouterModule: Copy + Eq + 'static {
-    /// 模块号（高 16 位）
-    const ID: AtlasModuleId;
-}
-
 pub trait AtlasRouterMethod: Copy + 'static {
-    type Module: AtlasRouterModule;
+    /// 所属模块（直接是 enum，不是 trait）
+    const MODULE: AtlasModuleId;
 
     fn id(self) -> u16;
 
     #[inline(always)]
     fn wire(self) -> u32 {
-        ((Self::Module::ID as u32) << 16) | self.id() as u32
+        ((Self::MODULE as u32) << 16) | self.id() as u32
     }
 }
