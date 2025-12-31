@@ -1,5 +1,4 @@
 use crate::net::rpc::client::pending::PendingTable;
-use crate::net::rpc::codec_rmp::MsgPackCodec as Codec;
 use crate::net::rpc::packet::{AtlasPacket, AtlasRawRequest, AtlasRawResponse, AtlasResponse};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
@@ -11,6 +10,7 @@ use tokio::sync::{Mutex, Notify, mpsc};
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
+use crate::net::rpc::codec_rmp::MsgPackCodec;
 
 pub struct AtlasConnection {
     addr: String,
@@ -77,7 +77,7 @@ impl AtlasConnection {
 
     pub async fn establish_connection(&self) -> anyhow::Result<()> {
         let stream = TcpStream::connect(&self.addr).await?;
-        let framed = Framed::new(stream, Codec::<AtlasPacket>::default());
+        let framed = Framed::new(stream, MsgPackCodec::<AtlasPacket>::default());
         let (mut socket_writer, mut socket_reader) = framed.split();
 
         let (channel_writer, mut channel_reader) = mpsc::channel::<AtlasPacket>(100 * 1024);
