@@ -3,7 +3,7 @@ use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
 use atlas_auth::rpc::method::AuthMethod;
-use atlas_core::net::rpc::client::client_rpc::AtlasRpcClient;
+use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet::AtlasRequest;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 

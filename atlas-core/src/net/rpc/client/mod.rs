@@ -1,3 +1,3 @@
-pub mod client_rpc;
+pub mod client;
 mod pending;
 mod connection;

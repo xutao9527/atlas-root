@@ -4,7 +4,7 @@ use tokio::time::sleep;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use atlas_auth::rpc::method::AuthMethod;
-use atlas_core::net::rpc::client::client_rpc::AtlasRpcClient;
+use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet::AtlasRequest;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 
