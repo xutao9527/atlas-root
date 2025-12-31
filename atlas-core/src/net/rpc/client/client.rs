@@ -31,7 +31,7 @@ impl AtlasRpcClient {
         Ok(())
     }
 
-    pub async fn call_cb<F: FnOnce(AtlasRawResponse) + Send + 'static>(&mut self, mut req: AtlasRawRequest, callback: F) {
+    pub async fn call_cb<F: FnOnce(AtlasRawResponse) + Send + 'static>(& self, mut req: AtlasRawRequest, callback: F) {
         let req_id = self.next_req_id.fetch_add(1, Ordering::Relaxed);
         req.id = req_id;
         let idx = (req_id as usize) % self.connections.len();
