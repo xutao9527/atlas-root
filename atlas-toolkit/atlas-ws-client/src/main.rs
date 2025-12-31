@@ -2,7 +2,6 @@ mod cmd_context;
 mod ws_client;
 
 use crate::cmd_context::CmdContext;
-use futures_util::{SinkExt, StreamExt};
 
 #[tokio::main]
 async fn main() {

@@ -56,12 +56,9 @@ dependencies = [
  "anyhow",
  "atlas-core",
  "axum",
- "bytes",
  "futures-util",
- "reqwest",
  "rmp-serde",
  "tokio",
- "tokio-tungstenite",
  "tracing",
  "tracing-subscriber",
 ]
@@ -83,6 +80,7 @@ version = "0.1.0"
 name = "atlas-ws-client"
 version = "0.1.0"
 dependencies = [
+ "atlas-auth",
  "atlas-core",
  "bytes",
  "futures-util",

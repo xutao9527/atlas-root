@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 # local
 atlas-core = { workspace = true }
+atlas-auth = { workspace = true }
 
 # runtime
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

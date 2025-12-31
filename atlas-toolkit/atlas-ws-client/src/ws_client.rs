@@ -1,11 +1,11 @@
-use std::sync::Arc;
 use bytes::Bytes;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
+use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
-use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 
 pub struct WsClient{
     ws_write: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
@@ -42,6 +42,10 @@ impl WsClient {
                 match msg {
                     Ok(Message::Text(text)) => {
                         println!("Received: {}", text);
+                    }
+                    Ok(Message::Binary(_bin)) => {
+
+
                     }
                     Ok(Message::Close(_)) => {
                         println!("Server closed connection");
