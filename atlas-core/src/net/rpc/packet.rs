@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use serde::{Serialize, Deserialize};
 use serde::de::DeserializeOwned;
 
@@ -7,8 +8,8 @@ pub enum AtlasPacket {
     AtlasResponse(AtlasRawResponse),
 }
 
-pub type AtlasRawRequest = AtlasRequest<Vec<u8>>;
-pub type AtlasRawResponse = AtlasResponse<Vec<u8>>;
+pub type AtlasRawRequest = AtlasRequest<Bytes>;
+pub type AtlasRawResponse = AtlasResponse<Bytes>;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AtlasRequest<T> {
@@ -23,13 +24,13 @@ where
     T: Serialize + DeserializeOwned,
 {
     pub fn from_raw(raw: AtlasRawRequest) -> Result<Self, String> {
-        let payload = rmp_serde::from_slice(&raw.payload)
+        let payload = rmp_serde::from_slice(&raw.payload.as_ref())
             .map_err(|e| e.to_string())?;
 
         Ok(Self {
             id: raw.id,
             slot_index: raw.slot_index,
-            method:raw.method,
+            method: raw.method,
             payload,
         })
     }
@@ -42,7 +43,7 @@ where
             id: self.id,
             slot_index: self.slot_index,
             method: self.method,
-            payload,
+            payload: Bytes::from(payload),
         })
     }
 }
@@ -60,13 +61,13 @@ where
     T: Serialize + DeserializeOwned,
 {
     pub fn from_raw(raw: AtlasRawResponse) -> Result<Self, String> {
-        let payload = rmp_serde::from_slice(&raw.payload)
+        let payload = rmp_serde::from_slice(&raw.payload.as_ref())
             .map_err(|e| e.to_string())?;
-    
+
         Ok(Self {
             id: raw.id,
             slot_index: raw.slot_index,
-            payload: payload,
+            payload,
             error:raw.error,
         })
     }
@@ -77,7 +78,7 @@ where
         AtlasRawResponse {
             id: self.id,
             slot_index: self.slot_index,
-            payload,
+            payload: Bytes::from(payload), // 👈 只拷一次
             error: self.error,
         }
     }

@@ -5,6 +5,7 @@ use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+use bytes::Bytes;
 use tokio::net::TcpStream;
 use tokio::sync::{Mutex, Notify, mpsc};
 use tokio::time::sleep;
@@ -53,7 +54,7 @@ impl AtlasConnection {
                             let resp = AtlasResponse {
                                 id: slot.request_id,
                                 slot_index: usize::MAX,
-                                payload: Vec::new(),
+                                payload: Bytes::new(),
                                 error: Some("connection closed".into()),
                             };
                             (slot.callback)(resp);
@@ -140,7 +141,7 @@ impl AtlasConnection {
             let resp = AtlasResponse {
                 id: req.id,
                 slot_index: usize::MAX,
-                payload: Vec::new(),
+                payload: Bytes::new(),
                 error: Some("connection closed".into()),
             };
             callback(resp);

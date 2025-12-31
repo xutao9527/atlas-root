@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
+use bytes::Bytes;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use crate::net::rpc::packet::{AtlasRawRequest, AtlasRawResponse, AtlasRequest, AtlasResponse};
@@ -31,6 +32,7 @@ where
     let f = Arc::new(f);
     move |raw: AtlasRawRequest| {
         let f = Arc::clone(&f);
+
         Box::pin(async move {
             let req = match AtlasRequest::<Req>::from_raw(raw.clone()) {
                 Ok(r) => r,
@@ -38,7 +40,7 @@ where
                     return AtlasRawResponse {
                         id: raw.id,
                         slot_index: raw.slot_index,
-                        payload: Vec::new(),
+                        payload: Bytes::new(),
                         error: Some(e),
                     };
                 }
@@ -74,7 +76,7 @@ impl AtlasRouter {
             None => AtlasResponse {
                 id: req.id,
                 slot_index: req.slot_index,
-                payload: Vec::new(),
+                payload: Bytes::new(),
                 error: Some("method not found".into()),
             },
         }
