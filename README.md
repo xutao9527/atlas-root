@@ -13,32 +13,20 @@
         v                                           |
 +-----------------+                                 |
 |   atlas-logic   |---------------------------------+
-| (游戏/IM等服务) |
+| (业务逻辑服务)  |
 +-----------------+
         |
-        v
-+-----------------+
-|   atlas-gate    |
-|   网关服务      |
-+-----------------+
-        |
-        | WebSocket + MsgPack
-        v
-      Client
         |
         | TCP + MsgPack
-        v
-+-----------------+
-|   Game Server   |
-| (atlas-logic模块)|
-+-----------------+
-        |
-        | TCP + MsgPack
-        v
-+-----------------+
-|   atlas-gate    |
-|   网关服务      |
-+-----------------+
+        | 
+        v       
++-------------------------------+
+|        | tcp dispatch MsgPack |
+|        |                      |
+|   atlas client                |
+|        | WebSocket + MsgPacke |
+|        |  网关服务(atlas-gate) |
++-------------------------------+
         |
         | WebSocket + MsgPack
         v
