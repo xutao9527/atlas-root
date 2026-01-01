@@ -35,5 +35,5 @@ parking_lot = "0.12"
 slab = "0.4"
 
 # client common
-reqwest = "0.12"
+reqwest = "0.13"
 tokio-tungstenite = "0.28"
