@@ -1,0 +1,11 @@
+[package]
+name = "atlas-scheme"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# local
+atlas-core = { workspace = true }
+
+sea-orm = { workspace = true }
+serde = { workspace = true, features = ["derive","rc"] }

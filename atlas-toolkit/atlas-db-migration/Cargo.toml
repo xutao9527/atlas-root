@@ -1,0 +1,10 @@
+[package]
+name = "atlas-db-migration"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap =  { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+sea-orm-migration = { workspace = true, features = ["sqlx-mysql", "runtime-tokio-rustls"] }
+sea-orm-cli = { workspace = true }

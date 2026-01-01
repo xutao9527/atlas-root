@@ -2,13 +2,12 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
-use atlas_auth::rpc::auth_model::{LoginReq, LoginResp};
 
-use atlas_auth::rpc::method::AuthMethod;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-
 use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
+use atlas_scheme::module_methods::AuthMethod;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -1,14 +1,12 @@
-use std::time::Duration;
-use tokio::time::sleep;
-
-
-use atlas_auth::rpc::method::AuthMethod;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet::AtlasRequest;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::module_methods::AuthMethod;
 use std::sync::Arc;
-use atlas_auth::rpc::auth_model::LoginReq;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Duration;
+use tokio::time::sleep;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -55,18 +53,20 @@ async fn main() -> anyhow::Result<()> {
                 id: 0,
                 slot_index: 0 as usize,
                 method: AuthMethod::Login.wire(),
-                payload: LoginReq{
+                payload: LoginReq {
                     account: "111".to_string(),
                     password: "2222".to_string(),
                 },
             };
 
-            client.call_cb(req.into_raw().unwrap(), move |_resp| {
-                _success.fetch_add(1, Ordering::Relaxed);
-                _recv.fetch_add(1, Ordering::Relaxed);
-                //let _resp = AtlasResponse::<LoginResp>::from_raw(_resp);
-                //println!("callback {:?}", resp);
-            }).await;
+            client
+                .call_cb(req.into_raw().unwrap(), move |_resp| {
+                    _success.fetch_add(1, Ordering::Relaxed);
+                    _recv.fetch_add(1, Ordering::Relaxed);
+                    //let _resp = AtlasResponse::<LoginResp>::from_raw(_resp);
+                    //println!("callback {:?}", resp);
+                })
+                .await;
             sent.fetch_add(1, Ordering::Relaxed);
             // 每 _batch_size 个请求暂停 1 秒
             // if (i + 1) % batch_size == 0 {

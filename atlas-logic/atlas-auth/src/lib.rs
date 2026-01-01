@@ -3,10 +3,11 @@ pub mod rpc;
 use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
 
 use rpc::auth_handler::login;
-use crate::rpc::method::AuthMethod;
+
 use atlas_core::net::rpc::router::{adapter_handler, AtlasRouter};
 use atlas_core::net::rpc::server::AtlasNetServer;
 use tracing::info;
+use atlas_scheme::module_methods::AuthMethod;
 
 pub async fn serve_auth(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     let mut router = AtlasRouter::new();

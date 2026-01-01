@@ -2,10 +2,10 @@ use crate::ws_client::WsClient;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
-use atlas_auth::rpc::auth_model::LoginReq;
-use atlas_auth::rpc::method::AuthMethod;
 use atlas_core::net::rpc::packet::{AtlasPacket, AtlasRequest};
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
+use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::module_methods::AuthMethod;
 
 pub struct CmdContext {
     pub ws_server_addr: String,
@@ -86,7 +86,7 @@ impl CmdContext {
                         id: 0,
                         slot_index: 0 as usize,
                         method: AuthMethod::Login.wire(),
-                        payload: LoginReq{
+                        payload: LoginReq {
                             account: account.to_string(),
                             password: password.to_string(),
                         },
