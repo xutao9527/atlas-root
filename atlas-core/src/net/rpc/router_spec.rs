@@ -7,17 +7,12 @@ pub enum AtlasModuleId {
 
 impl AtlasModuleId {
     #[inline]
-    fn from_u16(v: u16) -> Option<Self> {
-        match v {
+    pub fn from_wire(wire: u32) -> Option<Self> {
+        match (wire >> 16) as u16 {
             1 => Some(Self::Auth),
             2 => Some(Self::Chat),
             _ => None,
         }
-    }
-    
-    #[inline]
-    pub fn from_wire(wire: u32) -> Option<Self> {
-        Self::from_u16((wire >> 16) as u16)
     }
 }
 
