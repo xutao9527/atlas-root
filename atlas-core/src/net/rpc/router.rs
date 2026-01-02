@@ -63,7 +63,7 @@ impl AtlasRouter {
         Self::default()
     }
 
-    pub fn register<M, H>(&mut self, method: M, handler: H)
+    pub fn register<M, H>(&mut self, _method: M, handler: H)
     where
         M: AtlasRouterMethod,
         H: AsyncHandler,
