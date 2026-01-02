@@ -1,27 +1,25 @@
 #[macro_export]
 macro_rules! atlas_methods {
     (
-        module $enum_name:ident = $module_id:path {
+        module $mod_name:ident {
+            module_id = $module_id:expr;
             $(
-                $method:ident = $value:expr
+                $method_ty:ident = $method_id:expr
             ),* $(,)?
         }
     ) => {
-        #[repr(u16)]
-        #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-        pub enum $enum_name {
+        pub mod $mod_name {
+            use super::*;
+
             $(
-                $method = $value,
+                #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+                pub struct $method_ty;
+
+                impl $crate::AtlasRouterMethod for $method_ty {
+                    const MODULE_ID: $crate::AtlasModuleId = $module_id;
+                    const METHOD_ID: u16 = $method_id;
+                }
             )*
-        }
-
-        impl $crate::AtlasRouterMethod for $enum_name {
-            const MODULE: $crate::AtlasModuleId = $module_id;
-
-            #[inline(always)]
-            fn id(self) -> u16 {
-                self as u16
-            }
         }
     };
 }

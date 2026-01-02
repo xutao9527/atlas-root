@@ -8,7 +8,7 @@ use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_methods::AuthMethod;
+use atlas_scheme::module_methods::{auth};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     let req = AtlasWireRequest {
         id: 0,
         slot_index: 0 as usize,
-        method: AuthMethod::Login.wire(),
+        method: auth::Login::WIRE,
         payload: LoginReq{
             account: "111".to_string(),
             password: "2222".to_string(),

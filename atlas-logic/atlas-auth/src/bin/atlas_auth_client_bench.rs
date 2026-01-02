@@ -1,7 +1,7 @@
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_methods::AuthMethod;
+use atlas_scheme::module_methods::{auth};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
             let req = AtlasWireRequest {
                 id: 0,
                 slot_index: 0 as usize,
-                method: AuthMethod::Login.wire(),
+                method: auth::Login::WIRE,
                 payload: LoginReq {
                     account: "111".to_string(),
                     password: "2222".to_string(),

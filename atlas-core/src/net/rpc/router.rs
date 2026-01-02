@@ -68,7 +68,7 @@ impl AtlasRouter {
         M: AtlasRouterMethod,
         H: AsyncHandler,
     {
-        self.routes.insert(method.wire(), Arc::new(handler));
+        self.routes.insert(M::WIRE, Arc::new(handler));
     }
 
     /// 分发（异步）

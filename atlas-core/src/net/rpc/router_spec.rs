@@ -17,13 +17,8 @@ impl AtlasModuleId {
 }
 
 pub trait AtlasRouterMethod: Copy + 'static {
-    /// 所属模块（直接是 enum，不是 trait）
-    const MODULE: AtlasModuleId;
-
-    fn id(self) -> u16;
-
-    #[inline(always)]
-    fn wire(self) -> u32 {
-        ((Self::MODULE as u32) << 16) | self.id() as u32
-    }
+    const MODULE_ID: AtlasModuleId;
+    const METHOD_ID: u16;
+    const WIRE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::METHOD_ID as u32);
 }
+
