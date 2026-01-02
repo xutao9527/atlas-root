@@ -299,7 +299,10 @@ dependencies = [
  "anyhow",
  "atlas-core",
  "atlas-scheme",
+ "futures",
+ "serde",
  "tokio",
+ "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]

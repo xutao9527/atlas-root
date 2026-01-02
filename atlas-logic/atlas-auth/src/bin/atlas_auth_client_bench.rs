@@ -1,6 +1,6 @@
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_methods::{auth};
+// use atlas_scheme::module_methods::{auth};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
@@ -45,34 +45,34 @@ async fn main() -> anyhow::Result<()> {
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     let _batch_size = 100;
     if let Ok(_) = client.connect().await {
-        for _i in 0..total_requests {
-            let _success = success.clone();
-            let _fail = fail.clone();
-            let _recv = recv.clone();
-            let req = AtlasWireRequest {
-                id: 0,
-                slot_index: 0 as usize,
-                method: auth::Login::WIRE,
-                payload: LoginReq {
-                    account: "111".to_string(),
-                    password: "2222".to_string(),
-                },
-            };
-
-            client
-                .call_cb(req.into_raw().unwrap(), move |_resp| {
-                    _success.fetch_add(1, Ordering::Relaxed);
-                    _recv.fetch_add(1, Ordering::Relaxed);
-                    //let _resp = AtlasResponse::<LoginResp>::from_raw(_resp);
-                    //println!("callback {:?}", resp);
-                })
-                .await;
-            sent.fetch_add(1, Ordering::Relaxed);
-            // 每 _batch_size 个请求暂停 1 秒
-            // if (i + 1) % batch_size == 0 {
-            //     tokio::time::sleep(Duration::from_millis(10)).await;
-            // }
-        }
+        // for _i in 0..total_requests {
+        //     let _success = success.clone();
+        //     let _fail = fail.clone();
+        //     let _recv = recv.clone();
+        //     let req = AtlasWireRequest {
+        //         id: 0,
+        //         slot_index: 0 as usize,
+        //         method: auth::Login::WIRE,
+        //         payload: LoginReq {
+        //             account: "111".to_string(),
+        //             password: "2222".to_string(),
+        //         },
+        //     };
+        //
+        //     client
+        //         .call_cb(req.into_raw().unwrap(), move |_resp| {
+        //             _success.fetch_add(1, Ordering::Relaxed);
+        //             _recv.fetch_add(1, Ordering::Relaxed);
+        //             //let _resp = AtlasResponse::<LoginResp>::from_raw(_resp);
+        //             //println!("callback {:?}", resp);
+        //         })
+        //         .await;
+        //     sent.fetch_add(1, Ordering::Relaxed);
+        //     // 每 _batch_size 个请求暂停 1 秒
+        //     // if (i + 1) % batch_size == 0 {
+        //     //     tokio::time::sleep(Duration::from_millis(10)).await;
+        //     // }
+        // }
     }
     loop {
         sleep(Duration::from_secs(60)).await;

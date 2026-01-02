@@ -8,7 +8,7 @@ use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 use atlas_core::net::rpc::router_spec::AtlasMethodSpec;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_methods::{auth};
+// use atlas_scheme::module_methods::{auth};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,22 +22,22 @@ async fn main() -> anyhow::Result<()> {
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     client.connect().await?;
 
-    let req = AtlasWireRequest {
-        id: 0,
-        slot_index: 0 as usize,
-        method: auth::Login::WIRE,
-        payload: LoginReq{
-            account: "111".to_string(),
-            password: "2222".to_string(),
-        },
-    };
+    // let req = AtlasWireRequest {
+    //     id: 0,
+    //     slot_index: 0 as usize,
+    //     method: auth::Login::WIRE,
+    //     payload: LoginReq{
+    //         account: "111".to_string(),
+    //         password: "2222".to_string(),
+    //     },
+    // };
 
-    client.call_cb(req.into_raw().unwrap(),|resp| {
-        let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-        info!("callback {:?}", resp);
-    }).await;
-    loop{
-        sleep(Duration::from_secs(3)).await;
-    }
-    //Ok(())
+    // client.call_cb(req.into_raw().unwrap(),|resp| {
+    //     let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
+    //     info!("callback {:?}", resp);
+    // }).await;
+    // loop{
+    //     sleep(Duration::from_secs(3)).await;
+    // }
+    Ok(())
 }

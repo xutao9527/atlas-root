@@ -1,3 +1,9 @@
+use crate::net::rpc::packet_request::{AtlasRawRequest, AtlasWireRequest};
+use crate::net::rpc::packet_response::{AtlasRawResponse, AtlasWireResponse};
+use bytes::Bytes;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum AtlasModuleId {
@@ -20,5 +26,7 @@ pub trait AtlasMethodSpec: Copy + 'static {
     const MODULE_ID: AtlasModuleId;
     const METHOD_ID: u16;
     const WIRE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::METHOD_ID as u32);
+    type Request: Serialize + DeserializeOwned + Send + 'static;
+    type Response: Serialize + DeserializeOwned + Send + 'static;
 }
 

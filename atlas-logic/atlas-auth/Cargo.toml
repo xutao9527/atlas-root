@@ -15,3 +15,7 @@ tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
 anyhow = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+
+tokio-util = { workspace = true, features = ["codec"] }
+futures = { workspace = true }
