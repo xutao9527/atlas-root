@@ -300,10 +300,7 @@ dependencies = [
  "atlas-core",
  "atlas-scheme",
  "bytes",
- "futures",
- "serde",
  "tokio",
- "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]
