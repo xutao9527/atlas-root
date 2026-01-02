@@ -1,5 +1,5 @@
 use crate::net::rpc::client::pending::PendingTable;
-use crate::net::rpc::packet_definition::{AtlasPacket};
+use crate::net::rpc::packet::{AtlasPacket};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
