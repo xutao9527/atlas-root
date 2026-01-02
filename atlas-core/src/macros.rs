@@ -15,7 +15,7 @@ macro_rules! atlas_methods {
                 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
                 pub struct $method_ty;
 
-                impl $crate::AtlasRouterMethod for $method_ty {
+                impl $crate::AtlasMethodSpec for $method_ty {
                     const MODULE_ID: $crate::AtlasModuleId = $module_id;
                     const METHOD_ID: u16 = $method_id;
                 }

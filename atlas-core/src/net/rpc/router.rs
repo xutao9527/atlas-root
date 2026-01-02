@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::net::rpc::packet_request::{AtlasRawRequest, AtlasWireRequest};
 use crate::net::rpc::packet_response::{AtlasRawResponse,AtlasWireResponse};
-use crate::net::rpc::router_spec::AtlasRouterMethod;
+use crate::net::rpc::router_spec::{AtlasMethodSpec};
 
 
 pub trait AsyncHandler: Send + Sync + 'static {
@@ -65,7 +65,7 @@ impl AtlasRouter {
 
     pub fn register<M, H>(&mut self, _method: M, handler: H)
     where
-        M: AtlasRouterMethod,
+        M: AtlasMethodSpec,
         H: AsyncHandler,
     {
         self.routes.insert(M::WIRE, Arc::new(handler));

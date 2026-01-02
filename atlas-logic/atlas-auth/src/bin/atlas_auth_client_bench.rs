@@ -1,11 +1,11 @@
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 use atlas_scheme::dto::auth_model::LoginReq;
 use atlas_scheme::module_methods::{auth};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
+use atlas_core::AtlasMethodSpec;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]

@@ -6,7 +6,7 @@ use tracing_subscriber::fmt::time::LocalTime;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::net::rpc::packet_response::AtlasWireResponse;
-use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
+use atlas_core::net::rpc::router_spec::AtlasMethodSpec;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_methods::{auth};
 

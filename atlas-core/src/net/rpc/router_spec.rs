@@ -16,7 +16,7 @@ impl AtlasModuleId {
     }
 }
 
-pub trait AtlasRouterMethod: Copy + 'static {
+pub trait AtlasMethodSpec: Copy + 'static {
     const MODULE_ID: AtlasModuleId;
     const METHOD_ID: u16;
     const WIRE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::METHOD_ID as u32);
