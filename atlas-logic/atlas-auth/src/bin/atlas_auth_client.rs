@@ -2,13 +2,12 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
-
+use atlas_core::AtlasMethodSpec;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::net::rpc::packet_response::AtlasWireResponse;
-use atlas_core::net::rpc::router_spec::AtlasMethodSpec;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-// use atlas_scheme::module_methods::{auth};
+use atlas_scheme::module_method::auth_method;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -19,25 +18,25 @@ async fn main() -> anyhow::Result<()> {
         .with_target(false)
         .init();
 
-    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
+    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 1);
     client.connect().await?;
 
-    // let req = AtlasWireRequest {
-    //     id: 0,
-    //     slot_index: 0 as usize,
-    //     method: auth::Login::WIRE,
-    //     payload: LoginReq{
-    //         account: "111".to_string(),
-    //         password: "2222".to_string(),
-    //     },
-    // };
+    let req = AtlasWireRequest {
+        id: 0,
+        slot_index: 0usize,
+        method: auth_method::Login::WIRE,
+        payload: LoginReq{
+            account: "1111".to_string(),
+            password: "2222".to_string(),
+        },
+    };
 
-    // client.call_cb(req.into_raw().unwrap(),|resp| {
-    //     let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-    //     info!("callback {:?}", resp);
-    // }).await;
+    client.call_cb(req.into_raw().unwrap(),|resp| {
+        let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
+        info!("callback {:?}", resp);
+    }).await;
     // loop{
-    //     sleep(Duration::from_secs(3)).await;
+        sleep(Duration::from_secs(3)).await;
     // }
     Ok(())
 }

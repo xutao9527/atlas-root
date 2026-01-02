@@ -299,6 +299,7 @@ dependencies = [
  "anyhow",
  "atlas-core",
  "atlas-scheme",
+ "bytes",
  "futures",
  "serde",
  "tokio",

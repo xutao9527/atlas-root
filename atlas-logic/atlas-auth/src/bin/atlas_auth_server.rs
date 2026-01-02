@@ -1,5 +1,7 @@
-use atlas_auth::serve_auth;
+
 use tracing_subscriber::fmt::time::LocalTime;
+use atlas_auth::module_dispatch::auth_bind::dispatch;
+use atlas_core::net::rpc::server::AtlasNetServer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -9,5 +11,8 @@ async fn main() -> anyhow::Result<()> {
         .with_max_level(tracing::Level::DEBUG)
         .with_target(false)
         .init();
-    Ok(serve_auth("0.0.0.0".into(), "5566".into()).await?)
+    let serve_addr = format!("{}:{}", "0.0.0.0", "5566");
+    let server = AtlasNetServer::new(serve_addr, dispatch);
+    server.run().await?;
+    Ok(())
 }

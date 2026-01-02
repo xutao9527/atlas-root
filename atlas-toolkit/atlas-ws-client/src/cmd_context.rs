@@ -6,7 +6,8 @@ use atlas_core::AtlasMethodSpec;
 use atlas_core::net::rpc::packet::AtlasPacket;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_scheme::dto::auth_model::LoginReq;
-// use atlas_scheme::module_methods::auth;
+use atlas_scheme::module_method::auth_method;
+
 
 pub struct CmdContext {
     pub ws_server_addr: String,
@@ -82,21 +83,21 @@ impl CmdContext {
                 }
             },
             ["api","login",account, password] => {
-                // if let Some(client) = &self.client {
-                //     let req = AtlasWireRequest {
-                //         id: 0,
-                //         slot_index: 0 as usize,
-                //         method: auth::Login::WIRE,
-                //         payload: LoginReq {
-                //             account: account.to_string(),
-                //             password: password.to_string(),
-                //         },
-                //     };
-                //     let raw_req = req.into_raw().unwrap();
-                //     let packet = AtlasPacket::AtlasRequest(raw_req);
-                //     let buf = rmp_serde::to_vec(&packet).unwrap();
-                //     client.send_byte(buf).await;
-                // }
+                if let Some(client) = &self.client {
+                    let req = AtlasWireRequest {
+                        id: 0,
+                        slot_index: 0 as usize,
+                        method: auth_method::Login::WIRE,
+                        payload: LoginReq {
+                            account: account.to_string(),
+                            password: password.to_string(),
+                        },
+                    };
+                    let raw_req = req.into_raw().unwrap();
+                    let packet = AtlasPacket::AtlasRequest(raw_req);
+                    let buf = rmp_serde::to_vec(&packet).unwrap();
+                    client.send_byte(buf).await;
+                }
             }
             _ => {}
         }

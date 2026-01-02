@@ -1,0 +1,11 @@
+use atlas_core::atlas_method;
+use atlas_core::net::rpc::router_spec::AtlasModuleId;
+use crate::dto::auth_model::*;
+
+atlas_method! {
+    module auth_method {
+        module_id = AtlasModuleId::Auth;
+        Register = (1, RegisterReq, RegisterResp),
+        Login = (2, LoginReq, LoginResp),
+    }
+}

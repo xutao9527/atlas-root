@@ -1,7 +1,6 @@
-
-use serde::{Deserialize, Serialize};
 use crate::net::rpc::packet_request::AtlasRawRequest;
 use crate::net::rpc::packet_response::AtlasRawResponse;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum AtlasPacket {
