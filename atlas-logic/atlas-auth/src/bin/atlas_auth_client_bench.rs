@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
-use atlas_core::net::rpc::packet_request::AtlasRequest;
+use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -49,7 +49,7 @@ async fn main() -> anyhow::Result<()> {
             let _success = success.clone();
             let _fail = fail.clone();
             let _recv = recv.clone();
-            let req = AtlasRequest {
+            let req = AtlasWireRequest {
                 id: 0,
                 slot_index: 0 as usize,
                 method: AuthMethod::Login.wire(),

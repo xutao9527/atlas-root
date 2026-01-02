@@ -4,8 +4,8 @@ use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
 
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet_request::AtlasRequest;
-use atlas_core::net::rpc::packet_response::AtlasResponse;
+use atlas_core::net::rpc::packet_request::AtlasWireRequest;
+use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_methods::AuthMethod;
@@ -22,7 +22,7 @@ async fn main() -> anyhow::Result<()> {
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     client.connect().await?;
 
-    let req = AtlasRequest {
+    let req = AtlasWireRequest {
         id: 0,
         slot_index: 0 as usize,
         method: AuthMethod::Login.wire(),
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     client.call_cb(req.into_raw().unwrap(),|resp| {
-        let resp = AtlasResponse::<LoginResp>::from_raw(resp);
+        let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
         info!("callback {:?}", resp);
     }).await;
     loop{
