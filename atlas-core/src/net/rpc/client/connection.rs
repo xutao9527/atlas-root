@@ -1,5 +1,5 @@
 use crate::net::rpc::client::pending::PendingTable;
-use crate::net::rpc::packet::{AtlasPacket, AtlasRawRequest, AtlasRawResponse, AtlasResponse};
+use crate::net::rpc::packet_definition::{AtlasPacket};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -11,6 +11,8 @@ use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
 use crate::net::rpc::codec_rmp::MsgPackCodec;
+use crate::net::rpc::packet_request::AtlasRawRequest;
+use crate::net::rpc::packet_response::{AtlasRawResponse, AtlasResponse};
 
 pub struct AtlasConnection {
     addr: String,

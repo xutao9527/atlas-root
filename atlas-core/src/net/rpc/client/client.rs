@@ -1,8 +1,9 @@
 use crate::net::rpc::client::connection::AtlasConnection;
-use crate::net::rpc::packet::{AtlasRawRequest, AtlasRawResponse};
+
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-
+use crate::net::rpc::packet_request::AtlasRawRequest;
+use crate::net::rpc::packet_response::AtlasRawResponse;
 
 pub struct AtlasRpcClient {
     addr: String,

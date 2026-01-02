@@ -1,4 +1,5 @@
-use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
+use atlas_core::net::rpc::packet_request::AtlasRequest;
+use atlas_core::net::rpc::packet_response::AtlasResponse;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 
 pub async fn login(request: AtlasRequest<LoginReq>) -> AtlasResponse<LoginResp> {

@@ -4,7 +4,9 @@ use std::sync::Arc;
 use bytes::Bytes;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use crate::net::rpc::packet::{AtlasRawRequest, AtlasRawResponse, AtlasRequest, AtlasResponse};
+
+use crate::net::rpc::packet_request::{AtlasRawRequest, AtlasRequest};
+use crate::net::rpc::packet_response::{AtlasRawResponse,AtlasResponse};
 use crate::net::rpc::router_spec::AtlasRouterMethod;
 
 

@@ -1,5 +1,5 @@
 
-use crate::net::rpc::packet::AtlasPacket;
+use crate::net::rpc::packet_definition::AtlasPacket;
 
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;

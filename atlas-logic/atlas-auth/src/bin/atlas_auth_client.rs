@@ -4,7 +4,8 @@ use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
 
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet::{AtlasRequest, AtlasResponse};
+use atlas_core::net::rpc::packet_request::AtlasRequest;
+use atlas_core::net::rpc::packet_response::AtlasResponse;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_methods::AuthMethod;
