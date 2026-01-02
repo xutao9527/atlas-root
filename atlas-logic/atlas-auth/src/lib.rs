@@ -1,7 +1,7 @@
 pub mod rpc;
 
-use atlas_core::net::rpc::packet_request::AtlasRequest;
-use atlas_core::net::rpc::packet_response::AtlasResponse;
+use atlas_core::net::rpc::packet_request::AtlasWireRequest;
+use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 use atlas_core::net::rpc::router::{AtlasRouter, adapter_handler};
 use atlas_core::net::rpc::server::AtlasNetServer;
 use atlas_scheme::module_methods::AuthMethod;
@@ -14,8 +14,8 @@ pub async fn serve_auth(bind_addr: String, bind_port: String) -> anyhow::Result<
     router.register(AuthMethod::Login, adapter_handler(login));
     router.register(
         AuthMethod::Register,
-        adapter_handler(|req: AtlasRequest<Vec<u8>>| async move {
-            AtlasResponse {
+        adapter_handler(|req: AtlasWireRequest<Vec<u8>>| async move {
+            AtlasWireResponse {
                 id: req.id,
                 slot_index: req.slot_index,
                 payload: b"SignUp OK".to_vec(),

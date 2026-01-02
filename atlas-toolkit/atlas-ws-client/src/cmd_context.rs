@@ -3,7 +3,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
 use atlas_core::net::rpc::packet_definition::AtlasPacket;
-use atlas_core::net::rpc::packet_request::AtlasRequest;
+use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::net::rpc::router_spec::AtlasRouterMethod;
 use atlas_scheme::dto::auth_model::LoginReq;
 use atlas_scheme::module_methods::AuthMethod;
@@ -83,7 +83,7 @@ impl CmdContext {
             },
             ["api","login",account, password] => {
                 if let Some(client) = &self.client {
-                    let req = AtlasRequest {
+                    let req = AtlasWireRequest {
                         id: 0,
                         slot_index: 0 as usize,
                         method: AuthMethod::Login.wire(),

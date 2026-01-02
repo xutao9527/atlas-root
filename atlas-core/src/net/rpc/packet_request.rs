@@ -3,17 +3,17 @@ use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 
 
-pub type AtlasRawRequest = AtlasRequest<Bytes>;
+pub type AtlasRawRequest = AtlasWireRequest<Bytes>;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AtlasRequest<T> {
+pub struct AtlasWireRequest<T> {
     pub id: u64,
     pub slot_index: usize,
     pub method: u32,
     pub payload: T,
 }
 
-impl<T> AtlasRequest<T>
+impl<T> AtlasWireRequest<T>
 where
     T: Serialize + DeserializeOwned,
 {

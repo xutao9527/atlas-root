@@ -12,7 +12,7 @@ use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
 use crate::net::rpc::codec_rmp::MsgPackCodec;
 use crate::net::rpc::packet_request::AtlasRawRequest;
-use crate::net::rpc::packet_response::{AtlasRawResponse, AtlasResponse};
+use crate::net::rpc::packet_response::{AtlasRawResponse, AtlasWireResponse};
 
 pub struct AtlasConnection {
     addr: String,
@@ -52,7 +52,7 @@ impl AtlasConnection {
                             debug!("[2]收到断开连接通知! => connect_loop");
                         }
                         this.pending.drain(|slot| {
-                            let resp = AtlasResponse {
+                            let resp = AtlasWireResponse {
                                 id: slot.request_id,
                                 slot_index: usize::MAX,
                                 payload: Bytes::new(),
@@ -138,7 +138,7 @@ impl AtlasConnection {
         callback: F,
     ) {
         if !self.connected.load(Ordering::Acquire) {
-            let resp = AtlasResponse {
+            let resp = AtlasWireResponse {
                 id: req.id,
                 slot_index: usize::MAX,
                 payload: Bytes::new(),

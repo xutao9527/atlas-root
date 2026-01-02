@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use atlas_core::net::rpc::packet_definition::AtlasPacket;
-use atlas_core::net::rpc::packet_response::AtlasResponse;
+use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 use atlas_scheme::dto::auth_model::LoginResp;
 
 pub struct WsClient{
@@ -53,7 +53,7 @@ impl WsClient {
                                 println!("ws client Received : {:?}", req);
                             }
                             AtlasPacket::AtlasResponse(resp) => {
-                                let resp = AtlasResponse::<LoginResp>::from_raw(resp);
+                                let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
                                 println!("ws client Received : {:?}", resp);
                             }
                         }

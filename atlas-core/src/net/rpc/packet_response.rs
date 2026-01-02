@@ -2,17 +2,17 @@ use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 
-pub type AtlasRawResponse = AtlasResponse<Bytes>;
+pub type AtlasRawResponse = AtlasWireResponse<Bytes>;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AtlasResponse<T> {
+pub struct AtlasWireResponse<T> {
     pub id: u64,
     pub slot_index: usize,
     pub payload: T,
     pub error: Option<String>,
 }
 
-impl<T> AtlasResponse<T>
+impl<T> AtlasWireResponse<T>
 where
     T: Serialize + DeserializeOwned,
 {

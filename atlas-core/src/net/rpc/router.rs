@@ -5,8 +5,8 @@ use bytes::Bytes;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::net::rpc::packet_request::{AtlasRawRequest, AtlasRequest};
-use crate::net::rpc::packet_response::{AtlasRawResponse,AtlasResponse};
+use crate::net::rpc::packet_request::{AtlasRawRequest, AtlasWireRequest};
+use crate::net::rpc::packet_response::{AtlasRawResponse,AtlasWireResponse};
 use crate::net::rpc::router_spec::AtlasRouterMethod;
 
 
@@ -28,15 +28,15 @@ pub fn adapter_handler<Req, Resp, F, Fut>(f: F) -> impl Fn(AtlasRawRequest) -> P
 where
     Req: Serialize + DeserializeOwned + Send + 'static,
     Resp: Serialize + DeserializeOwned + Send + 'static,
-    F: Fn(AtlasRequest<Req>) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output=AtlasResponse<Resp>> + Send + 'static,
+    F: Fn(AtlasWireRequest<Req>) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output=AtlasWireResponse<Resp>> + Send + 'static,
 {
     let f = Arc::new(f);
     move |raw: AtlasRawRequest| {
         let f = Arc::clone(&f);
 
         Box::pin(async move {
-            let req = match AtlasRequest::<Req>::from_raw(raw.clone()) {
+            let req = match AtlasWireRequest::<Req>::from_raw(raw.clone()) {
                 Ok(r) => r,
                 Err(e) => {
                     return AtlasRawResponse {
@@ -75,7 +75,7 @@ impl AtlasRouter {
     pub async fn dispatch(&self, req: AtlasRawRequest) -> AtlasRawResponse {
         match self.routes.get(&req.method) {
             Some(handler) => handler.call(req).await,
-            None => AtlasResponse {
+            None => AtlasWireResponse {
                 id: req.id,
                 slot_index: req.slot_index,
                 payload: Bytes::new(),
