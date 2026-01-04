@@ -3,7 +3,7 @@ use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::AtlasMethodSpec;
 use atlas_scheme::dto::auth_model::LoginReq;
 use atlas_scheme::module_method::auth_method;
-use bytes::BytesMut;
+use bytes::{Bytes, BytesMut};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -43,28 +43,29 @@ async fn main() -> anyhow::Result<()> {
     let fail = fail_counter.clone();
     let sent = sent_total.clone();
     let recv = recv_total.clone();
-    let mut client = AtlasRpcRawClient::new("127.0.0.1:5566".into(), 8);
+    let mut client = AtlasRpcRawClient::new("127.0.0.1:5566".into(), 4);
     let _batch_size = 100;
 
-    let req = AtlasWireRequest {
-        id: 0,
-        slot_index: 0u64,
-        method: auth_method::Login::WIRE,
-        payload: LoginReq {
-            account: "111".to_string(),
-            password: "2222".to_string(),
-        },
-    };
-    let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
+
+
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
             let _success = success.clone();
             let _fail = fail.clone();
             let _recv = recv.clone();
 
-            // let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
-            // let bytes = BytesMut::from(buf.as_slice());
-            let bytes = BytesMut::from(buf.as_slice());
+            let req = AtlasWireRequest {
+                id: 0,
+                slot_index: 0u64,
+                method: auth_method::Login::WIRE,
+                payload: LoginReq {
+                    account: "111".to_string(),
+                    password: "2222".to_string(),
+                },
+            };
+            let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
+            let bytes = Bytes::from(buf);
+
             client
                 .call_raw_cb(bytes, move |_resp| {
                     _success.fetch_add(1, Ordering::Relaxed);

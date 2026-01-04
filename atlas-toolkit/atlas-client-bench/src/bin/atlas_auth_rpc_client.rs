@@ -3,7 +3,7 @@ use atlas_core::net::rpc::packet_request::{AtlasWireRequest};
 use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_method::auth_method;
-use bytes::BytesMut;
+use bytes::{Bytes, BytesMut};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
-    let bytes = BytesMut::from(buf.as_slice());
+    let bytes = Bytes::from(buf);
 
     client
         .call_raw_cb(bytes, |resp| {

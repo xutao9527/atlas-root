@@ -29,9 +29,9 @@ impl AtlasRpcRawClient {
         Ok(())
     }
 
-    pub async fn call_raw_cb<F: FnOnce(Bytes) + Send + 'static>(& self, req_buf: BytesMut, callback: F) {
+    pub async fn call_raw_cb<F: FnOnce(Bytes) + Send + 'static>(& self, req_buf: Bytes, callback: F) {
         let req_id = self.next_req_id.fetch_add(1, Ordering::Relaxed);
         let idx = (req_id as usize) % self.connections.len();
-        self.connections[idx].send(req_id, req_buf, callback).await;
+        self.connections[idx].send(req_id, req_buf.into(), callback).await;
     }
 }
