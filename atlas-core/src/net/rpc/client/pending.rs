@@ -1,4 +1,3 @@
-use crate::net::rpc::packet_response::AtlasRawResponse;
 use parking_lot::Mutex;
 use slab::Slab;
 use tokio::time::Instant;

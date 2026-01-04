@@ -1,12 +1,11 @@
 use crate::ws_client::WsClient;
+use atlas_core::net::rpc::packet_request::AtlasWireRequest;
+use atlas_core::AtlasMethodSpec;
+use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::module_method::auth_method;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
-use atlas_core::AtlasMethodSpec;
-use atlas_core::net::rpc::packet::AtlasPacket;
-use atlas_core::net::rpc::packet_request::AtlasWireRequest;
-use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_method::auth_method;
 
 
 pub struct CmdContext {
