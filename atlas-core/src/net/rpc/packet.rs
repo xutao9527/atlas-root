@@ -11,7 +11,6 @@ pub enum AtlasPacket {
     AtlasResponse(AtlasRawResponse),
 }
 
-
 #[derive(Debug, Clone, Copy)]
 pub struct AtlasWireHeader {
     pub id: u64,
@@ -61,6 +60,6 @@ mod tests {
         let buf = Bytes::from(rmp_serde::to_vec(&req).unwrap());
         let wire_header_only = decode_wire_header_only(&buf);
         println!("wire_header_only: {:?}", wire_header_only);
-      
+
     }
 }
