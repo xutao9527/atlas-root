@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
             let _recv = recv.clone();
             let req = AtlasWireRequest {
                 id: 0,
-                slot_index: 0 as usize,
+                slot_index: 0u64,
                 method: auth_method::Login::WIRE,
                 payload: LoginReq {
                     account: "111".to_string(),

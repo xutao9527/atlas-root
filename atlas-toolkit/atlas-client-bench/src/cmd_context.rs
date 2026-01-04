@@ -86,7 +86,7 @@ impl CmdContext {
                 if let Some(client) = &self.client {
                     let req = AtlasWireRequest {
                         id: 0,
-                        slot_index: 0 as usize,
+                        slot_index: 0u64,
                         method: auth_method::Login::WIRE,
                         payload: LoginReq {
                             account: account.to_string(),

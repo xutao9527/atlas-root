@@ -50,6 +50,7 @@ macro_rules! atlas_dispatch {
                     _ => AtlasRawResponse {
                         id: raw.id,
                         slot_index: raw.slot_index,
+                        method: raw.method,
                         payload: Bytes::new(),
                         error: Some("method not found".into()),
                     },

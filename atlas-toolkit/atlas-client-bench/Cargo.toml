@@ -22,4 +22,4 @@ anyhow = { workspace = true }
 reqwest = { workspace = true }
 tokio-tungstenite = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
+tracing-subscriber = {  workspace = true, features = ["env-filter", "local-time"] }

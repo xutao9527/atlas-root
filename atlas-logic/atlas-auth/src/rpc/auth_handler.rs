@@ -7,6 +7,7 @@ pub async fn login(request: AtlasWireRequest<LoginReq>) -> AtlasWireResponse<Log
     AtlasWireResponse {
         id: request.id,
         slot_index: request.slot_index,
+        method: request.method,
         payload: LoginResp {
             ok: true,
             token: Some(token),
@@ -21,6 +22,7 @@ pub async fn register(req: AtlasWireRequest<RegisterReq>) -> AtlasWireResponse<R
     AtlasWireResponse {
         id: req.id,
         slot_index: req.slot_index,
+        method: req.method,
         payload: RegisterResp { ok: true, error: None },
         error: None,
     }

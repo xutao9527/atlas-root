@@ -17,6 +17,7 @@ where
         Err(e) => return AtlasRawResponse {
             id: raw.id,
             slot_index: raw.slot_index,
+            method: raw.method,
             payload: Bytes::new(),
             error: Some(e),
         },

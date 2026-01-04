@@ -23,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
 
     let req = AtlasWireRequest {
         id: 0,
-        slot_index: 0usize,
+        slot_index: 0u64,
         method: auth_method::Login::WIRE,
         payload: LoginReq{
             account: "1111".to_string(),

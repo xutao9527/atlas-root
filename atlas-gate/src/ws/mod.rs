@@ -7,7 +7,6 @@ use tokio::sync::{mpsc};
 use tracing::{info, warn};
 use atlas_core::AtlasModuleId;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet::{AtlasPacket};
 use atlas_core::net::rpc::packet_request::AtlasRawRequest;
 
 pub async fn ws_handler(ws: WebSocketUpgrade, auth_client: Arc<AtlasRpcClient>) -> impl IntoResponse {

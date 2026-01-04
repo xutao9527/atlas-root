@@ -17,23 +17,11 @@ use crate::net::rpc::packet_response::{AtlasRawResponse, AtlasWireResponse};
 pub struct AtlasConnection {
     addr: String,
     channel_writer: Mutex<mpsc::Sender<AtlasPacket>>,
-    pending: Arc<PendingTable>,
+    pending: Arc<PendingTable<AtlasRawResponse>>,
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
     connected: Arc<AtomicBool>,
 }
-
-//
-// pub struct AtlasRawConnection {
-//     addr: String,
-//
-//     channel_writer: Mutex<mpsc::Sender<Bytes>>,
-//     pending: Arc<PendingRawTable>,   // 👈 不要丢 PendingTable 思想
-//
-//     notify_connected: Arc<Notify>,
-//     notify_disconnected: Arc<Notify>,
-//     connected: Arc<AtomicBool>,
-// }
 
 impl AtlasConnection {
     pub async fn new(addr: String) -> anyhow::Result<Self> {
@@ -66,7 +54,8 @@ impl AtlasConnection {
                         this.pending.drain(|slot| {
                             let resp = AtlasWireResponse {
                                 id: slot.request_id,
-                                slot_index: usize::MAX,
+                                slot_index: u64::MAX,
+                                method: 0,
                                 payload: Bytes::new(),
                                 error: Some("connection closed".into()),
                             };
@@ -125,7 +114,7 @@ impl AtlasConnection {
             while let Some(result) = socket_reader.next().await {
                 match result {
                     Ok(AtlasPacket::AtlasResponse(resp)) => {
-                        if let Some(slot) = pending.remove(resp.slot_index) {
+                        if let Some(slot) = pending.remove(resp.slot_index as usize) {
                             if resp.id == slot.request_id {
                                 (slot.callback)(resp);
                             }
@@ -152,14 +141,15 @@ impl AtlasConnection {
         if !self.connected.load(Ordering::Acquire) {
             let resp = AtlasWireResponse {
                 id: req.id,
-                slot_index: usize::MAX,
+                slot_index: u64::MAX,
+                method: req.method,
                 payload: Bytes::new(),
                 error: Some("connection closed".into()),
             };
             callback(resp);
             return
         }
-        req.slot_index = self.pending.insert(req.id, Box::new(callback));
+        req.slot_index = self.pending.insert(req.id, Box::new(callback)) as u64;
         let channel_writer = {
             let guard = self.channel_writer.lock().await;
             guard.clone()
