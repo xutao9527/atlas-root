@@ -72,7 +72,7 @@ impl CmdContext {
             },
             ["c"] => {
                 if self.client.is_none() {
-                    let mut ws_client = WsClient::new(self.ws_server_addr.clone()).await;
+                    let mut ws_client = WsClient::new(self.ws_server_addr.clone(),|_resp|{}).await;
                     ws_client.run().await;
                     self.client = Some(ws_client);
                 }

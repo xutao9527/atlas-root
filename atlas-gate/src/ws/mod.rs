@@ -57,7 +57,7 @@ async fn handle_ws(socket: WebSocket,auth_client: Arc<AtlasRpcClient>) {
                                 let client = auth_client.clone();
                                 let _ = client.call_cb(req, move |resp| {
                                     let packet = AtlasPacket::AtlasResponse(resp);
-                                    info!("gateway resp {:?}", packet);
+                                    // info!("gateway resp {:?}", packet);
                                     let buf = rmp_serde::to_vec(&packet).unwrap();
                                     let _ = out.send(Message::binary(buf));
                                 }).await;
