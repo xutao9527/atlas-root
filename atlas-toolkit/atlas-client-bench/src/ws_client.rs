@@ -1,5 +1,5 @@
 use atlas_core::net::rpc::packet::AtlasPacket;
-use atlas_core::net::rpc::packet_response::AtlasRawResponse;
+use atlas_core::net::rpc::packet_response::{AtlasRawResponse, AtlasWireResponse};
 use bytes::Bytes;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
@@ -8,6 +8,8 @@ use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
+use atlas_core::net::rpc::packet_request::AtlasRawRequest;
+use atlas_scheme::dto::auth_model::LoginResp;
 
 pub struct WsClient{
     ws_write: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
@@ -52,17 +54,19 @@ impl WsClient {
                         println!("Received: {}", text);
                     }
                     Ok(Message::Binary(bin)) => {
-                        let packet: AtlasPacket =  rmp_serde::from_slice(&bin).expect("REASON");
-                        match packet {
-                            AtlasPacket::AtlasRequest(req) => {
-                                println!("ws client Received : {:?}", req);
-                            }
-                            AtlasPacket::AtlasResponse(resp) => {
-                                // let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-                                // println!("ws client Received : {:?}", resp);
-                                callback(resp);
-                            }
-                        }
+                        let resp:AtlasRawResponse =  rmp_serde::from_slice(&bin).expect("REASON");
+                        let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
+                        println!("ws client Received : {:?}", resp);
+                        // match packet {
+                        //     AtlasPacket::AtlasRequest(req) => {
+                        //         println!("ws client Received : {:?}", req);
+                        //     }
+                        //     AtlasPacket::AtlasResponse(resp) => {
+                        //         // let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
+                        //         // println!("ws client Received : {:?}", resp);
+                        //         callback(resp);
+                        //     }
+                        // }
 
                     }
                     Ok(Message::Close(_)) => {

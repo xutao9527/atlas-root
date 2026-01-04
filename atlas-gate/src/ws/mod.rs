@@ -8,8 +8,9 @@ use tracing::{info, warn};
 use atlas_core::AtlasModuleId;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet::{AtlasPacket};
+use atlas_core::net::rpc::packet_request::AtlasRawRequest;
 
-pub async fn ws_handler(ws: WebSocketUpgrade,auth_client: Arc<AtlasRpcClient>) -> impl IntoResponse {
+pub async fn ws_handler(ws: WebSocketUpgrade, auth_client: Arc<AtlasRpcClient>) -> impl IntoResponse {
 
     ws.on_upgrade(move |socket| handle_ws(socket, auth_client.clone()))
 }
@@ -35,39 +36,32 @@ async fn handle_ws(socket: WebSocket,auth_client: Arc<AtlasRpcClient>) {
     while let Some(msg) = ws_rx.next().await {
         match msg {
             Ok(Message::Binary(bin)) => {
-                let packet: AtlasPacket = match rmp_serde::from_slice(&bin) {
-                    Ok(p) => p,
+                let req: AtlasRawRequest = match rmp_serde::from_slice(&bin) {
+                    Ok(r) => r,
                     Err(e) => {
-                        warn!("decode packet failed: {}", e);
+                        warn!("decode raw request failed: {}", e);
                         continue;
                     }
                 };
-                match packet {
-                    AtlasPacket::AtlasRequest(req) => {
-                        let module = match AtlasModuleId::from_wire(req.method) {
-                            Some(m) => m,
-                            None => {
-                                warn!("unknown module wire: {}", req.method);
-                                continue;
-                            }
-                        };
-                        match module {
+                match AtlasModuleId::from_wire(req.method) {
+                    Some(module_id) => {
+                        match module_id {
                             AtlasModuleId::Auth => {
                                 let out = out_tx.clone();
                                 let client = auth_client.clone();
                                 let _ = client.call_cb(req, move |resp| {
-                                    let packet = AtlasPacket::AtlasResponse(resp);
-                                    // info!("gateway resp {:?}", packet);
-                                    let buf = rmp_serde::to_vec(&packet).unwrap();
+                                    let buf = rmp_serde::to_vec(&resp).unwrap();
                                     let _ = out.send(Message::binary(buf));
                                 }).await;
                             }
                             _ => {}
                         }
+                    },
+                    None => {
+                        warn!("unknown module wire: {}", req.method);
+                        continue;
                     }
-                    _ => {}
-                }
-
+                };
             }
             _ => {}
         }

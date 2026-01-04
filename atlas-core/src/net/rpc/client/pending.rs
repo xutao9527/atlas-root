@@ -1,8 +1,7 @@
+use crate::net::rpc::packet_response::AtlasRawResponse;
 use parking_lot::Mutex;
 use slab::Slab;
 use tokio::time::Instant;
-use crate::net::rpc::packet_request::AtlasRawRequest;
-use crate::net::rpc::packet_response::AtlasRawResponse;
 
 /// 每个 slot 存储回调和元信息
 pub struct PendingSlot {
@@ -11,10 +10,12 @@ pub struct PendingSlot {
     pub _timestamp: Instant,
 }
 
+
 /// 高性能 PendingTable
 pub struct PendingTable {
     slab: Mutex<Slab<PendingSlot>>, // Slab存储回调
 }
+
 
 impl PendingTable {
     pub fn new(cap: usize) -> Self {
@@ -26,16 +27,17 @@ impl PendingTable {
     #[inline]
     pub fn insert(
         &self,
-        req: &mut AtlasRawRequest,
+        req_id: u64,
         callback: Box<dyn FnOnce(AtlasRawResponse) + Send + 'static>,
-    ) {
+    ) -> usize
+    {
         let mut slab = self.slab.lock();
         let index = slab.insert(PendingSlot {
-            request_id: req.id,
+            request_id: req_id,
             callback,
             _timestamp: Instant::now(),
         });
-        req.slot_index = index;
+        index
     }
 
     #[inline]
@@ -58,3 +60,4 @@ impl PendingTable {
         }
     }
 }
+

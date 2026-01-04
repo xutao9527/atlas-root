@@ -94,8 +94,8 @@ impl CmdContext {
                         },
                     };
                     let raw_req = req.into_raw().unwrap();
-                    let packet = AtlasPacket::AtlasRequest(raw_req);
-                    let buf = rmp_serde::to_vec(&packet).unwrap();
+                    // let packet = AtlasPacket::AtlasRequest(raw_req);
+                    let buf = rmp_serde::to_vec(&raw_req).unwrap();
                     client.send_byte(buf).await;
                 }
             }

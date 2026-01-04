@@ -23,6 +23,18 @@ pub struct AtlasConnection {
     connected: Arc<AtomicBool>,
 }
 
+//
+// pub struct AtlasRawConnection {
+//     addr: String,
+//
+//     channel_writer: Mutex<mpsc::Sender<Bytes>>,
+//     pending: Arc<PendingRawTable>,   // 👈 不要丢 PendingTable 思想
+//
+//     notify_connected: Arc<Notify>,
+//     notify_disconnected: Arc<Notify>,
+//     connected: Arc<AtomicBool>,
+// }
+
 impl AtlasConnection {
     pub async fn new(addr: String) -> anyhow::Result<Self> {
         let pending = Arc::new(PendingTable::new(100 * 1024));
@@ -147,7 +159,7 @@ impl AtlasConnection {
             callback(resp);
             return
         }
-        self.pending.insert(&mut req, Box::new(callback));
+        req.slot_index = self.pending.insert(req.id, Box::new(callback));
         let channel_writer = {
             let guard = self.channel_writer.lock().await;
             guard.clone()
