@@ -1,13 +1,14 @@
+use atlas_core::AtlasMethodSpec;
+use atlas_core::net::rpc::packet_request::{AtlasWireRequest};
+use atlas_core::net::rpc::packet_response::AtlasWireResponse;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
+use atlas_scheme::module_method::auth_method;
+use bytes::BytesMut;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 use tracing_subscriber::fmt::time::LocalTime;
-use atlas_core::AtlasMethodSpec;
-use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet_request::AtlasWireRequest;
-use atlas_core::net::rpc::packet_response::AtlasWireResponse;
-use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_method::auth_method;
+use atlas_core::net::rpc::client::client_raw::AtlasRpcRawClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -18,25 +19,32 @@ async fn main() -> anyhow::Result<()> {
         .with_target(false)
         .init();
 
-    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 1);
+    let mut client = AtlasRpcRawClient::new("127.0.0.1:5566".into(), 1);
     client.connect().await?;
 
     let req = AtlasWireRequest {
-        id: 0,
-        slot_index: 0u64,
+        id: 1,
+        slot_index: 1u64,
         method: auth_method::Login::WIRE,
-        payload: LoginReq{
+        payload: LoginReq {
             account: "1111".to_string(),
             password: "2222".to_string(),
         },
     };
 
-    client.call_cb(req.into_raw().unwrap(),|resp| {
-        let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-        info!("callback {:?}", resp);
-    }).await;
-    // loop{
-    sleep(Duration::from_secs(3)).await;
-    // }
-    Ok(())
+    let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
+    let bytes = BytesMut::from(buf.as_slice());
+
+    client
+        .call_raw_cb(bytes, |resp| {
+            let resp = rmp_serde::from_slice(&resp).unwrap();
+            let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
+            info!("callback2 {:?}", resp);
+        })
+        .await;
+
+    loop {
+        sleep(Duration::from_secs(3)).await;
+    }
+    // Ok(())
 }

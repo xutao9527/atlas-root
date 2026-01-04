@@ -15,7 +15,7 @@ futures = { workspace = true }
 # common
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-rmp = "0.8"
+rmp = "0.8.15"
 rmp-serde = { workspace = true }
 bytes = { workspace = true ,features = ["serde"] }
 slab = { workspace = true }
