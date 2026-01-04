@@ -13,7 +13,7 @@ use tracing::info;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）
-    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), 1);
+    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     auth_client.connect().await?;
     let auth_client = Arc::new(auth_client); // 用 Arc 包裹
 

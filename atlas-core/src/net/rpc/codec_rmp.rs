@@ -42,14 +42,11 @@ where
         if src.len() < 4 {
             return Ok(None);
         }
-
         let mut len_buf = &src[..4];
         let len = len_buf.get_u32() as usize;
-
         if src.len() < 4 + len {
             return Ok(None);
         }
-
         src.advance(4);
         let body = src.split_to(len);
         let msg = rmp_serde::from_slice(&body)?;

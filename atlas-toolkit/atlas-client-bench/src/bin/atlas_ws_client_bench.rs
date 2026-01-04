@@ -12,59 +12,83 @@ use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() {
-    // 每秒统计 QPS
-    let success_counter = Arc::new(AtomicUsize::new(0));
-    // 总发送 / 总收到
+    // ================== 参数 ==================
+    let connections: usize = 4;            // WS 连接数
+    let total_requests: usize = 2_0000_0000; // 总请求数
+    let per_conn = total_requests / connections;
+
+    // ================== 统计 ==================
     let sent_total = Arc::new(AtomicUsize::new(0));
     let recv_total = Arc::new(AtomicUsize::new(0));
-    {
-        let success = success_counter.clone();
+    let qps_counter = Arc::new(AtomicUsize::new(0));
 
+    // ================== QPS 打印 ==================
+    {
         let sent = sent_total.clone();
         let recv = recv_total.clone();
+        let qps = qps_counter.clone();
+
         tokio::spawn(async move {
             loop {
-                let _s = success.swap(0, Ordering::Relaxed);
-                let _sent_val = sent.load(Ordering::Relaxed);
-                let _recv_val = recv.load(Ordering::Relaxed);
+                let qps_val = qps.swap(0, Ordering::Relaxed);
+                let sent_val = sent.load(Ordering::Relaxed);
+                let recv_val = recv.load(Ordering::Relaxed);
+
                 println!(
-                    "QPS: {}, Sent Total: {}, Recv Total: {}",
-                    _s, _sent_val, _recv_val
+                    "QPS: {:>7}, Sent: {:>10}, Recv: {:>10}",
+                    qps_val, sent_val, recv_val
                 );
+
                 sleep(Duration::from_secs(1)).await;
             }
         });
     }
 
-    let success = success_counter.clone();
-    let recv = recv_total.clone();
-    let mut ws_client = WsClient::new("ws://127.0.0.1:8080/ws".to_string(), move |resp| {
-        success.fetch_add(1, Ordering::Relaxed);
-        recv.fetch_add(1, Ordering::Relaxed);
-        let _resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-        //println!("ws client Received : {:?}", resp);
-    })
-    .await;
+    // ================== 启动多个连接 ==================
+    for conn_id in 0..connections {
+        let sent = sent_total.clone();
+        let recv = recv_total.clone();
+        let qps = qps_counter.clone();
 
-    ws_client.run().await;
-    let total_requests = 200_0000usize;
-    for _i in 0..total_requests {
-        let req = AtlasWireRequest {
-            id: 0,
-            slot_index: 0 as usize,
-            method: auth_method::Login::WIRE,
-            payload: LoginReq {
-                account: "test".to_string(),
-                password: "test".to_string(),
-            },
-        };
-        let raw_req = req.into_raw().unwrap();
-        let packet = AtlasPacket::AtlasRequest(raw_req);
-        let buf = rmp_serde::to_vec(&packet).unwrap();
-        ws_client.send_byte(buf).await;
-        sent_total.fetch_add(1, Ordering::Relaxed);
+        tokio::spawn(async move {
+            let mut ws_client = WsClient::new(
+                "ws://127.0.0.1:8080/ws".to_string(),
+                move |resp| {
+                    qps.fetch_add(1, Ordering::Relaxed);
+                    recv.fetch_add(1, Ordering::Relaxed);
+                    let _ =
+                        AtlasWireResponse::<LoginResp>::from_raw(resp);
+                },
+            )
+                .await;
+
+            ws_client.run().await;
+
+            for _ in 0..per_conn {
+                let req = AtlasWireRequest {
+                    id: 0,
+                    slot_index: 0,
+                    method: auth_method::Login::WIRE,
+                    payload: LoginReq {
+                        account: "test".to_string(),
+                        password: "test".to_string(),
+                    },
+                };
+
+                let raw = req.into_raw().unwrap();
+                let packet = AtlasPacket::AtlasRequest(raw);
+                let buf = rmp_serde::to_vec(&packet).unwrap();
+
+                ws_client.send_byte(buf).await;
+                sent.fetch_add(1, Ordering::Relaxed);
+            }
+
+            println!("connection {} finished", conn_id);
+        });
+
     }
-    loop{
-        sleep(Duration::from_secs(3)).await;
+    // ================== 不让 main 退出 ==================
+    loop {
+        sleep(Duration::from_secs(10)).await;
     }
 }
