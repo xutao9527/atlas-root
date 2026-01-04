@@ -1,7 +1,4 @@
-mod cmd_context;
-mod ws_client;
-
-use crate::cmd_context::CmdContext;
+use atlas_client_bench::cmd_context::CmdContext;
 
 #[tokio::main]
 async fn main() {

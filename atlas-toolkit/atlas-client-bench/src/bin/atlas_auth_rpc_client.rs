@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
         info!("callback {:?}", resp);
     }).await;
     // loop{
-        sleep(Duration::from_secs(3)).await;
+    sleep(Duration::from_secs(3)).await;
     // }
     Ok(())
 }
