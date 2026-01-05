@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 # local
-atlas-core = { workspace = true }
+atlas-nut = { workspace = true }
 atlas-scheme = { workspace = true }
 
 # runtime
@@ -14,12 +14,8 @@ tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
 # common
 futures-util = { workspace = true }
-rmp-serde = { workspace = true }
 bytes = { workspace = true }
-anyhow = { workspace = true }
 
 # client
 reqwest = { workspace = true }
 tokio-tungstenite = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = {  workspace = true, features = ["env-filter", "local-time"] }

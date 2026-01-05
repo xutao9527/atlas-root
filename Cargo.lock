@@ -327,17 +327,13 @@ dependencies = [
 name = "atlas-client-bench"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "atlas-core",
+ "atlas-nut",
  "atlas-scheme",
  "bytes",
  "futures-util",
  "reqwest",
- "rmp-serde",
  "tokio",
  "tokio-tungstenite",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

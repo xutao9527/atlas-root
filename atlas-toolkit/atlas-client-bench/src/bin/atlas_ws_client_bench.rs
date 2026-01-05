@@ -1,12 +1,11 @@
 use atlas_client_bench::ws_client::WsClient;
-use atlas_core::AtlasMethodSpec;
-use atlas_core::net::rpc::packet::AtlasPacket;
-use atlas_core::net::rpc::packet_request::AtlasWireRequest;
-use atlas_core::net::rpc::packet_response::AtlasWireResponse;
-use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_method::auth_method;
-use std::sync::Arc;
+use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
+use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_nut::net::rpc::router::AtlasMethodSpec;
+use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::module_method::auth_method::Login;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -44,44 +43,42 @@ async fn main() {
         });
     }
 
+    let request = AtlasWireMessage {
+        header: AtlasWireHeader {
+            id: 0,
+            slot_index: 0,
+            method: Login::WIRE,
+            kind: AtlasWireKind::Request,
+        },
+        payload: LoginReq {
+            account: "val".into(),
+            password: "val".into(),
+        },
+    };
+    let req_bytes = request.into_raw().unwrap().into_wire_bytes();
     // ================== 启动多个连接 ==================
     for conn_id in 0..connections {
         let sent = sent_total.clone();
         let recv = recv_total.clone();
         let qps = qps_counter.clone();
-
+        let req_clone1 = req_bytes.clone();
         tokio::spawn(async move {
-            let mut ws_client = WsClient::new(
-                "ws://127.0.0.1:8080/ws".to_string(),
-                move |resp| {
+
+            let mut ws_client = WsClient::new("ws://127.0.0.1:8080/ws".to_string(),
+                move |_resp| {
                     qps.fetch_add(1, Ordering::Relaxed);
                     recv.fetch_add(1, Ordering::Relaxed);
-                    let _ =
-                        AtlasWireResponse::<LoginResp>::from_raw(resp);
+                    // let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
+                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    // println!("{:?}", resp_msg);
                 },
-            )
-                .await;
-
+            ).await;
             ws_client.run().await;
-
-            // for _ in 0..per_conn {
-            //     let req = AtlasWireRequest {
-            //         id: 0,
-            //         slot_index: 0,
-            //         method: auth_method::Login::WIRE,
-            //         payload: LoginReq {
-            //             account: "test".to_string(),
-            //             password: "test".to_string(),
-            //         },
-            //     };
-            //
-            //     let raw = req.into_raw().unwrap();
-            //     let packet = AtlasPacket::AtlasRequest(raw);
-            //     let buf = rmp_serde::to_vec(&packet).unwrap();
-            //
-            //     ws_client.send_byte(buf).await;
-            //     sent.fetch_add(1, Ordering::Relaxed);
-            // }
+            for _ in 0..per_conn {
+                let req_clone2 = req_clone1.clone();
+                ws_client.send_byte(req_clone2).await;
+                sent.fetch_add(1, Ordering::Relaxed);
+            }
 
             println!("connection {} finished", conn_id);
         });
@@ -91,4 +88,5 @@ async fn main() {
     loop {
         sleep(Duration::from_secs(10)).await;
     }
+
 }

@@ -1,5 +1,3 @@
-use atlas_core::net::rpc::packet_response::{AtlasRawResponse, AtlasWireResponse};
-use atlas_scheme::dto::auth_model::LoginResp;
 use bytes::Bytes;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
@@ -12,14 +10,14 @@ use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 pub struct WsClient{
     ws_write: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
     ws_read: Arc<Mutex<SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>>>,
-    callback: Arc<dyn Fn(AtlasRawResponse) + Send + Sync + 'static>,
+    callback: Arc<dyn Fn(Bytes) + Send + Sync + 'static>,
 }
 
 impl WsClient {
 
     pub async fn new<F>(ws_server_addr: String,callback: F,) -> WsClient
     where
-        F: Fn(AtlasRawResponse) + Send + Sync + 'static,
+        F: Fn(Bytes) + Send + Sync + 'static,
     {
         let (ws_stream, _) =
             connect_async(ws_server_addr).await.expect("Failed to connect");
@@ -36,14 +34,14 @@ impl WsClient {
         write.send(Message::Text(text.into())).await.expect("send text failed");
     }
 
-    pub async fn send_byte(&self, buf: Vec<u8>) {
+    pub async fn send_byte(&self, buf: Bytes) {
         let mut write = self.ws_write.lock().await;
-        write.send(Message::Binary(Bytes::from(buf))).await.expect("send byte failed");
+        write.send(Message::Binary(buf)).await.expect("send byte failed");
     }
 
     pub async fn run(&mut self,) {
         let ws_read = self.ws_read.clone();
-        let _callback = self.callback.clone();
+        let callback = self.callback.clone();
         tokio::spawn(async move {
             let mut read = ws_read.lock().await;
             while let Some(msg) =  read.next().await{
@@ -51,21 +49,8 @@ impl WsClient {
                     Ok(Message::Text(text)) => {
                         println!("Received: {}", text);
                     }
-                    Ok(Message::Binary(bin)) => {
-                        let resp:AtlasRawResponse =  rmp_serde::from_slice(&bin).expect("REASON");
-                        let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-                        println!("ws client Received : {:?}", resp);
-                        // match packet {
-                        //     AtlasPacket::AtlasRequest(req) => {
-                        //         println!("ws client Received : {:?}", req);
-                        //     }
-                        //     AtlasPacket::AtlasResponse(resp) => {
-                        //         // let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-                        //         // println!("ws client Received : {:?}", resp);
-                        //         callback(resp);
-                        //     }
-                        // }
-
+                    Ok(Message::Binary(resp_bytes)) => {
+                        callback(resp_bytes);
                     }
                     Ok(Message::Close(_)) => {
                         println!("Server closed connection");
