@@ -1,3 +1,3 @@
-pub mod model;
 pub mod dto;
+pub mod model;
 pub mod module_method;

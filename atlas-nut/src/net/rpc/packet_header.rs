@@ -20,6 +20,14 @@ pub struct AtlasWireHeader {
 impl AtlasWireHeader {
     pub const WIRE_LEN: usize = 17;
 
+    #[inline]
+    pub fn with_kind(self, kind: AtlasWireKind) -> Self {
+        Self {
+            kind,
+            ..self
+        }
+    }
+
     pub fn read_wire_header(buf: &[u8]) -> Result<Self, String> {
         if buf.len() < Self::WIRE_LEN {
             return Err(format!(

@@ -1,5 +1,5 @@
 use std::time::Duration;
-use atlas_blitz::auth_mod::{Login, LoginReq};
+use atlas_blitz::auth_mod::{Login, LoginReq, LoginResp};
 use atlas_nut::net::rpc::codec::FrameWireCodec;
 use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
@@ -15,13 +15,13 @@ async fn main() -> anyhow::Result<()> {
     let framed = Framed::new(stream, FrameWireCodec::default());
     let (mut socket_writer, mut socket_reader) = framed.split();
 
-
     tokio::spawn(async move {
         while let Some(result) = socket_reader.next().await {
             match result {
                 Ok(resp) => {
-                    let result = AtlasRawMessage::from_wire_bytes(resp);
-                    println!("{:?}", result);
+                    let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
+                    let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    println!("{:?}", resp_msg);
                 }
                 Err(_) => break,
             }
@@ -42,9 +42,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let request_bytes = request.into_raw().unwrap().into_wire_bytes();
-
     socket_writer.send(request_bytes).await?;
-
     loop {
         sleep(Duration::from_secs(3)).await;
     }
