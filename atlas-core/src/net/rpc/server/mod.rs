@@ -35,7 +35,7 @@ where
                 let mut framed = Framed::new(stream, FrameWireCodec::default());
                 while let Some(result) = framed.next().await {
                     match result {
-                        Ok(req) =>{
+                        Ok(_req) =>{
 
                         }
                         Err(e) => {
