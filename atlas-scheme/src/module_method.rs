@@ -1,5 +1,4 @@
-use atlas_core::atlas_method;
-use atlas_core::net::rpc::router_spec::AtlasModuleId;
+use atlas_nut::atlas_method;
 use crate::dto::auth_model::*;
 
 atlas_method! {

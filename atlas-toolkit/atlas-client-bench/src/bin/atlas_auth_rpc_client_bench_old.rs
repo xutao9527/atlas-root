@@ -51,25 +51,25 @@ async fn main() -> anyhow::Result<()> {
             let _success = success.clone();
             let _fail = fail.clone();
             let _recv = recv.clone();
-            let req = AtlasWireRequest {
-                id: 0,
-                slot_index: 0u64,
-                method: auth_method::Login::WIRE,
-                payload: LoginReq {
-                    account: "111".to_string(),
-                    password: "2222".to_string(),
-                },
-            };
-
-            client
-                .call_cb(req.into_raw().unwrap(), move |_resp| {
-                    _success.fetch_add(1, Ordering::Relaxed);
-                    _recv.fetch_add(1, Ordering::Relaxed);
-
-                    // println!("callback {:?}", _resp);
-                })
-                .await;
-            sent.fetch_add(1, Ordering::Relaxed);
+            // let req = AtlasWireRequest {
+            //     id: 0,
+            //     slot_index: 0u64,
+            //     method: auth_method::Login::WIRE,
+            //     payload: LoginReq {
+            //         account: "111".to_string(),
+            //         password: "2222".to_string(),
+            //     },
+            // };
+            //
+            // client
+            //     .call_cb(req.into_raw().unwrap(), move |_resp| {
+            //         _success.fetch_add(1, Ordering::Relaxed);
+            //         _recv.fetch_add(1, Ordering::Relaxed);
+            //
+            //         // println!("callback {:?}", _resp);
+            //     })
+            //     .await;
+            // sent.fetch_add(1, Ordering::Relaxed);
             // 每 _batch_size 个请求暂停 1 秒
             // if (i + 1) % batch_size == 0 {
             //     tokio::time::sleep(Duration::from_millis(10)).await;

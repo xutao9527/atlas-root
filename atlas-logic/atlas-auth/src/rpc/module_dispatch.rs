@@ -1,7 +1,6 @@
-use atlas_core::atlas_dispatch;
-use atlas_scheme::module_method::auth_method;
 use crate::rpc::auth_handler;
-
+use atlas_nut::atlas_dispatch;
+use atlas_scheme::module_method::auth_method;
 
 atlas_dispatch! {
     module auth_bind {
@@ -9,5 +8,3 @@ atlas_dispatch! {
         auth_method::Login => auth_handler::login,
     }
 }
-
-

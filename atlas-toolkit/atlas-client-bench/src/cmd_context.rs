@@ -83,19 +83,19 @@ impl CmdContext {
             },
             ["api","login",account, password] => {
                 if let Some(client) = &self.client {
-                    let req = AtlasWireRequest {
-                        id: 0,
-                        slot_index: 0u64,
-                        method: auth_method::Login::WIRE,
-                        payload: LoginReq {
-                            account: account.to_string(),
-                            password: password.to_string(),
-                        },
-                    };
-                    let raw_req = req.into_raw().unwrap();
-                    // let packet = AtlasPacket::AtlasRequest(raw_req);
-                    let buf = rmp_serde::to_vec(&raw_req).unwrap();
-                    client.send_byte(buf).await;
+                    // let req = AtlasWireRequest {
+                    //     id: 0,
+                    //     slot_index: 0u64,
+                    //     method: auth_method::Login::WIRE,
+                    //     payload: LoginReq {
+                    //         account: account.to_string(),
+                    //         password: password.to_string(),
+                    //     },
+                    // };
+                    // let raw_req = req.into_raw().unwrap();
+                    // // let packet = AtlasPacket::AtlasRequest(raw_req);
+                    // let buf = rmp_serde::to_vec(&raw_req).unwrap();
+                    // client.send_byte(buf).await;
                 }
             }
             _ => {}

@@ -64,24 +64,24 @@ async fn main() {
 
             ws_client.run().await;
 
-            for _ in 0..per_conn {
-                let req = AtlasWireRequest {
-                    id: 0,
-                    slot_index: 0,
-                    method: auth_method::Login::WIRE,
-                    payload: LoginReq {
-                        account: "test".to_string(),
-                        password: "test".to_string(),
-                    },
-                };
-
-                let raw = req.into_raw().unwrap();
-                let packet = AtlasPacket::AtlasRequest(raw);
-                let buf = rmp_serde::to_vec(&packet).unwrap();
-
-                ws_client.send_byte(buf).await;
-                sent.fetch_add(1, Ordering::Relaxed);
-            }
+            // for _ in 0..per_conn {
+            //     let req = AtlasWireRequest {
+            //         id: 0,
+            //         slot_index: 0,
+            //         method: auth_method::Login::WIRE,
+            //         payload: LoginReq {
+            //             account: "test".to_string(),
+            //             password: "test".to_string(),
+            //         },
+            //     };
+            //
+            //     let raw = req.into_raw().unwrap();
+            //     let packet = AtlasPacket::AtlasRequest(raw);
+            //     let buf = rmp_serde::to_vec(&packet).unwrap();
+            //
+            //     ws_client.send_byte(buf).await;
+            //     sent.fetch_add(1, Ordering::Relaxed);
+            // }
 
             println!("connection {} finished", conn_id);
         });

@@ -12,39 +12,39 @@ use atlas_core::net::rpc::client::client_raw::AtlasRpcRawClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_timer(LocalTime::rfc_3339())
-        .with_max_level(tracing::Level::DEBUG)
-        .with_target(false)
-        .init();
-
-    let mut client = AtlasRpcRawClient::new("127.0.0.1:5566".into(), 1);
-    client.connect().await?;
-
-    let req = AtlasWireRequest {
-        id: 1,
-        slot_index: 1u64,
-        method: auth_method::Login::WIRE,
-        payload: LoginReq {
-            account: "1111".to_string(),
-            password: "2222".to_string(),
-        },
-    };
-
-    let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
-    let bytes = Bytes::from(buf);
-
-    client
-        .call_raw_cb(bytes, |resp| {
-            let resp = rmp_serde::from_slice(&resp).unwrap();
-            let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
-            info!("callback2 {:?}", resp);
-        })
-        .await;
-
+    // tracing_subscriber::fmt()
+    //     .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+    //     .with_timer(LocalTime::rfc_3339())
+    //     .with_max_level(tracing::Level::DEBUG)
+    //     .with_target(false)
+    //     .init();
+    //
+    // let mut client = AtlasRpcRawClient::new("127.0.0.1:5566".into(), 1);
+    // client.connect().await?;
+    //
+    // let req = AtlasWireRequest {
+    //     id: 1,
+    //     slot_index: 1u64,
+    //     method: auth_method::Login::WIRE,
+    //     payload: LoginReq {
+    //         account: "1111".to_string(),
+    //         password: "2222".to_string(),
+    //     },
+    // };
+    //
+    // let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
+    // let bytes = Bytes::from(buf);
+    //
+    // client
+    //     .call_raw_cb(bytes, |resp| {
+    //         let resp = rmp_serde::from_slice(&resp).unwrap();
+    //         let resp = AtlasWireResponse::<LoginResp>::from_raw(resp);
+    //         info!("callback2 {:?}", resp);
+    //     })
+    //     .await;
+    //
     loop {
         sleep(Duration::from_secs(3)).await;
     }
-    // Ok(())
+    //Ok(())
 }

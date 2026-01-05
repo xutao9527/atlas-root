@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 # local
-atlas-core = { workspace = true }
+atlas-nut = { workspace = true }
 
 sea-orm = { workspace = true }
 serde = { workspace = true, features = ["derive","rc"] }

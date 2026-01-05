@@ -297,7 +297,7 @@ name = "atlas-auth"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atlas-core",
+ "atlas-nut",
  "atlas-scheme",
  "bytes",
  "tokio",
@@ -403,7 +403,7 @@ version = "0.1.0"
 name = "atlas-scheme"
 version = "0.1.0"
 dependencies = [
- "atlas-core",
+ "atlas-nut",
  "sea-orm",
  "serde",
 ]

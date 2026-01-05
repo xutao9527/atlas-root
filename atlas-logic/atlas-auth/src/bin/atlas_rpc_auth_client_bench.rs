@@ -1,4 +1,3 @@
-use atlas_blitz::auth_mod::{Login, LoginReq};
 use atlas_nut::net::rpc::client::client::AtlasRpcClient;
 use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
@@ -7,6 +6,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
+use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::module_method::auth_method::Login;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
