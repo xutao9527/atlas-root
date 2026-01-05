@@ -1,13 +1,14 @@
 use atlas_core::net::rpc::client::client_raw::AtlasRpcRawClient;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_method::auth_method;
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
+use atlas_core::net::rpc::packet_response::AtlasWireResponse;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -46,7 +47,17 @@ async fn main() -> anyhow::Result<()> {
     let mut client = AtlasRpcRawClient::new("127.0.0.1:5566".into(), 4);
     let _batch_size = 100;
 
-
+    let req = AtlasWireRequest {
+        id: 0,
+        slot_index: 0u64,
+        method: auth_method::Login::WIRE,
+        payload: LoginReq {
+            account: "1111".to_string(),
+            password: "2222".to_string(),
+        },
+    };
+    let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
+    let req_bytes  = Bytes::from(buf);
 
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
@@ -54,24 +65,24 @@ async fn main() -> anyhow::Result<()> {
             let _fail = fail.clone();
             let _recv = recv.clone();
 
-            let req = AtlasWireRequest {
-                id: 0,
-                slot_index: 0u64,
-                method: auth_method::Login::WIRE,
-                payload: LoginReq {
-                    account: "111".to_string(),
-                    password: "2222".to_string(),
-                },
-            };
-            let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
-            let bytes = Bytes::from(buf);
-
+            // let req = AtlasWireRequest {
+            //     id: 0,
+            //     slot_index: 0u64,
+            //     method: auth_method::Login::WIRE,
+            //     payload: LoginReq {
+            //         account: "111".to_string(),
+            //         password: "2222".to_string(),
+            //     },
+            // };
+            // let buf = rmp_serde::to_vec(&req.into_raw().unwrap()).unwrap();
+            // let bytes = Bytes::from(buf);
+            let req_clone = req_bytes.clone();
             client
-                .call_raw_cb(bytes, move |_resp| {
+                .call_raw_cb(req_clone, move |_resp| {
                     _success.fetch_add(1, Ordering::Relaxed);
                     _recv.fetch_add(1, Ordering::Relaxed);
-                    // let _resp = rmp_serde::from_slice(&_resp).unwrap();
-                    // let _resp = AtlasWireResponse::<LoginResp>::from_raw(_resp);
+                    let _resp = rmp_serde::from_slice(&_resp).unwrap();
+                    let _resp = AtlasWireResponse::<LoginResp>::from_raw(_resp);
                     // println!("callback {:?}", _resp);
                 })
                 .await;

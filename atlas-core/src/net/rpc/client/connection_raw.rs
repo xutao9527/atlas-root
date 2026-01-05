@@ -9,7 +9,7 @@ use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
 use crate::net::rpc::client::pending::PendingTable;
-use crate::net::rpc::codec_rmp::MsgPackCodec;
+use crate::net::rpc::codec_frame::ByteFrameCodec;
 use crate::net::rpc::packet::{read_wire_header_only, write_wire_header_only};
 use crate::net::rpc::packet_response::{AtlasWireResponse};
 
@@ -80,7 +80,7 @@ impl AtlasRawConnection {
 
     pub async fn establish_connection(&self) -> anyhow::Result<()> {
         let stream = TcpStream::connect(&self.addr).await?;
-        let framed = Framed::new(stream, MsgPackCodec::<Bytes>::default());
+        let framed = Framed::new(stream, ByteFrameCodec::default());
         let (mut socket_writer, mut socket_reader) = framed.split();
 
         let (channel_writer, mut channel_reader) = mpsc::channel::<Bytes>(100 * 1024);

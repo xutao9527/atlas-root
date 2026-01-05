@@ -1,5 +1,5 @@
 use crate::net::rpc::client::connection_raw::AtlasRawConnection;
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 

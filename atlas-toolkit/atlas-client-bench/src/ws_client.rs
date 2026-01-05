@@ -43,7 +43,7 @@ impl WsClient {
 
     pub async fn run(&mut self,) {
         let ws_read = self.ws_read.clone();
-        let callback = self.callback.clone();
+        let _callback = self.callback.clone();
         tokio::spawn(async move {
             let mut read = ws_read.lock().await;
             while let Some(msg) =  read.next().await{

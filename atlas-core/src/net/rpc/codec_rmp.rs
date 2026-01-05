@@ -1,7 +1,8 @@
 use bytes::{Buf, BufMut, BytesMut};
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Serialize};
 use std::marker::PhantomData;
 use tokio_util::codec::{Decoder, Encoder};
+
 
 pub struct MsgPackCodec<T> {
     _marker: PhantomData<T>,
@@ -14,6 +15,7 @@ impl<T> Default for MsgPackCodec<T> {
         }
     }
 }
+
 
 impl<T> Encoder<T> for MsgPackCodec<T>
 where

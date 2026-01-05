@@ -1,12 +1,14 @@
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_method::auth_method;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use bytes::Bytes;
 use tokio::time::sleep;
+use atlas_core::net::rpc::packet::AtlasPacket::AtlasResponse;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -44,8 +46,8 @@ async fn main() -> anyhow::Result<()> {
     let recv = recv_total.clone();
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     let _batch_size = 100;
-    
-    
+
+
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
             let _success = success.clone();
@@ -65,8 +67,8 @@ async fn main() -> anyhow::Result<()> {
                 .call_cb(req.into_raw().unwrap(), move |_resp| {
                     _success.fetch_add(1, Ordering::Relaxed);
                     _recv.fetch_add(1, Ordering::Relaxed);
-                    //let _resp = AtlasResponse::<LoginResp>::from_raw(_resp);
-                    //println!("callback {:?}", resp);
+
+                    // println!("callback {:?}", _resp);
                 })
                 .await;
             sent.fetch_add(1, Ordering::Relaxed);

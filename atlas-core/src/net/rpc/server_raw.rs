@@ -1,11 +1,11 @@
 use bytes::Bytes;
-use crate::net::rpc::codec_rmp::MsgPackCodec;
 use crate::net::rpc::packet_request::{AtlasRawRequest};
 use crate::net::rpc::packet_response::{AtlasRawResponse};
 use futures::{SinkExt, StreamExt};
 use tokio::net::TcpListener;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
+use crate::net::rpc::codec_frame::ByteFrameCodec;
 
 pub struct AtlasNetRawServer<DispatchFn, Fut>
 where
@@ -34,7 +34,7 @@ where
             let dispatch_fn = self.dispatch_fn;
 
             tokio::spawn(async move {
-                let mut framed = Framed::new(stream, MsgPackCodec::<Bytes>::default());
+                let mut framed = Framed::new(stream, ByteFrameCodec::default());
 
                 while let Some(result) = framed.next().await {
                     match result {
