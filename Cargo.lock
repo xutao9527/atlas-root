@@ -300,7 +300,9 @@ dependencies = [
  "atlas-nut",
  "atlas-scheme",
  "bytes",
+ "futures-util",
  "tokio",
+ "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]
@@ -370,7 +372,7 @@ name = "atlas-gate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atlas-core",
+ "atlas-nut",
  "axum",
  "futures-util",
  "rmp-serde",

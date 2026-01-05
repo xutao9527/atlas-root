@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
             let recv = recv_total.clone();
 
             let req_clone = req_bytes.clone();
-            client.call_raw_cb(req_clone, move |_resp| {
+            client.call_cb(req_clone, move |_resp| {
                 // success.fetch_add(1, Ordering::Relaxed);
                 recv.fetch_add(1, Ordering::Relaxed);
                 match AtlasWireHeader::read_wire_header(&_resp) {

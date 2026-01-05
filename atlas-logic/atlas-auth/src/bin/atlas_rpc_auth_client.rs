@@ -1,10 +1,11 @@
-use std::time::Duration;
-use atlas_blitz::auth_mod::{Login, LoginReq, LoginResp};
 use atlas_nut::net::rpc::codec::FrameWireCodec;
 use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use atlas_nut::net::rpc::router::AtlasMethodSpec;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
+use atlas_scheme::module_method::auth_method::Login;
 use futures_util::{SinkExt, StreamExt};
+use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
@@ -30,8 +31,8 @@ async fn main() -> anyhow::Result<()> {
 
     let request = AtlasWireMessage {
         header: AtlasWireHeader {
-            id: 0,
-            slot_index: 0,
+            id: 1,
+            slot_index: 1,
             method: Login::WIRE,
             kind: AtlasWireKind::Request,
         },
@@ -43,8 +44,6 @@ async fn main() -> anyhow::Result<()> {
 
     let request_bytes = request.into_raw().unwrap().into_wire_bytes();
     socket_writer.send(request_bytes).await?;
-    loop {
-        sleep(Duration::from_secs(3)).await;
-    }
+    sleep(Duration::from_secs(3)).await;
     Ok(())
 }

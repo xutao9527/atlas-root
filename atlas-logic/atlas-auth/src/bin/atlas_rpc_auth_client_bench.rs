@@ -1,12 +1,12 @@
 use atlas_nut::net::rpc::client::client::AtlasRpcClient;
 use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use atlas_nut::net::rpc::router::AtlasMethodSpec;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_method::auth_method::Login;
 
 #[tokio::main]
@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
             let recv = recv_total.clone();
 
             let req_clone = req_bytes.clone();
-            client.call_raw_cb(req_clone, move |_resp| {
+            client.call_cb(req_clone, move |_resp| {
                 // success.fetch_add(1, Ordering::Relaxed);
                 recv.fetch_add(1, Ordering::Relaxed);
                 match AtlasWireHeader::read_wire_header(&_resp) {
@@ -80,11 +80,13 @@ async fn main() -> anyhow::Result<()> {
                     }
                 };
 
-                // let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
-                // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
-                // println!("{:?}", resp_msg);
+                let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
+                let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                println!("{:?}", resp_msg);
+
             }).await;
             sent.fetch_add(1, Ordering::Relaxed);
+            // sleep(Duration::from_secs(1)).await;
             // if (i + 1) % batch_size == 0 {
             //     sleep(Duration::from_secs(1)).await;
             // }

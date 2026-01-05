@@ -82,7 +82,7 @@ impl AtlasConnection {
 
     pub async fn establish_connection(&self) -> anyhow::Result<()> {
         let stream = TcpStream::connect(&self.addr).await?;
-        let mut framed = Framed::new(stream, FrameWireCodec::default());
+        let framed = Framed::new(stream, FrameWireCodec::default());
         let (mut socket_writer, mut socket_reader) = framed.split();
         let (channel_writer, mut channel_reader) = mpsc::channel::<Bytes>(100 * 1024);
         // 替换成新的 channel_writer

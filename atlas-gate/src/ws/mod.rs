@@ -1,20 +1,22 @@
-use std::sync::Arc;
+use atlas_nut::net::rpc::client::client::AtlasRpcClient;
+use atlas_nut::net::rpc::packet_header::AtlasWireHeader;
+use atlas_nut::net::rpc::router::AtlasModuleId;
 use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
-use tokio::sync::{mpsc};
+use std::sync::Arc;
+use tokio::sync::mpsc;
 use tracing::{info, warn};
-use atlas_core::AtlasModuleId;
-use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet_request::AtlasRawRequest;
 
-pub async fn ws_handler(ws: WebSocketUpgrade, auth_client: Arc<AtlasRpcClient>) -> impl IntoResponse {
-
+pub async fn ws_handler(
+    ws: WebSocketUpgrade,
+    auth_client: Arc<AtlasRpcClient>,
+) -> impl IntoResponse {
     ws.on_upgrade(move |socket| handle_ws(socket, auth_client.clone()))
 }
 
-async fn handle_ws(socket: WebSocket,auth_client: Arc<AtlasRpcClient>) {
+async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     info!("WS connected");
 
     let (mut ws_tx, mut ws_rx) = socket.split();
@@ -34,33 +36,27 @@ async fn handle_ws(socket: WebSocket,auth_client: Arc<AtlasRpcClient>) {
     // 3️⃣ reader / dispatcher
     while let Some(msg) = ws_rx.next().await {
         match msg {
-            Ok(Message::Binary(bin)) => {
-                let req: AtlasRawRequest = match rmp_serde::from_slice(&bin) {
-                    Ok(r) => r,
-                    Err(e) => {
-                        warn!("decode raw request failed: {}", e);
-                        continue;
-                    }
-                };
-                match AtlasModuleId::from_wire(req.method) {
-                    Some(module_id) => {
-                        match module_id {
+            Ok(Message::Binary(msg_bytes)) => {
+                if let Ok(header) = AtlasWireHeader::read_wire_header(&msg_bytes) {
+                    match AtlasModuleId::from_wire(header.method) {
+                        Some(module_id) => match module_id {
                             AtlasModuleId::Auth => {
                                 let out = out_tx.clone();
                                 let client = auth_client.clone();
-                                let _ = client.call_cb(req, move |resp| {
-                                    let buf = rmp_serde::to_vec(&resp).unwrap();
-                                    let _ = out.send(Message::binary(buf));
-                                }).await;
+                                let _ = client
+                                    .call_cb(msg_bytes, move |resp| {
+                                        let _ = out.send(Message::binary(resp));
+                                    })
+                                    .await;
                             }
                             _ => {}
+                        },
+                        None => {
+                            warn!("unknown module wire: {}", header.method);
+                            continue;
                         }
-                    },
-                    None => {
-                        warn!("unknown module wire: {}", req.method);
-                        continue;
                     }
-                };
+                }
             }
             _ => {}
         }
