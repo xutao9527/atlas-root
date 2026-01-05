@@ -1,0 +1,52 @@
+use std::time::Duration;
+use atlas_blitz::auth_mod::{Login, LoginReq};
+use atlas_nut::net::rpc::codec::FrameWireCodec;
+use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
+use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
+use atlas_nut::net::rpc::router::AtlasMethodSpec;
+use futures_util::{SinkExt, StreamExt};
+use tokio::net::TcpStream;
+use tokio::time::sleep;
+use tokio_util::codec::Framed;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let stream = TcpStream::connect("127.0.0.1:5566".to_string()).await?;
+    let framed = Framed::new(stream, FrameWireCodec::default());
+    let (mut socket_writer, mut socket_reader) = framed.split();
+
+
+    tokio::spawn(async move {
+        while let Some(result) = socket_reader.next().await {
+            match result {
+                Ok(resp) => {
+                    let result = AtlasRawMessage::from_wire_bytes(resp);
+                    println!("{:?}", result);
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    let request = AtlasWireMessage {
+        header: AtlasWireHeader {
+            id: 0,
+            slot_index: 0,
+            method: Login::WIRE,
+            kind: AtlasWireKind::Request,
+        },
+        payload: LoginReq {
+            account: "val".into(),
+            password: "val".into(),
+        },
+    };
+
+    let request_bytes = request.into_raw().unwrap().into_wire_bytes();
+
+    socket_writer.send(request_bytes).await?;
+
+    loop {
+        sleep(Duration::from_secs(3)).await;
+    }
+    Ok(())
+}

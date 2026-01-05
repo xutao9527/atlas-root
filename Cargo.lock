@@ -312,9 +312,11 @@ dependencies = [
  "anyhow",
  "atlas-nut",
  "bytes",
+ "futures-util",
  "rmp-serde",
  "serde",
  "tokio",
+ "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]
