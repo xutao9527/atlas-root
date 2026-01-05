@@ -23,7 +23,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
 
     // 1️⃣ WS 写通道（唯一）
     let (out_tx, mut out_rx) = mpsc::unbounded_channel::<Message>();
-
+    //let (out_tx, mut out_rx) = mpsc::channel::<Message>(1024);
     // 2️⃣ writer task（唯一写 socket 的地方）
     let writer = tokio::spawn(async move {
         while let Some(msg) = out_rx.recv().await {

@@ -1,8 +1,8 @@
 use atlas_client_bench::ws_client::WsClient;
 use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use atlas_nut::net::rpc::router::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_method::auth_method::Login;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -63,14 +63,13 @@ async fn main() {
         let qps = qps_counter.clone();
         let req_clone1 = req_bytes.clone();
         tokio::spawn(async move {
-
             let mut ws_client = WsClient::new("ws://127.0.0.1:8080/ws".to_string(),
                 move |_resp| {
                     qps.fetch_add(1, Ordering::Relaxed);
                     recv.fetch_add(1, Ordering::Relaxed);
-                    // let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
-                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
-                    // println!("{:?}", resp_msg);
+                    let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
+                    let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    println!("{:?}", resp_msg);
                 },
             ).await;
             ws_client.run().await;
@@ -79,7 +78,6 @@ async fn main() {
                 ws_client.send_byte(req_clone2).await;
                 sent.fetch_add(1, Ordering::Relaxed);
             }
-
             println!("connection {} finished", conn_id);
         });
 

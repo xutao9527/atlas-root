@@ -1,8 +1,8 @@
 use crate::ws_client::WsClient;
 use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use atlas_nut::net::rpc::router::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
 use atlas_scheme::module_method::auth_method::Login;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
@@ -71,7 +71,11 @@ impl CmdContext {
             },
             ["c"] => {
                 if self.client.is_none() {
-                    let mut ws_client = WsClient::new(self.ws_server_addr.clone(),|_resp|{}).await;
+                    let mut ws_client = WsClient::new(self.ws_server_addr.clone(),|_resp|{
+                        let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
+                        let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                        println!("{:?}", resp_msg);
+                    }).await;
                     ws_client.run().await;
                     self.client = Some(ws_client);
                 }
