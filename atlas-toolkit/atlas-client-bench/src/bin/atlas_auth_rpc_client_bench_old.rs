@@ -1,14 +1,12 @@
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet_request::AtlasWireRequest;
 use atlas_core::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
+use atlas_scheme::dto::auth_model::LoginReq;
 use atlas_scheme::module_method::auth_method;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
-use bytes::Bytes;
 use tokio::time::sleep;
-use atlas_core::net::rpc::packet::AtlasPacket::AtlasResponse;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
