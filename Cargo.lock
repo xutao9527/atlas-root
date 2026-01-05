@@ -375,7 +375,6 @@ dependencies = [
  "atlas-nut",
  "axum",
  "futures-util",
- "rmp-serde",
  "tokio",
  "tracing",
  "tracing-subscriber",
