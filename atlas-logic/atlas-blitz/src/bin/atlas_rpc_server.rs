@@ -1,5 +1,5 @@
 use atlas_blitz::auth_mod;
-use atlas_nut::net::rpc::server::AtlasNetServer;
+use atlas_nut::net::rpc::server::AtlasRpcServer;
 use tracing_subscriber::fmt::time::LocalTime;
 
 
@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
         .with_target(false)
         .init();
     let serve_addr = format!("{}:{}", "0.0.0.0", "5566");
-    let server = AtlasNetServer::new(serve_addr, auth_mod::dispatch);
+    let server = AtlasRpcServer::new(serve_addr, auth_mod::dispatch);
     server.run().await?;
     Ok(())
 }

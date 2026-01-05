@@ -5,7 +5,7 @@ use tracing::{debug, warn};
 use crate::net::rpc::codec::FrameWireCodec;
 use crate::net::rpc::packet_message::AtlasRawMessage;
 
-pub struct AtlasNetServer<DispatchFn, Fut>
+pub struct AtlasRpcServer<DispatchFn, Fut>
 where
     DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,
@@ -14,7 +14,7 @@ where
     dispatch_fn: DispatchFn,
 }
 
-impl<DispatchFn, Fut> AtlasNetServer<DispatchFn, Fut>
+impl<DispatchFn, Fut> AtlasRpcServer<DispatchFn, Fut>
 where
     DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,

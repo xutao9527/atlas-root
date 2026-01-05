@@ -1,4 +1,4 @@
-use bytes::Buf;
+use bytes::{Buf, Bytes, BytesMut};
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,5 +64,21 @@ impl AtlasWireHeader {
             method,
             kind,
         })
+    }
+
+    pub fn overwrite_wire_header(
+        wire: Bytes,
+        new_id: u64,
+        new_slot_index: u32,
+    ) -> Bytes {
+        // 如果 Bytes 是共享的，这里才会发生一次 copy（仅 17 字节）
+        let mut buf = BytesMut::from(wire.as_ref());
+
+        // id
+        buf[0..8].copy_from_slice(&new_id.to_be_bytes());
+        // slot_index
+        buf[8..12].copy_from_slice(&new_slot_index.to_be_bytes());
+
+        buf.freeze()
     }
 }

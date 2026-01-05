@@ -22,7 +22,7 @@ fn main() {
     let payload_bytes = rmp_serde::to_vec(&request.payload).expect("payload encode failed");
 
     // 3️⃣ 分配 wire buffer（header 固定 17 字节）
-    let mut wire = BytesMut::with_capacity(21 + payload_bytes.len());
+    let mut wire = BytesMut::with_capacity(17 + payload_bytes.len());
 
     // 4️⃣ 手动写 AtlasWireHeader（固定布局）
     wire.put_u64(request.header.id); // 8
@@ -33,8 +33,8 @@ fn main() {
     // 2️⃣ payload → msgpack bytes（只序列化 payload）
     let payload_bytes = rmp_serde::to_vec(&request.payload).expect("payload encode failed");
 
-    // 3️⃣ 分配 wire buffer（header 固定 21 字节）
-    let mut wire = BytesMut::with_capacity(21 + payload_bytes.len());
+    // 3️⃣ 分配 wire buffer（header 固定 17 字节）
+    let mut wire = BytesMut::with_capacity(17 + payload_bytes.len());
 
     // 4️⃣ 手动写 AtlasWireHeader（固定布局）
     wire.put_u64(request.header.id); // 8
