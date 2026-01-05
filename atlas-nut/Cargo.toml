@@ -1,0 +1,22 @@
+[package]
+name = "atlas-nut"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# runtime
+tokio = { workspace = true, features = ["full"] }
+
+# network
+tokio-util = { workspace = true, features = ["codec"] }
+futures = { workspace = true }
+
+# common
+anyhow = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+rmp = "0.8.15"
+rmp-serde = { workspace = true }
+bytes = { workspace = true ,features = ["serde"] }
+slab = { workspace = true }
+parking_lot = { workspace = true }
+tracing = { workspace = true }

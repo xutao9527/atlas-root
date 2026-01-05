@@ -308,6 +308,16 @@ dependencies = [
 [[package]]
 name = "atlas-blitz"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "atlas-nut",
+ "bytes",
+ "rmp-serde",
+ "serde",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "atlas-client-bench"
@@ -365,6 +375,23 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "atlas-nut"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "futures",
+ "parking_lot",
+ "rmp",
+ "rmp-serde",
+ "serde",
+ "slab",
+ "tokio",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]

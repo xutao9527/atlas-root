@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
-#[tokio::main(flavor = "multi_thread", worker_threads = 16)]
+#[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // 每秒统计 QPS
     let success_counter = Arc::new(AtomicUsize::new(0));

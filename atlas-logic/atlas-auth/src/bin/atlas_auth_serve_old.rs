@@ -1,6 +1,6 @@
 use tracing_subscriber::fmt::time::LocalTime;
 use atlas_auth::module_dispatch::auth_bind::dispatch;
-use atlas_core::net::rpc::server::AtlasNetServer;
+use atlas_core::net::rpc::server_obj::AtlasNetServer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
