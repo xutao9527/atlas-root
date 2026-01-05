@@ -1,13 +1,12 @@
 pub mod handler;
-pub mod dto;
 
 pub mod auth_mod {
-  
+
     use atlas_nut::net::rpc::packet_message::{AtlasRawMessage};
     use atlas_nut::net::rpc::router::{AtlasMethodSpec, AtlasModuleId, handle};
     use bytes::Bytes;
     use serde::{Deserialize, Serialize};
-    
+
     use crate::handler::{login, register};
 
     #[derive(Debug, Serialize, Deserialize, Clone)]

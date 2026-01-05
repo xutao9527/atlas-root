@@ -387,7 +387,6 @@ dependencies = [
  "bytes",
  "futures",
  "parking_lot",
- "rmp",
  "rmp-serde",
  "serde",
  "slab",
