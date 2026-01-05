@@ -39,7 +39,7 @@ where
 {
     let req_msg = match AtlasWireMessage::<M::Request>::from_raw(raw.clone()) {
         Ok(r) => r,
-        Err(e) => return AtlasRawMessage {
+        Err(_e) => return AtlasRawMessage {
             header: raw.header,
             payload: Bytes::new(),
         },
@@ -47,7 +47,7 @@ where
     let resp_msg = f(req_msg).await;
     match resp_msg.into_raw() {
         Ok(resp_msg) => resp_msg,
-        Err(_) => return AtlasRawMessage {
+        Err(_) => AtlasRawMessage {
             header: raw.header,
             payload: Bytes::new(),
         },
