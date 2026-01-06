@@ -1,10 +1,10 @@
 use crate::rpc::auth_handler;
-use atlas_core::atlas_dispatch;
+use atlas_core::atlas_rpc_dispatch;
 use atlas_scheme::module_method::auth_method;
 
-atlas_dispatch! {
+atlas_rpc_dispatch! {
     module auth_bind {
-        auth_method::Register => auth_handler::register,
-        auth_method::Login => auth_handler::login,
+        auth_method::RegisterRpc => auth_handler::register,
+        auth_method::LoginRpc => auth_handler::login,
     }
 }

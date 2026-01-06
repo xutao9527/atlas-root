@@ -1,9 +1,9 @@
 use atlas_core::net::rpc::codec::FrameWireCodec;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
-use atlas_core::net::rpc::router::AtlasMethodSpec;
+use atlas_core::net::rpc::router::AtlasRpcSpec;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_method::auth_method::Login;
+use atlas_scheme::module_method::auth_method::LoginRpc;
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::net::TcpStream;
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
         header: AtlasWireHeader {
             id: 1,
             slot_index: 1,
-            method: Login::WIRE,
+            method: LoginRpc::WIRE,
             kind: AtlasWireKind::Request,
         },
         payload: LoginReq {

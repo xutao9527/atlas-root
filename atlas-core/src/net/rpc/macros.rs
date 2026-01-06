@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! atlas_method {
+macro_rules! atlas_rpc_module {
     (
         module $mod_name:ident {
             module_id = $module_id:expr;
@@ -10,12 +10,12 @@ macro_rules! atlas_method {
     ) => {
         pub mod $mod_name {
             use super::*;
-            use atlas_core::net::rpc::router::{AtlasMethodSpec, AtlasModuleId};
+            use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
+
             $(
                 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
                 pub struct $method_ty;
-
-                impl AtlasMethodSpec for $method_ty {
+                impl AtlasRpcSpec for $method_ty {
                     const MODULE_ID: AtlasModuleId = $module_id;
                     const METHOD_ID: u16 = $method_id;
                     type Request = $req_ty;
@@ -27,7 +27,7 @@ macro_rules! atlas_method {
 }
 
 #[macro_export]
-macro_rules! atlas_dispatch {
+macro_rules! atlas_rpc_dispatch {
     (
         module $mod_name:ident {
             $(
@@ -39,7 +39,7 @@ macro_rules! atlas_dispatch {
             use super::*;
             use bytes::Bytes;
             use atlas_core::net::rpc::packet_message::AtlasRawMessage;
-            use atlas_core::net::rpc::router::{handle, AtlasMethodSpec};
+            use atlas_core::net::rpc::router::{handle, AtlasRpcSpec};
 
 
             pub async fn dispatch(raw: AtlasRawMessage) -> AtlasRawMessage {

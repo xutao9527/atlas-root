@@ -1,8 +1,8 @@
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use atlas_core::net::rpc::router::AtlasMethodSpec;
+use atlas_core::net::rpc::router::{AtlasRpcSpec};
 use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_method::auth_method::Login;
+use atlas_scheme::module_method::auth_method::{LoginRpc};
 use futures_util::{SinkExt, StreamExt};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
@@ -49,7 +49,7 @@ async fn main() {
         header: AtlasWireHeader {
             id: 0,
             slot_index: 0,
-            method: Login::WIRE,
+            method: LoginRpc::WIRE,
             kind: AtlasWireKind::Request,
         },
         payload: LoginReq {

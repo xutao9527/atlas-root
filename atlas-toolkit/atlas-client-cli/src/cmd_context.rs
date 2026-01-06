@@ -1,9 +1,9 @@
 use crate::ws_client::WsClient;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use atlas_core::net::rpc::router::AtlasMethodSpec;
+use atlas_core::net::rpc::router::{AtlasRpcSpec};
 use atlas_scheme::dto::auth_model::{LoginReq, RegisterReq};
-use atlas_scheme::module_method::auth_method::{Login, Register};
+use atlas_scheme::module_method::auth_method::{LoginRpc, RegisterRpc};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
@@ -91,7 +91,7 @@ impl CmdContext {
                         header: AtlasWireHeader {
                             id: 0,
                             slot_index: 0,
-                            method: Login::WIRE,
+                            method: LoginRpc::WIRE,
                             kind: AtlasWireKind::Request,
                         },
                         payload: LoginReq {
@@ -109,7 +109,7 @@ impl CmdContext {
                         header: AtlasWireHeader {
                             id: 0,
                             slot_index: 0,
-                            method: Register::WIRE,
+                            method: RegisterRpc::WIRE,
                             kind: AtlasWireKind::Request,
                         },
                         payload: RegisterReq {

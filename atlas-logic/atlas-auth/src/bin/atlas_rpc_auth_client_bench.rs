@@ -1,11 +1,11 @@
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use atlas_core::net::rpc::router::AtlasMethodSpec;
+use atlas_core::net::rpc::router::AtlasRpcSpec;
 use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_method::auth_method::Login;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use atlas_scheme::module_method::auth_method::LoginRpc;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
         header: AtlasWireHeader {
             id: 0,
             slot_index: 0,
-            method: Login::WIRE,
+            method: LoginRpc::WIRE,
             kind: AtlasWireKind::Request,
         },
         payload: LoginReq {
@@ -64,13 +64,14 @@ async fn main() -> anyhow::Result<()> {
             let recv = recv_total.clone();
 
             let req_clone = req_bytes.clone();
-            client.call_cb(req_clone, |resp| async move {
-                recv.fetch_add(1, Ordering::Relaxed);
+            client
+                .call_cb(req_clone, |resp| async move {
+                    recv.fetch_add(1, Ordering::Relaxed);
                     match AtlasWireHeader::read_wire_header(&resp) {
                         Ok(header) => {
                             if header.kind == AtlasWireKind::ResponseOk {
                                 success.fetch_add(1, Ordering::Relaxed);
-                            }else{
+                            } else {
                                 fail.fetch_add(1, Ordering::Relaxed);
                             }
                         }
@@ -81,7 +82,8 @@ async fn main() -> anyhow::Result<()> {
                     // let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
                     // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
                     // println!("{:?}", resp_msg);
-            }).await;
+                })
+                .await;
             sent.fetch_add(1, Ordering::Relaxed);
             // sleep(Duration::from_secs(1)).await;
             // if (i + 1) % batch_size == 0 {
