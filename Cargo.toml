@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "atlas-core",
+#    "atlas-core",
     "atlas-scheme",
     "atlas-gate",
     "atlas-registry",
@@ -13,14 +13,12 @@ resolver = "3"
 
 [workspace.dependencies]
 # local
-atlas-core = { path = "atlas-core" }
+#atlas-core = { path = "atlas-core" }
 atlas-nut = { path = "atlas-nut" }
 atlas-scheme = { path = "atlas-scheme" }
 
 # runtime
 tokio = "1.48"
-
-
 
 # network
 axum = "0.8"
