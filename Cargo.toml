@@ -7,7 +7,7 @@ members = [
     "atlas-logic/atlas-auth",
     "atlas-logic/atlas-blitz",
     "atlas-toolkit/atlas-db-migration",
-    "atlas-toolkit/atlas-client-bench"
+    "atlas-toolkit/atlas-client-cli"
 , "atlas-core"]
 resolver = "3"
 

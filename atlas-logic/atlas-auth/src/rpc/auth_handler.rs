@@ -4,10 +4,10 @@ use atlas_scheme::dto::auth_model::{LoginReq, LoginResp, RegisterReq, RegisterRe
 
 pub async fn register(request: AtlasWireMessage<RegisterReq>) -> AtlasWireMessage<RegisterResp> {
     AtlasWireMessage {
-        header: request.header,
+        header: request.header.with_kind(ResponseOk),
         payload: RegisterResp {
             ok: true,
-            error: None,
+            message: None,
         },
     }
 }

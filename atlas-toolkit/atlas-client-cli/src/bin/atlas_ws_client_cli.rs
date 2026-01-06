@@ -1,4 +1,4 @@
-use atlas_client_bench::cmd_context::CmdContext;
+use atlas_client_cli::cmd_context::CmdContext;
 
 #[tokio::main]
 async fn main() {

@@ -322,7 +322,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "atlas-client-bench"
+name = "atlas-client-cli"
 version = "0.1.0"
 dependencies = [
  "atlas-core",

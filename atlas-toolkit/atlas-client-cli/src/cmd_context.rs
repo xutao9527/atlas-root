@@ -2,8 +2,8 @@ use crate::ws_client::WsClient;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_method::auth_method::Login;
+use atlas_scheme::dto::auth_model::{LoginReq, RegisterReq};
+use atlas_scheme::module_method::auth_method::{Login, Register};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
@@ -89,8 +89,8 @@ impl CmdContext {
                 if let Some(client) = &self.client {
                     let request = AtlasWireMessage {
                         header: AtlasWireHeader {
-                            id: 1,
-                            slot_index: 1,
+                            id: 0,
+                            slot_index: 0,
                             method: Login::WIRE,
                             kind: AtlasWireKind::Request,
                         },
@@ -99,7 +99,25 @@ impl CmdContext {
                             password: password.to_string(),
                         },
                     };
-
+                    let request_bytes = request.into_raw().unwrap().into_wire_bytes();
+                    client.send_byte(request_bytes).await;
+                }
+            }
+            ["api", "register", account, password,nickname] => {
+                if let Some(client) = &self.client {
+                    let request = AtlasWireMessage {
+                        header: AtlasWireHeader {
+                            id: 0,
+                            slot_index: 0,
+                            method: Register::WIRE,
+                            kind: AtlasWireKind::Request,
+                        },
+                        payload: RegisterReq {
+                            account: account.to_string(),
+                            password: password.to_string(),
+                            nickname: nickname.to_string(),
+                        },
+                    };
                     let request_bytes = request.into_raw().unwrap().into_wire_bytes();
                     client.send_byte(request_bytes).await;
                 }
