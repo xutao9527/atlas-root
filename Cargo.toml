@@ -1,6 +1,6 @@
 [workspace]
 members = [
-#    "atlas-core",
+    "atlas-core",
     "atlas-scheme",
     "atlas-gate",
     "atlas-registry",
@@ -8,13 +8,12 @@ members = [
     "atlas-logic/atlas-blitz",
     "atlas-toolkit/atlas-db-migration",
     "atlas-toolkit/atlas-client-bench"
-, "atlas-nut"]
+, "atlas-core"]
 resolver = "3"
 
 [workspace.dependencies]
 # local
-#atlas-core = { path = "atlas-core" }
-atlas-nut = { path = "atlas-nut" }
+atlas-core = { path = "atlas-core" }
 atlas-scheme = { path = "atlas-scheme" }
 
 # runtime

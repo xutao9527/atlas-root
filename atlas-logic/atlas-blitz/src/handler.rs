@@ -1,6 +1,6 @@
 use crate::auth_mod::{LoginReq, LoginResp, RegisterReq, RegisterResp};
-use atlas_nut::net::rpc::packet_header::AtlasWireKind::ResponseOk;
-use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_core::net::rpc::packet_header::AtlasWireKind::ResponseOk;
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 
 pub async fn register(request: AtlasWireMessage<RegisterReq>) -> AtlasWireMessage<RegisterResp> {
     AtlasWireMessage {

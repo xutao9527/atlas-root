@@ -1,5 +1,5 @@
-use atlas_nut::net::rpc::packet_header::AtlasWireKind::ResponseOk;
-use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_core::net::rpc::packet_header::AtlasWireKind::ResponseOk;
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp, RegisterReq, RegisterResp};
 
 pub async fn register(request: AtlasWireMessage<RegisterReq>) -> AtlasWireMessage<RegisterResp> {

@@ -10,12 +10,13 @@ macro_rules! atlas_method {
     ) => {
         pub mod $mod_name {
             use super::*;
+            use atlas_core::net::rpc::router::{AtlasMethodSpec, AtlasModuleId};
             $(
                 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
                 pub struct $method_ty;
 
-                impl ::atlas_core::AtlasMethodSpec for $method_ty {
-                    const MODULE_ID: ::atlas_core::AtlasModuleId = $module_id;
+                impl AtlasMethodSpec for $method_ty {
+                    const MODULE_ID: AtlasModuleId = $module_id;
                     const METHOD_ID: u16 = $method_id;
                     type Request = $req_ty;
                     type Response = $resp_ty;
@@ -37,22 +38,18 @@ macro_rules! atlas_dispatch {
         pub mod $mod_name {
             use super::*;
             use bytes::Bytes;
-            use atlas_core::AtlasMethodSpec;
-            use atlas_core::net::rpc::packet_request::AtlasRawRequest;
-            use atlas_core::net::rpc::packet_response::AtlasRawResponse;
-            use atlas_core::net::rpc::router::handle;
+            use atlas_core::net::rpc::packet_message::AtlasRawMessage;
+            use atlas_core::net::rpc::router::{handle, AtlasMethodSpec};
 
-            pub async fn dispatch(raw: AtlasRawRequest) -> AtlasRawResponse {
-                match raw.method {
+
+            pub async fn dispatch(raw: AtlasRawMessage) -> AtlasRawMessage {
+                match raw.header.method {
                     $(
                         <$method_ty>::WIRE => handle::<$method_ty, _>(raw, $fn_name).await,
                     )*
-                    _ => AtlasRawResponse {
-                        id: raw.id,
-                        slot_index: raw.slot_index,
-                        method: raw.method,
+                    _ => AtlasRawMessage {
+                        header: raw.header,
                         payload: Bytes::new(),
-                        error: Some("method not found".into()),
                     },
                 }
             }

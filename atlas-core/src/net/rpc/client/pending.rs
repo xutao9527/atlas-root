@@ -3,20 +3,18 @@ use slab::Slab;
 use tokio::time::Instant;
 
 /// 每个 slot 存储回调和元信息
-pub struct PendingSlot<R> {
+pub struct PendingSlot<T> {
     pub request_id: u64,
-    pub callback: Box<dyn FnOnce(R) + Send + 'static>,
+    pub body: T,
     pub _timestamp: Instant,
 }
 
-
 /// 高性能 PendingTable
-pub struct PendingTable<R> {
-    slab: Mutex<Slab<PendingSlot<R>>>, // Slab存储回调
+pub struct PendingTable<T> {
+    slab: Mutex<Slab<PendingSlot<T>>>, // Slab 存储回调
 }
 
-
-impl<R> PendingTable<R> {
+impl<T> PendingTable<T> {
     pub fn new(cap: usize) -> Self {
         Self {
             slab: Mutex::new(Slab::with_capacity(cap)),
@@ -24,39 +22,28 @@ impl<R> PendingTable<R> {
     }
 
     #[inline]
-    pub fn insert(
-        &self,
-        req_id: u64,
-        callback: Box<dyn FnOnce(R) + Send + 'static>,
-    ) -> usize
-    {
+    pub fn insert(&self, req_id: u64, body: T) -> u32 {
         let mut slab = self.slab.lock();
         let index = slab.insert(PendingSlot {
             request_id: req_id,
-            callback,
+            body,
             _timestamp: Instant::now(),
         });
-        index
+        index as u32
     }
 
     #[inline]
-    pub fn remove(&self, slot_index: usize) -> Option<PendingSlot<R>> {
+    pub fn remove(&self, slot_index: u32) -> Option<PendingSlot<T>> {
         let mut slab = self.slab.lock();
-        slab.try_remove(slot_index)
+        slab.try_remove(slot_index as usize)
     }
 
     pub fn _len(&self) -> usize {
         self.slab.lock().len()
     }
 
-    pub fn drain<F>(&self, mut f: F)
-    where
-        F: FnMut(PendingSlot<R>),
-    {
+    pub fn drain(&self) -> Vec<PendingSlot<T>> {
         let mut slab = self.slab.lock();
-        for slot in slab.drain() {
-            f(slot);
-        }
+        slab.drain().collect()
     }
 }
-

@@ -2,8 +2,8 @@ pub mod handler;
 
 pub mod auth_mod {
 
-    use atlas_nut::net::rpc::packet_message::{AtlasRawMessage};
-    use atlas_nut::net::rpc::router::{AtlasMethodSpec, AtlasModuleId, handle};
+    use atlas_core::net::rpc::packet_message::{AtlasRawMessage};
+    use atlas_core::net::rpc::router::{AtlasMethodSpec, AtlasModuleId, handle};
     use bytes::Bytes;
     use serde::{Deserialize, Serialize};
 

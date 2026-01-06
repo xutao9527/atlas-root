@@ -10,7 +10,7 @@ use axum::routing::get;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
-use atlas_nut::net::rpc::client::client::AtlasRpcClient;
+use atlas_core::net::rpc::client::client::AtlasRpcClient;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）

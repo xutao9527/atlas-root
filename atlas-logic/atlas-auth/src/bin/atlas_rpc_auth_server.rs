@@ -1,5 +1,5 @@
 
-use atlas_nut::net::rpc::server::AtlasRpcServer;
+use atlas_core::net::rpc::server::AtlasRpcServer;
 use tracing_subscriber::fmt::time::LocalTime;
 use atlas_auth::rpc::module_dispatch::auth_bind::dispatch;
 

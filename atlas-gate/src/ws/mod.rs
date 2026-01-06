@@ -1,14 +1,13 @@
-use atlas_nut::net::rpc::client::client::AtlasRpcClient;
-use atlas_nut::net::rpc::packet_header::AtlasWireHeader;
-use atlas_nut::net::rpc::router::AtlasModuleId;
+use atlas_core::net::rpc::client::client::AtlasRpcClient;
+use atlas_core::net::rpc::packet_header::AtlasWireHeader;
+use atlas_core::net::rpc::router::AtlasModuleId;
 use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use bytes::Bytes;
-use tokio::sync::mpsc;
-use tracing::{info, warn};
+use tracing::{info};
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,

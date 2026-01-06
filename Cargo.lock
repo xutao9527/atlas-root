@@ -297,7 +297,7 @@ name = "atlas-auth"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atlas-nut",
+ "atlas-core",
  "atlas-scheme",
  "bytes",
  "futures-util",
@@ -312,7 +312,7 @@ name = "atlas-blitz"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atlas-nut",
+ "atlas-core",
  "bytes",
  "futures-util",
  "rmp-serde",
@@ -327,13 +327,29 @@ dependencies = [
 name = "atlas-client-bench"
 version = "0.1.0"
 dependencies = [
- "atlas-nut",
+ "atlas-core",
  "atlas-scheme",
  "bytes",
  "futures-util",
  "reqwest",
  "tokio",
  "tokio-tungstenite",
+]
+
+[[package]]
+name = "atlas-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "futures",
+ "parking_lot",
+ "rmp-serde",
+ "serde",
+ "slab",
+ "tokio",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]
@@ -351,7 +367,7 @@ name = "atlas-gate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atlas-nut",
+ "atlas-core",
  "atlas-scheme",
  "axum",
  "bytes",
@@ -362,22 +378,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atlas-nut"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytes",
- "futures",
- "parking_lot",
- "rmp-serde",
- "serde",
- "slab",
- "tokio",
- "tokio-util",
- "tracing",
-]
-
-[[package]]
 name = "atlas-registry"
 version = "0.1.0"
 
@@ -385,7 +385,7 @@ version = "0.1.0"
 name = "atlas-scheme"
 version = "0.1.0"
 dependencies = [
- "atlas-nut",
+ "atlas-core",
  "sea-orm",
  "serde",
 ]

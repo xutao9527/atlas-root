@@ -1,6 +1,6 @@
 
-use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use atlas_blitz::auth_mod::RegisterReq;
 
