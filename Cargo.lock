@@ -369,6 +369,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "atlas-nut",
+ "atlas-scheme",
  "axum",
  "futures-util",
  "tokio",

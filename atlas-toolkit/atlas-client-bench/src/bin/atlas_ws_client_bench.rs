@@ -67,9 +67,9 @@ async fn main() {
                 move |_resp| {
                     qps.fetch_add(1, Ordering::Relaxed);
                     recv.fetch_add(1, Ordering::Relaxed);
-                    let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
-                    let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
-                    println!("{:?}", resp_msg);
+                    // let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
+                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    // println!("{:?}", resp_msg);
                 },
             ).await;
             ws_client.run().await;

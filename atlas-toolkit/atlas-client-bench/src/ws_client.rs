@@ -10,14 +10,14 @@ use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 pub struct WsClient{
     ws_write: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
     ws_read: Arc<Mutex<SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>>>,
-    callback: Arc<dyn Fn(Bytes) + Send + Sync + 'static>,
+    callback: Arc<dyn Fn(&str) + Send + Sync + 'static>,
 }
 
 impl WsClient {
 
     pub async fn new<F>(ws_server_addr: String,callback: F,) -> WsClient
     where
-        F: Fn(Bytes) + Send + Sync + 'static,
+        F: Fn(&str) + Send + Sync + 'static,
     {
         let (ws_stream, _) =
             connect_async(ws_server_addr).await.expect("Failed to connect");
@@ -47,10 +47,11 @@ impl WsClient {
             while let Some(msg) =  read.next().await{
                 match msg {
                     Ok(Message::Text(text)) => {
-                        println!("Received: {}", text);
+                        // println!("Received: {}", text);
+                        callback(&text);
                     }
-                    Ok(Message::Binary(resp_bytes)) => {
-                        callback(resp_bytes);
+                    Ok(Message::Binary(_resp_bytes)) => {
+                        //callback(resp_bytes);
                     }
                     Ok(Message::Close(_)) => {
                         println!("Server closed connection");
