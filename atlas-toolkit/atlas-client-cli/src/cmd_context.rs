@@ -87,39 +87,21 @@ impl CmdContext {
             },
             ["api","login",account, password] => {
                 if let Some(client) = &self.client {
-                    let request = AtlasWireMessage {
-                        header: AtlasWireHeader {
-                            id: 0,
-                            slot_index: 0,
-                            method: LoginRpc::WIRE,
-                            kind: AtlasWireKind::Request,
-                        },
-                        payload: LoginReq {
-                            account: account.to_string(),
-                            password: password.to_string(),
-                        },
-                    };
-                    let request_bytes = request.into_raw().unwrap().into_wire_bytes();
-                    client.send_byte(request_bytes).await;
+                    let req = LoginRpc::build_request(LoginReq {
+                        account: account.to_string(),
+                        password: password.to_string(),
+                    }).unwrap();
+                    client.send_byte(req.into_wire_bytes()).await;
                 }
             }
             ["api", "register", account, password,nickname] => {
                 if let Some(client) = &self.client {
-                    let request = AtlasWireMessage {
-                        header: AtlasWireHeader {
-                            id: 0,
-                            slot_index: 0,
-                            method: RegisterRpc::WIRE,
-                            kind: AtlasWireKind::Request,
-                        },
-                        payload: RegisterReq {
-                            account: account.to_string(),
-                            password: password.to_string(),
-                            nickname: nickname.to_string(),
-                        },
-                    };
-                    let request_bytes = request.into_raw().unwrap().into_wire_bytes();
-                    client.send_byte(request_bytes).await;
+                    let req = RegisterRpc::build_request(RegisterReq {
+                        account: account.to_string(),
+                        password: password.to_string(),
+                        nickname: nickname.to_string(),
+                    }).unwrap();
+                    client.send_byte(req.into_wire_bytes()).await;
                 }
             }
             _ => {}
