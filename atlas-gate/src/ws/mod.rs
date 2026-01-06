@@ -46,13 +46,15 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
                         Some(module_id) => match module_id {
                             AtlasModuleId::Auth => {
                                 let sender = out_tx.clone();
-                                let client = auth_client.clone();
-                                let _ = client.call_cb(bin, |resp| async move {
-                                    // let raw_msg = AtlasRawMessage::from_wire_bytes(resp.clone());
-                                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
-                                    // println!("{:?}", resp_msg);
-                                    let _ = sender.send(Message::binary(resp)).await;
-                                }).await;
+
+                                sender.send(Message::binary(bin)).await.expect("send message error");
+                                // let client = auth_client.clone();
+                                // let _ = client.call_cb(bin, |resp| async move {
+                                //     // let raw_msg = AtlasRawMessage::from_wire_bytes(resp.clone());
+                                //     // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                                //     // println!("{:?}", resp_msg);
+                                //     let _ = sender.send(Message::binary(resp)).await;
+                                // }).await;
                             }
                             _ => {}
                         }
