@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
 
     let req_bytes = request.into_raw().unwrap().into_wire_bytes();
 
-    let total_requests = 10000_0000; // 总共发多少次
+    let total_requests = 10_0000_0000; // 总共发多少次
 
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     if let Ok(_) = client.connect().await {
