@@ -19,3 +19,4 @@ futures-util = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
 anyhow = { workspace = true }
+bytes = {workspace = true}

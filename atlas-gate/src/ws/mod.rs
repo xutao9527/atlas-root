@@ -6,6 +6,7 @@ use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
+use bytes::Bytes;
 use tokio::sync::mpsc;
 use tracing::{info, warn};
 
@@ -16,63 +17,71 @@ pub async fn ws_handler(
     ws.on_upgrade(move |socket| handle_ws(socket, auth_client.clone()))
 }
 
+const MAX_INFLIGHT: usize = 8192;   // 每 WS 连接最大 RPC 并发
+const RESP_QUEUE: usize = 8192;     // 回包队列
+
 async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     info!("WS connected");
 
-    // 有界队列：限制内存 + 允许背压
     let (mut ws_tx, mut ws_rx) = socket.split();
-    let (out_tx, mut out_rx) = mpsc::channel::<Message>(100 * 1024);
 
-    // ===== writer task（唯一写 socket 的地方）=====
+    // === 有界响应队列（不丢）===
+    let (resp_tx, mut resp_rx) = tokio::sync::mpsc::channel::<Bytes>(RESP_QUEUE);
+
+    // === inflight 限制（核心）===
+    let inflight = Arc::new(tokio::sync::Semaphore::new(MAX_INFLIGHT));
+
+    // ===== writer：唯一 socket IO =====
     let writer = tokio::spawn(async move {
-        while let Some(msg) = out_rx.recv().await {
-            if ws_tx.send(msg).await.is_err() {
+        while let Some(resp) = resp_rx.recv().await {
+            if ws_tx.send(Message::Binary(resp)).await.is_err() {
                 break;
             }
         }
     });
 
-    // ===== reader loop（高 QPS 核心）=====
+    // ===== reader：解析 + RPC =====
     while let Some(msg) = ws_rx.next().await {
-        match msg {
-            Ok(Message::Text(text)) => {
-                let _ = out_tx.send(Message::Text(text)).await;
-            }
-            Ok(Message::Binary(bin)) => {
-                if let Ok(header) = AtlasWireHeader::read_wire_header(&bin) {
-                    match AtlasModuleId::from_wire(header.method) {
-                        Some(module_id) => match module_id {
-                            AtlasModuleId::Auth => {
-                                let sender = out_tx.clone();
-                                let _client = auth_client.clone();
-
-                                // out_tx.send(Message::binary(bin)).await.expect("send message error");
-
-                                let _ = _client.call_cb(bin, |_resp| async move {
-                                    // let raw_msg = AtlasRawMessage::from_wire_bytes(resp.clone());
-                                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
-                                    // println!("{:?}", resp_msg);
-                                    let _ = sender.send(Message::binary(_resp)).await;
-                                    // if sender.try_send(Message::binary(resp)).is_err() {
-                                    //     panic!("send message error");
-                                    // }
-                                }).await;
-                            }
-                            _ => {}
-                        }
-                        None => {
-                            warn!("unknown module wire: {}", header.method);
-                            continue;
-                        }
-                    }
-                }
-            }
+        let msg = match msg {
+            Ok(Message::Binary(b)) => b,
             Ok(Message::Close(_)) => break,
-            _ => {}
+            _ => continue,
+        };
+
+        // 校验 header
+        let header = match AtlasWireHeader::read_wire_header(&msg) {
+            Ok(h) => h,
+            Err(_) => continue,
+        };
+
+        if AtlasModuleId::from_wire(header.method) != Some(AtlasModuleId::Auth) {
+            continue;
         }
+
+        // === 获取 inflight permit（背压在这里）===
+        let permit = match inflight.clone().acquire_owned().await {
+            Ok(p) => p,
+            Err(_) => break,
+        };
+
+        let resp_tx = resp_tx.clone();
+        let client = auth_client.clone();
+
+        // ⚠ 不 await WS，不 spawn 炸弹
+        let _ = client
+            .call_cb(msg, move |resp| {
+                async move {
+                    // 回包进入有界队列（不丢）
+                    let _ = resp_tx.send(resp).await;
+                    drop(permit); // 释放 inflight
+                }
+            })
+            .await;
     }
 
-    drop(out_tx); // 通知 writer 退出
+    // === 清理 ===
+    drop(resp_tx); // 通知 writer 退出
     let _ = writer.await;
+
     info!("WS disconnected");
 }

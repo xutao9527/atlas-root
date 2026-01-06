@@ -354,6 +354,7 @@ dependencies = [
  "atlas-nut",
  "atlas-scheme",
  "axum",
+ "bytes",
  "futures-util",
  "tokio",
  "tracing",
