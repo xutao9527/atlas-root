@@ -1,4 +1,5 @@
-use crate::net::rpc::client::pending::PendingTable;
+use std::pin::Pin;
+use crate::net::rpc::client::pending::{ PendingTable};
 use crate::net::rpc::codec::FrameWireCodec;
 use crate::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use crate::net::rpc::packet_message::AtlasWireMessage;
@@ -13,9 +14,11 @@ use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
 
+pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
+
 pub struct AtlasConnection {
     addr: String,
-    pending: Arc<PendingTable>,
+    pending: Arc<PendingTable<AsyncCallback>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
@@ -62,7 +65,7 @@ impl AtlasConnection {
                                 payload: Bytes::new(),
                             };
                             let resp_bytes = resp_msg.into_raw().unwrap().into_wire_bytes();
-                            (slot.callback)(resp_bytes).await;
+                            (slot.body)(resp_bytes).await;
                         }
                     }
                     Err(e) => {
@@ -113,7 +116,7 @@ impl AtlasConnection {
                         if let Ok(header) = AtlasWireHeader::read_wire_header(&packet) {
                             if let Some(slot) = pending.remove(header.slot_index) {
                                 if header.id == slot.request_id {
-                                    (slot.callback)(packet).await;
+                                    (slot.body)(packet).await;
                                 }
                             }
                         }
