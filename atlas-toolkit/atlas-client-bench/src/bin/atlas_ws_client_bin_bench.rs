@@ -1,16 +1,16 @@
+use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
+use atlas_nut::net::rpc::packet_message::AtlasWireMessage;
+use atlas_nut::net::rpc::router::AtlasMethodSpec;
+use atlas_scheme::dto::auth_model::LoginReq;
+use atlas_scheme::module_method::auth_method::Login;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 use tokio::time::{sleep, Duration};
 use tokio_tungstenite::connect_async;
-use tokio_tungstenite::tungstenite::{Error, Message};
-use atlas_nut::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_nut::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
-use atlas_nut::net::rpc::router::AtlasMethodSpec;
-use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_method::auth_method::Login;
+use tokio_tungstenite::tungstenite::Message;
 
 const CONNECTIONS: usize = 4;
 const INFLIGHT_PER_CONN: usize = 1024;
