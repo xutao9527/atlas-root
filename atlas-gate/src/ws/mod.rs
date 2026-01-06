@@ -23,7 +23,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
 
     // 有界队列：限制内存 + 允许背压
     let (mut ws_tx, mut ws_rx) = socket.split();
-    let (out_tx, mut out_rx) = mpsc::channel::<Message>(100 * 1024);
+    let (out_tx, mut out_rx) = mpsc::channel::<Message>(1024);
 
     // ===== writer task（唯一写 socket 的地方）=====
     let writer = tokio::spawn(async move {
@@ -46,7 +46,6 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
                         Some(module_id) => match module_id {
                             AtlasModuleId::Auth => {
                                 let sender = out_tx.clone();
-
                                 sender.send(Message::binary(bin)).await.expect("send message error");
                                 // let client = auth_client.clone();
                                 // let _ = client.call_cb(bin, |resp| async move {

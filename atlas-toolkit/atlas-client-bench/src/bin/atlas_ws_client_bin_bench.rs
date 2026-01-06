@@ -57,14 +57,14 @@ async fn main() {
             password: "val".into(),
         },
     };
-    let req_bytes = request.into_raw().unwrap().into_wire_bytes();
+    let _req_bytes = request.into_raw().unwrap().into_wire_bytes();
 
     // ===== 启动连接 =====
     for conn_id in 0..CONNECTIONS  {
         let sent_total = sent_total.clone();
         let recv_total = recv_total.clone();
         let qps_counter = qps_counter.clone();
-        let req_bytes_clone = req_bytes.clone();
+        let req_bytes_clone = _req_bytes.clone();
         tokio::spawn(async move {
             let (ws, _) = connect_async("ws://127.0.0.1:8080/ws").await.unwrap();
             let (mut tx, mut rx) = ws.split();
