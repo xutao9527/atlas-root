@@ -18,5 +18,3 @@ anyhow = { workspace = true }
 bytes = { workspace = true ,features = ["serde"] }
 serde = { workspace = true, features = ["derive","rc"] }
 rmp-serde = { workspace = true }
-futures-util = { workspace = true }
-tokio-util = { workspace = true, features = ["codec"] }

@@ -314,11 +314,9 @@ dependencies = [
  "anyhow",
  "atlas-core",
  "bytes",
- "futures-util",
  "rmp-serde",
  "serde",
  "tokio",
- "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]
@@ -368,7 +366,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "atlas-core",
- "atlas-scheme",
  "axum",
  "bytes",
  "futures-util",
