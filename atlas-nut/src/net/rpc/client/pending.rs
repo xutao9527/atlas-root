@@ -1,12 +1,15 @@
 use bytes::Bytes;
 use parking_lot::Mutex;
 use slab::Slab;
+use std::pin::Pin;
 use tokio::time::Instant;
+
+pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
 
 /// 每个 slot 存储回调和元信息
 pub struct PendingSlot {
     pub request_id: u64,
-    pub callback: Box<dyn FnOnce(Bytes) + Send + 'static>,
+    pub callback: Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>,
     pub _timestamp: Instant,
 }
 
@@ -23,7 +26,7 @@ impl PendingTable {
     }
 
     #[inline]
-    pub fn insert(&self, req_id: u64, callback: Box<dyn FnOnce(Bytes) + Send + 'static>) -> u32 {
+    pub fn insert(&self, req_id: u64, callback: AsyncCallback) -> u32 {
         let mut slab = self.slab.lock();
         let index = slab.insert(PendingSlot {
             request_id: req_id,
@@ -43,13 +46,18 @@ impl PendingTable {
         self.slab.lock().len()
     }
 
-    pub fn drain<F>(&self, mut f: F)
-    where
-        F: FnMut(PendingSlot),
-    {
+    // pub fn drain<F>(&self, mut f: F)
+    // where
+    //     F: FnMut(PendingSlot),
+    // {
+    //     let mut slab = self.slab.lock();
+    //     for slot in slab.drain() {
+    //         f(slot);
+    //     }
+    // }
+
+    pub fn drain(&self) -> Vec<PendingSlot> {
         let mut slab = self.slab.lock();
-        for slot in slab.drain() {
-            f(slot);
-        }
+        slab.drain().collect()
     }
 }

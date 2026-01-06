@@ -46,14 +46,14 @@ async fn main() -> anyhow::Result<()> {
             kind: AtlasWireKind::Request,
         },
         payload: LoginReq {
-            account: "val".into(),
-            password: "val".into(),
+            account: "val1".into(),
+            password: "val2".into(),
         },
     };
 
     let req_bytes = request.into_raw().unwrap().into_wire_bytes();
 
-    let total_requests = 20000_0000; // 总共发多少次
+    let total_requests = 10000_0000; // 总共发多少次
 
     let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
     if let Ok(_) = client.connect().await {
@@ -64,24 +64,23 @@ async fn main() -> anyhow::Result<()> {
             let recv = recv_total.clone();
 
             let req_clone = req_bytes.clone();
-            client.call_cb(req_clone, move |_resp| {
-                // success.fetch_add(1, Ordering::Relaxed);
+            client.call_cb(req_clone, |resp| async move {
                 recv.fetch_add(1, Ordering::Relaxed);
-                match AtlasWireHeader::read_wire_header(&_resp) {
-                    Ok(header) => {
-                        if header.kind == AtlasWireKind::ResponseOk {
-                            success.fetch_add(1, Ordering::Relaxed);
-                        }else{
+                    match AtlasWireHeader::read_wire_header(&resp) {
+                        Ok(header) => {
+                            if header.kind == AtlasWireKind::ResponseOk {
+                                success.fetch_add(1, Ordering::Relaxed);
+                            }else{
+                                fail.fetch_add(1, Ordering::Relaxed);
+                            }
+                        }
+                        Err(_) => {
                             fail.fetch_add(1, Ordering::Relaxed);
                         }
-                    }
-                    Err(_) => {
-                        fail.fetch_add(1, Ordering::Relaxed);
-                    }
-                };
-                // let raw_msg = AtlasRawMessage::from_wire_bytes(_resp);
-                // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
-                // println!("{:?}", resp_msg);
+                    };
+                    // let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
+                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    // println!("{:?}", resp_msg);
             }).await;
             sent.fetch_add(1, Ordering::Relaxed);
             // sleep(Duration::from_secs(1)).await;
