@@ -89,7 +89,7 @@ impl CmdContext {
                         account: account.to_string(),
                         password: password.to_string(),
                     }).unwrap();
-
+                    println!("Send: {:?}", req);
                     let bytes = req.into_wire_bytes();
                     client.send_byte(bytes).await;
                 }
@@ -101,6 +101,7 @@ impl CmdContext {
                         password: password.to_string(),
                         nickname: nickname.to_string(),
                     }).unwrap();
+
                     client.send_byte(req.into_wire_bytes()).await;
                 }
             }

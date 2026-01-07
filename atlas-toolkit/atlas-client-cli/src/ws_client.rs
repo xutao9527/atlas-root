@@ -7,6 +7,7 @@ use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
+use atlas_scheme::dto::auth_model::AuthResp;
 
 pub struct WsClient{
     ws_write: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
@@ -53,6 +54,7 @@ impl WsClient {
                     }
                     Ok(Message::Binary(bin)) => {
                         let result = AtlasWireMessage::from_wire_bytes(bin).unwrap();
+                        let result = AtlasWireMessage::<AuthResp>::from_raw(result);
                         println!("Received: {:?}", result);
                     }
                     Ok(Message::Close(_)) => {
