@@ -28,6 +28,8 @@ impl AtlasWireMessage<Bytes> {
         buf.put_u32(self.header.slot_index);
         buf.put_u32(self.header.method);
         buf.put_u8(self.header.kind as u8);
+
+        buf.extend_from_slice(&self.header.uid);
         // 2️⃣ 拼 payload（零拷贝语义）
         buf.extend_from_slice(&self.payload);
         buf.freeze()

@@ -89,7 +89,9 @@ impl CmdContext {
                         account: account.to_string(),
                         password: password.to_string(),
                     }).unwrap();
-                    client.send_byte(req.into_wire_bytes()).await;
+
+                    let bytes = req.into_wire_bytes();
+                    client.send_byte(bytes).await;
                 }
             }
             ["api", "register", account, password,nickname] => {

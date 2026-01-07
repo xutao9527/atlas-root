@@ -83,7 +83,7 @@ pub async fn basic_auth(request: AtlasWireMessage<BasicAuthReq>) -> AtlasWireMes
 }
 
 pub async fn token_auth(request: AtlasWireMessage<TokenAuthReq>) -> AtlasWireMessage<AuthResp> {
-    let mut login_resp = AtlasWireMessage {
+    let login_resp = AtlasWireMessage {
         header: request.header.with_kind(ResponseErr),
         payload: AuthResp {
             ok: false,
