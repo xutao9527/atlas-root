@@ -299,7 +299,6 @@ dependencies = [
  "anyhow",
  "atlas-core",
  "atlas-scheme",
- "bytes",
  "chrono",
  "futures-util",
  "sea-orm",
