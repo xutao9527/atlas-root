@@ -3,7 +3,7 @@ use crate::dto::auth_model::*;
 
 atlas_rpc_module! {
     module auth_method {
-        module_id = AtlasModuleId::Auth;
+        ModuleId = AtlasModuleId::Auth;
         RegisterRpc = (1, RegisterReq, RegisterResp),
         LoginRpc = (2, LoginReq, LoginResp),
     }

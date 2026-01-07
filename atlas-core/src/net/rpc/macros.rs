@@ -2,7 +2,7 @@
 macro_rules! atlas_rpc_module {
     (
         module $mod_name:ident {
-            module_id = $module_id:expr;
+            ModuleId = $module_id:expr;
             $(
                 $method_ty:ident = ($method_id:expr, $req_ty:ty, $resp_ty:ty)
             ),* $(,)?
