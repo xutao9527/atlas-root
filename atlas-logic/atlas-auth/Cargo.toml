@@ -18,6 +18,7 @@ sea-orm = { workspace = true, features = ["sqlx-mysql", "runtime-tokio-rustls"] 
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
 anyhow = { workspace = true }
+bytes = { workspace = true ,features = ["serde"] }
 futures-util = { workspace = true }
 tokio-util = { workspace = true, features = ["codec"] }
 ulid = { workspace = true, features = ["serde"] }
