@@ -2,13 +2,13 @@ use atlas_core::net::rpc::codec::FrameWireCodec;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::dto::auth_model::{LoginReq, LoginResp};
-use atlas_scheme::module_method::auth_method::LoginRpc;
+use atlas_scheme::dto::auth_model::{AuthResp, BasicAuthReq};
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
+use atlas_scheme::module_method::auth_method::BasicAuthRpc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
             match result {
                 Ok(resp) => {
                     let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
-                    let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    let resp_msg = AtlasWireMessage::<AuthResp>::from_raw(raw_msg.unwrap());
                     println!("{:?}", resp_msg);
                 }
                 Err(_) => break,
@@ -33,10 +33,10 @@ async fn main() -> anyhow::Result<()> {
         header: AtlasWireHeader {
             id: 1,
             slot_index: 1,
-            method: LoginRpc::WIRE,
+            method: BasicAuthRpc::WIRE,
             kind: AtlasWireKind::Request,
         },
-        payload: LoginReq {
+        payload: BasicAuthReq {
             account: "val".into(),
             password: "val".into(),
         },

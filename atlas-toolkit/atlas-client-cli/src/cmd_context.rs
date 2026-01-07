@@ -1,7 +1,7 @@
 use crate::ws_client::WsClient;
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::dto::auth_model::{LoginReq, RegisterReq};
-use atlas_scheme::module_method::auth_method::{LoginRpc, RegisterRpc};
+use atlas_scheme::dto::auth_model::{BasicAuthReq, RegisterReq};
+use atlas_scheme::module_method::auth_method::{BasicAuthRpc, RegisterRpc};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
@@ -85,7 +85,7 @@ impl CmdContext {
             },
             ["api","login",account, password] => {
                 if let Some(client) = &self.client {
-                    let req = LoginRpc::build_request(LoginReq {
+                    let req = BasicAuthRpc::build_request(BasicAuthReq {
                         account: account.to_string(),
                         password: password.to_string(),
                     }).unwrap();

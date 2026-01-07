@@ -5,6 +5,7 @@ use atlas_scheme::module_method::auth_method;
 atlas_rpc_dispatch! {
     module auth_bind {
         auth_method::RegisterRpc => account_handler::register,
-        auth_method::LoginRpc => account_handler::login,
+        auth_method::BasicAuthRpc => account_handler::basic_auth,
+        auth_method::TokenAuthRpc => account_handler::token_auth,
     }
 }

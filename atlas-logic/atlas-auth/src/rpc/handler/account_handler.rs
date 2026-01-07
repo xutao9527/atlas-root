@@ -1,7 +1,7 @@
 use crate::context::get_db;
 use atlas_core::net::rpc::packet_header::AtlasWireKind::{ResponseErr, ResponseOk};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use atlas_scheme::dto::auth_model::{LoginReq, LoginResp, RegisterReq, RegisterResp};
+use atlas_scheme::dto::auth_model::{AuthResp, BasicAuthReq, RegisterReq, RegisterResp, TokenAuthReq};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
@@ -45,48 +45,52 @@ pub async fn register(request: AtlasWireMessage<RegisterReq>) -> AtlasWireMessag
     }
 }
 
-pub async fn login(request: AtlasWireMessage<LoginReq>) -> AtlasWireMessage<LoginResp> {
+pub async fn basic_auth(request: AtlasWireMessage<BasicAuthReq>) -> AtlasWireMessage<AuthResp> {
     let login_req = request.payload;
     let result = atlas_user::Entity::find()
         .filter(atlas_user::Column::Account.eq(login_req.account))
         .one(get_db())
         .await;
+    let mut login_resp = AtlasWireMessage {
+        header: request.header.with_kind(ResponseErr),
+        payload: AuthResp {
+            ok: false,
+            uid: None,
+            token: None,
+            error: None,
+        },
+    };
     match result {
         Ok(Some(user)) => {
             if user.password != login_req.password {
-                return AtlasWireMessage {
-                    header: request.header.with_kind(ResponseErr),
-                    payload: LoginResp {
-                        ok: false,
-                        token: None,
-                        error: Some("Invalid password".into()),
-                    },
-                };
+                login_resp.payload.error = Some("Invalid password".into());
+                return login_resp;
             }
-            AtlasWireMessage {
-                header: request.header.with_kind(ResponseOk),
-                payload: LoginResp {
-                    ok: true,
-                    token: Some(Ulid::new().to_string()),
-                    error: None,
-                },
-            }
+            login_resp.payload.ok = true;
+            login_resp.payload.uid = Some(user.id);
+            login_resp.payload.token = Some(Ulid::new().to_string());
+            login_resp.header.kind = ResponseOk;
         }
-        Ok(None) => AtlasWireMessage {
-            header: request.header.with_kind(ResponseErr),
-            payload: LoginResp {
-                ok: false,
-                token: None,
-                error: Some("account not found".into()),
-            },
+        Ok(None) =>  {
+            login_resp.payload.error = Some("account not found".into());
+
         },
-        Err(e) => AtlasWireMessage {
-            header: request.header.with_kind(ResponseErr),
-            payload: LoginResp {
-                ok: false,
-                token: None,
-                error: Some(format!("Login failed: {}", e)),
-            },
+        Err(e) => {
+            login_resp.payload.error = Some(format!("auth failed: {}", e));
         },
-    }
+    };
+    login_resp
+}
+
+pub async fn token_auth(request: AtlasWireMessage<TokenAuthReq>) -> AtlasWireMessage<AuthResp> {
+    let mut login_resp = AtlasWireMessage {
+        header: request.header.with_kind(ResponseErr),
+        payload: AuthResp {
+            ok: false,
+            uid: None,
+            token: None,
+            error: None,
+        },
+    };
+    login_resp
 }

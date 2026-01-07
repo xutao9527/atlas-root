@@ -2,12 +2,12 @@ use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::dto::auth_model::LoginReq;
-use atlas_scheme::module_method::auth_method::LoginRpc;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
+use atlas_scheme::dto::auth_model::BasicAuthReq;
+use atlas_scheme::module_method::auth_method::BasicAuthRpc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -42,10 +42,10 @@ async fn main() -> anyhow::Result<()> {
         header: AtlasWireHeader {
             id: 0,
             slot_index: 0,
-            method: LoginRpc::WIRE,
+            method: BasicAuthRpc::WIRE,
             kind: AtlasWireKind::Request,
         },
-        payload: LoginReq {
+        payload: BasicAuthReq {
             account: "val1".into(),
             password: "val2".into(),
         },
