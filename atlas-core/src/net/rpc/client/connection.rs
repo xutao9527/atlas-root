@@ -61,6 +61,7 @@ impl AtlasConnection {
                                     slot_index: u32::MAX,
                                     method: u32::MAX,
                                     kind: AtlasWireKind::ResponseErr,
+                                    uid: [0u8; 16],
                                 },
                                 payload: Bytes::new(),
                             };
@@ -145,6 +146,7 @@ impl AtlasConnection {
                         slot_index: u32::MAX,
                         method: u32::MAX,
                         kind: AtlasWireKind::ResponseErr,
+                        uid: [0u8; 16],
                     },
                     payload: Bytes::new(),
                 };
@@ -155,7 +157,7 @@ impl AtlasConnection {
             let slot_index = self
                 .pending
                 .insert(req_id, Box::new(move |resp| Box::pin(callback(resp))));
-            let req_msg = AtlasWireHeader::overwrite_wire_header(req, req_id, slot_index);
+            let req_msg = AtlasWireHeader::overwrite_request_meta(req, req_id, slot_index);
             let channel_writer = {
                 let guard = self.channel_writer.lock().await;
                 guard.clone()

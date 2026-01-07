@@ -22,6 +22,7 @@ mod test{
                 slot_index: 2,
                 method: 3,
                 kind: AtlasWireKind::Request,
+                uid:[0; 16]
             },
             payload: TestReq {
                 account: "val".into(),

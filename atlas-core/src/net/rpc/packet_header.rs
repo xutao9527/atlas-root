@@ -15,10 +15,11 @@ pub struct AtlasWireHeader {
     pub slot_index: u32,
     pub method: u32,
     pub kind: AtlasWireKind,
+    pub uid: [u8; 16],
 }
 
 impl AtlasWireHeader {
-    pub const WIRE_LEN: usize = 17;
+    pub const WIRE_LEN: usize = 33;
     /// 变更消息种类
     #[inline]
     pub fn with_kind(self, kind: AtlasWireKind) -> Self {
@@ -35,6 +36,7 @@ impl AtlasWireHeader {
             slot_index: 0,
             method,
             kind: AtlasWireKind::Request,
+            uid: [0u8; 16],
         }
     }
 
@@ -68,28 +70,37 @@ impl AtlasWireHeader {
                 ))
             }
         };
-
+        let mut uid = [0u8; 16];
+        p.copy_to_slice(&mut uid);
         Ok(AtlasWireHeader {
             id,
             slot_index,
             method,
             kind,
+            uid,
         })
     }
 
     /// 覆盖请求头中字段
-    pub fn overwrite_wire_header(
+    pub fn overwrite_request_meta(
         wire: Bytes,
-        new_id: u64,
-        new_slot_index: u32,
+        id: u64,
+        slot_index: u32,
+
     ) -> Bytes {
-        // 如果 Bytes 是共享的，这里才会发生一次 copy（仅 17 字节）
         let mut buf = BytesMut::from(wire.as_ref());
         // id
-        buf[0..8].copy_from_slice(&new_id.to_be_bytes());
+        buf[0..8].copy_from_slice(&id.to_be_bytes());
         // slot_index
-        buf[8..12].copy_from_slice(&new_slot_index.to_be_bytes());
+        buf[8..12].copy_from_slice(&slot_index.to_be_bytes());
+        buf.freeze()
+    }
 
+    #[inline]
+    pub fn overwrite_uid(wire: Bytes, uid: [u8; 16]) -> Bytes {
+        let mut buf = BytesMut::from(wire.as_ref());
+        // uid offset: 17..33
+        buf[17..33].copy_from_slice(&uid);
         buf.freeze()
     }
 }

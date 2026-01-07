@@ -66,7 +66,6 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
         let resp_tx = resp_tx.clone();
         let client = auth_client.clone();
 
-        // ⚠ 不 await WS，不 spawn 炸弹
         let _ = client
             .call_cb(msg, move |resp| {
                 async move {

@@ -44,6 +44,7 @@ async fn main() -> anyhow::Result<()> {
             slot_index: 0,
             method: BasicAuthRpc::WIRE,
             kind: AtlasWireKind::Request,
+            uid: [0; 16],
         },
         payload: BasicAuthReq {
             account: "val1".into(),
