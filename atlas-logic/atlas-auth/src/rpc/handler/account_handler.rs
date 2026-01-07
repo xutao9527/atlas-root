@@ -4,7 +4,8 @@ use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_scheme::dto::auth_model::{LoginReq, LoginResp, RegisterReq, RegisterResp};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
-use sea_orm::{ActiveModelTrait, IntoActiveModel};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
+use sea_orm::{QueryFilter};
 use tracing::log;
 use ulid::Ulid;
 
@@ -24,15 +25,13 @@ pub async fn register(request: AtlasWireMessage<RegisterReq>) -> AtlasWireMessag
     let active_model = model.into_active_model();
     let res = active_model.insert(get_db()).await;
     match res {
-        Ok(_) => {
-            AtlasWireMessage {
-                header: request.header.with_kind(ResponseOk),
-                payload: RegisterResp {
-                    ok: true,
-                    message: Some("register success".into()),
-                }
-            }
-        }
+        Ok(_) => AtlasWireMessage {
+            header: request.header.with_kind(ResponseOk),
+            payload: RegisterResp {
+                ok: true,
+                message: Some("register success".into()),
+            },
+        },
         Err(e) => {
             log::error!("register error: {:?}", e);
             AtlasWireMessage {
@@ -40,20 +39,54 @@ pub async fn register(request: AtlasWireMessage<RegisterReq>) -> AtlasWireMessag
                 payload: RegisterResp {
                     ok: false,
                     message: Some(format!("register failed: {}", e)),
-                }
+                },
             }
         }
     }
 }
 
 pub async fn login(request: AtlasWireMessage<LoginReq>) -> AtlasWireMessage<LoginResp> {
-    let token = format!("{}|{}", request.payload.account, request.payload.password);
-    AtlasWireMessage {
-        header: request.header.with_kind(ResponseOk),
-        payload: LoginResp {
-            ok: true,
-            token: Option::from(token),
-            error: None,
+    let login_req = request.payload;
+    let result = atlas_user::Entity::find()
+        .filter(atlas_user::Column::Account.eq(login_req.account))
+        .one(get_db())
+        .await;
+    match result {
+        Ok(Some(user)) => {
+            if user.password != login_req.password {
+                return AtlasWireMessage {
+                    header: request.header.with_kind(ResponseErr),
+                    payload: LoginResp {
+                        ok: false,
+                        token: None,
+                        error: Some("Invalid password".into()),
+                    },
+                };
+            }
+            AtlasWireMessage {
+                header: request.header.with_kind(ResponseOk),
+                payload: LoginResp {
+                    ok: true,
+                    token: Some(Ulid::new().to_string()),
+                    error: None,
+                },
+            }
+        }
+        Ok(None) => AtlasWireMessage {
+            header: request.header.with_kind(ResponseErr),
+            payload: LoginResp {
+                ok: false,
+                token: None,
+                error: Some("account not found".into()),
+            },
+        },
+        Err(e) => AtlasWireMessage {
+            header: request.header.with_kind(ResponseErr),
+            payload: LoginResp {
+                ok: false,
+                token: None,
+                error: Some(format!("Login failed: {}", e)),
+            },
         },
     }
 }
