@@ -40,6 +40,8 @@ bytes = "1.11"
 parking_lot = "0.12"
 slab = "0.4"
 clap = "4.5"
+ulid = "1.2"
+chrono = "0.4"
 
 # client common
 reqwest = "0.13"
