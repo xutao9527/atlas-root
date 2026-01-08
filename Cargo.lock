@@ -393,6 +393,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "atlas_holdem"
+version = "0.1.0"
+
+[[package]]
 name = "atoi"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

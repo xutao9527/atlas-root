@@ -6,9 +6,10 @@ members = [
     "atlas-registry",
     "atlas-logic/atlas-auth",
     "atlas-logic/atlas-blitz",
+    "atlas-logic/atlas_holdem",
     "atlas-toolkit/atlas-db-migration",
     "atlas-toolkit/atlas-client-cli"
-, "atlas-core"]
+]
 resolver = "3"
 
 [workspace.dependencies]
