@@ -1,14 +1,12 @@
-
+use rand::prelude::*;
 use sha2::{Digest, Sha256};
 
-/// 计算 SHA256 并返回十六进制字符串
+
 fn sha256_hex(input: &str) -> String {
     let hash = Sha256::digest(input.as_bytes());
     hex::encode(hash)
 }
 
-
-/// 根据 ServerSeed + ClientSeed + Nonce 生成可复现随机种子
 fn generate_seed(server_seed: &str, client_seed: &str, nonce: u32) -> u64 {
     let input = format!("{}{}{}", server_seed, client_seed, nonce);
     let hash = Sha256::digest(input.as_bytes());
@@ -18,7 +16,6 @@ fn generate_seed(server_seed: &str, client_seed: &str, nonce: u32) -> u64 {
     u64::from_be_bytes(bytes)
 }
 
-/// 根据 seed 对数字数组进行可复现洗牌（Fisher-Yates）
 fn shuffling_with_seed(mut numbers: Vec<u32>, mut seed: u64) -> Vec<u32> {
     for i in (1..numbers.len()).rev() {
         // 简单 LCG 生成伪随机
@@ -29,20 +26,26 @@ fn shuffling_with_seed(mut numbers: Vec<u32>, mut seed: u64) -> Vec<u32> {
     numbers
 }
 
+fn shuffling()-> Vec<u8>{
+    let mut deck: Vec<u8> = (0..52).collect();
+    let mut rng = rand::rng();
+    deck.shuffle(&mut rng);
+    deck
+}
+
 
 #[cfg(test)]
 mod tests {
-    use rand::prelude::{*};
-    use crate::logic::shuffle::{generate_seed, sha256_hex, shuffling_with_seed};
+    use crate::logic::shuffle::{generate_seed, sha256_hex, shuffling, shuffling_with_seed};
 
     #[test]
-    pub fn test_rand(){
-
-
+    pub fn test_shuffling(){
+        println!("{:?}", shuffling());
+     
     }
 
     #[test]
-    pub fn shuffling(){
+    pub fn test_shuffling_with_seed(){
         // 服务器私有
         let server_seed = "server_secret";
         // 玩家已知
@@ -61,7 +64,6 @@ mod tests {
         println!("Nonce {}: result: {:?}", nonce, result);
         println!("Nonce {}: ClientSeed (player knows): {}", nonce, client_seed);
         println!("Nonce {}: ServerSeed (reveal after game): {}", nonce, server_seed);
-
 
     }
 
