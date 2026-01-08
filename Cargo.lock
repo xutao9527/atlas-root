@@ -374,6 +374,7 @@ dependencies = [
  "axum",
  "bytes",
  "futures-util",
+ "log",
  "tokio",
  "tracing",
  "tracing-subscriber",

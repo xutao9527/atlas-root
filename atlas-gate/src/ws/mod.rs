@@ -47,7 +47,18 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
             Ok(Message::Binary(bin)) => {
                 handle_binary_message(bin, ws_session.clone(), auth_client.clone(), resp_tx.clone(), inflight.clone()).await;
             }
-            Ok(_) => {}
+            Ok(Message::Text(txt)) => {
+                info!("WS received text message: {}", txt);
+            },
+            Ok(Message::Ping(msg)) => {
+                info!("WS received ping message: {:?}", msg);
+            }
+            Ok(Message::Pong(_)) => {
+                info!("WS received pong message");
+            }
+            Ok(Message::Close(_)) => {
+                info!("WS received close message");
+            }
             Err(_) => {}
         }
     }
