@@ -11,8 +11,7 @@ use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::channel;
-use tokio::time::{Instant, interval};
-use tracing::{info, log};
+use tracing::{info};
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
