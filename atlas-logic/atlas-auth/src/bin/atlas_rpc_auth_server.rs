@@ -1,8 +1,5 @@
-
-use atlas_core::net::rpc::server::AtlasRpcServer;
+use atlas_auth::serve_auth;
 use tracing_subscriber::fmt::time::LocalTime;
-use atlas_auth::context::init_db;
-use atlas_auth::rpc::module_dispatch::auth_bind::dispatch;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -13,11 +10,6 @@ async fn main() -> anyhow::Result<()> {
         .with_target(false)
         .init();
 
-    // 初始化数据库
-    init_db("mysql://root:root@localhost:3306/atlas").await;
-    // 初始化Rpc服务
-    let serve_addr = format!("{}:{}", "0.0.0.0", "5566");
-    let server = AtlasRpcServer::new(serve_addr, dispatch);
-    server.run().await?;
+    serve_auth("0.0.0.0".into(),"5566".into()).await?;
     Ok(())
 }
