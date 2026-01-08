@@ -1,9 +1,15 @@
+use rand::prelude::*;
 use sha2::{Digest, Sha256};
 
 /// 计算 SHA256 并返回十六进制字符串
 fn sha256_hex(input: &str) -> String {
     let hash = Sha256::digest(input.as_bytes());
     hex::encode(hash)
+}
+
+/// 使用操作系统真随机源生成随机种子
+fn generate_random_seed() -> u64 {
+    rand::random()
 }
 
 /// 根据 ServerSeed + ClientSeed + Nonce 生成可复现随机种子
@@ -27,24 +33,42 @@ fn shuffling_with_seed(mut numbers: Vec<u32>, mut seed: u64) -> Vec<u32> {
     numbers
 }
 
-#[test]
-pub fn shuffling(){
-    // 服务器私有
-    let server_seed = "server_secret";
-    // 玩家已知
-    let client_seed = "player_seed";
-    let numbers: Vec<u32> = (1..=4).collect();
 
-    // 开始前公布 server_seed 的哈希
-    let server_seed_hash = sha256_hex(server_seed);
-    println!("server_seed sha256 hash (public before game): {}", server_seed_hash);
+#[cfg(test)]
+mod tests {
+    use crate::logic::shuffle::{generate_seed, sha256_hex, shuffling_with_seed};
+    use rand::prelude::{IndexedRandom, SliceRandom};
 
-    let nonce = 1;
+    #[test]
+    pub fn shuffling(){
+        // 服务器私有
+        let server_seed = "server_secret";
+        // 玩家已知
+        let client_seed = "player_seed";
+        let numbers: Vec<u32> = (1..=4).collect();
 
-    let seed = generate_seed(server_seed, client_seed, nonce);
-    let result = shuffling_with_seed(numbers.clone(), seed);
+        // 开始前公布 server_seed 的哈希
+        let server_seed_hash = sha256_hex(server_seed);
+        println!("server_seed sha256 hash (public before game): {}", server_seed_hash);
 
-    println!("Nonce {}: Game result: {:?}", nonce, result);
-    println!("Nonce {}: ClientSeed (player knows): {}", nonce, client_seed);
-    println!("Nonce {}: ServerSeed (reveal after game): {}", nonce, server_seed);
+        let nonce = 1;
+
+        let seed = generate_seed(server_seed, client_seed, nonce);
+        let result = shuffling_with_seed(numbers.clone(), seed);
+
+        println!("Nonce {}: result: {:?}", nonce, result);
+        println!("Nonce {}: ClientSeed (player knows): {}", nonce, client_seed);
+        println!("Nonce {}: ServerSeed (reveal after game): {}", nonce, server_seed);
+
+        let mut rng = rand::rng();
+        // Generate and shuffle a sequence:
+        let mut nums: Vec<i32> = (1..53).collect();
+        nums.shuffle(&mut rng);
+        // And take a random pick (yes, we didn't need to shuffle first!):
+        let n = nums.choose(&mut rng).unwrap();
+        println!("Random pick: {:?}", *n);
+        println!("{:?}", nums);
+    }
+
 }
+
