@@ -1,13 +1,17 @@
+pub mod ws_session;
+mod binary_handle;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet_header::AtlasWireHeader;
-use atlas_core::net::rpc::router::AtlasModuleId;
 use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use bytes::Bytes;
+use tokio::sync::mpsc::channel;
+use tokio::sync::RwLock;
 use tracing::{info};
+use crate::ws::binary_handle::handle_binary_message;
+use crate::ws::ws_session::{ WsSession};
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
@@ -21,15 +25,14 @@ const RESP_QUEUE: usize = 8192;     // 回包队列
 
 async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     info!("WS connected");
-
+    // 独立会话
+    let ws_session = Arc::new(RwLock::new(WsSession::new()));
+    // ws socket
     let (mut ws_tx, mut ws_rx) = socket.split();
-
-    // === 有界响应队列（不丢）===
-    let (resp_tx, mut resp_rx) = tokio::sync::mpsc::channel::<Bytes>(RESP_QUEUE);
-
-    // === inflight 限制（核心）===
+    // === 有界响应队列===
+    let (resp_tx, mut resp_rx) = channel::<Bytes>(RESP_QUEUE);
+    // === inflight ===
     let inflight = Arc::new(tokio::sync::Semaphore::new(MAX_INFLIGHT));
-
     // ===== writer：唯一 socket IO =====
     let writer = tokio::spawn(async move {
         while let Some(resp) = resp_rx.recv().await {
@@ -38,48 +41,17 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
             }
         }
     });
-
     // ===== reader：解析 + RPC =====
     while let Some(msg) = ws_rx.next().await {
-        let msg = match msg {
-            Ok(Message::Binary(b)) => b,
-            Ok(Message::Close(_)) => break,
-            _ => continue,
-        };
-
-        // 校验 header
-        let header = match AtlasWireHeader::read_wire_header(&msg) {
-            Ok(h) => h,
-            Err(_) => continue,
-        };
-
-        if AtlasModuleId::from_wire(header.method) != Some(AtlasModuleId::Auth) {
-            continue;
+        match msg {
+            Ok(Message::Binary(bin)) => {
+                handle_binary_message(bin, ws_session.clone(), auth_client.clone(), resp_tx.clone(), inflight.clone()).await;
+            }
+            Ok(_) => {}
+            Err(_) => {}
         }
-
-        // === 获取 inflight permit（背压在这里）===
-        let permit = match inflight.clone().acquire_owned().await {
-            Ok(p) => p,
-            Err(_) => break,
-        };
-
-        let resp_tx = resp_tx.clone();
-        let client = auth_client.clone();
-
-        let _ = client
-            .call_cb(msg, move |resp| {
-                async move {
-                    // 回包进入有界队列（不丢）
-                    let _ = resp_tx.send(resp).await;
-                    drop(permit); // 释放 inflight
-                }
-            })
-            .await;
     }
-
-    // === 清理 ===
-    drop(resp_tx); // 通知 writer 退出
+    drop(resp_tx);
     let _ = writer.await;
-
     info!("WS disconnected");
 }
