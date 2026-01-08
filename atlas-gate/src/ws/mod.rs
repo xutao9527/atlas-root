@@ -14,10 +14,8 @@ use tokio::select;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::channel;
 use tracing::{info};
-use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::dto::auth_model::{AuthResp, TokenAuthReq};
+use atlas_scheme::dto::auth_model::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 
 pub async fn ws_handler(
@@ -29,7 +27,7 @@ pub async fn ws_handler(
 
 const MAX_INFLIGHT: usize = 8192; // 每 WS 连接最大 RPC 并发
 const RESP_QUEUE: usize = 8192; // 回包队列
-const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
+const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(10);//心跳定时器
 
 async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     info!("WS connected");
@@ -105,7 +103,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
                              refresh_token_if_needed(token.as_str(), client, session).await;
                         });
                     }
-                    info!("now_unix => expire_at_unix: {:?} - {:?} = {:?}s", expire_at_unix ,now_unix ,expire_at_unix - now_unix);
+                    // info!("now_unix => expire_at_unix: {:?} - {:?} = {:?}s", expire_at_unix ,now_unix ,expire_at_unix - now_unix);
                 }
             }
         }

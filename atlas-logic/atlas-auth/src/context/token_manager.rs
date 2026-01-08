@@ -104,7 +104,45 @@ pub fn start_token_cleaner() {
     if CLEANER_STARTED.fetch_or(true, Ordering::SeqCst) {
         return;
     }
+    // 调试打印token信息
+    //display_token_info();
+    tokio::spawn(async move {
+        let token_map = token_map().clone();
+        let uid_map = uid_map().clone();
+        let heap = expire_heap().clone();
+        loop {
+            tokio::time::sleep(CLEAN_INTERVAL).await;
+            let now = SystemTime::now();
+            let mut heap_lock = heap.lock().await;
+            while let Some(Reverse((_, token))) = heap_lock.peek() {
+                // 只处理 heap 顶部过期 token
+                match token_map.get(token) {
+                    Some(entry) => {
+                        let actual_expire = entry.value().1;
+                        if actual_expire <= now {
+                            debug!("token {} expired", token);
+                            // token 真的过期，直接 remove 返回 value
+                            if let Some((uid, _)) = token_map.remove(token) {
+                                uid_map.remove(&uid);
+                            }
+                            heap_lock.pop();
+                        } else {
+                            debug!("token {} is not expired yet", token);
+                            break;
+                        }
+                    }
+                    None => {
+                        // token 已经被删除，直接 pop
+                        heap_lock.pop();
+                    }
+                }
+            }
+        }
+    });
+}
 
+
+pub fn display_token_info(){
     tokio::spawn(async move{
         let token_map = token_map();
         let uid_map = uid_map();
@@ -154,40 +192,6 @@ pub fn start_token_cleaner() {
                     "  token={} expire_in={}s",
                     token, ttl
                 );
-            }
-        }
-    });
-
-    tokio::spawn(async move {
-        let token_map = token_map().clone();
-        let uid_map = uid_map().clone();
-        let heap = expire_heap().clone();
-        loop {
-            tokio::time::sleep(CLEAN_INTERVAL).await;
-            let now = SystemTime::now();
-            let mut heap_lock = heap.lock().await;
-            while let Some(Reverse((_, token))) = heap_lock.peek() {
-                // 只处理 heap 顶部过期 token
-                match token_map.get(token) {
-                    Some(entry) => {
-                        let actual_expire = entry.value().1;
-                        if actual_expire <= now {
-                            debug!("token {} expired", token);
-                            // token 真的过期，直接 remove 返回 value
-                            if let Some((uid, _)) = token_map.remove(token) {
-                                uid_map.remove(&uid);
-                            }
-                            heap_lock.pop();
-                        } else {
-                            debug!("token {} is not expired yet", token);
-                            break;
-                        }
-                    }
-                    None => {
-                        // token 已经被删除，直接 pop
-                        heap_lock.pop();
-                    }
-                }
             }
         }
     });
