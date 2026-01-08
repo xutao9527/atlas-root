@@ -30,5 +30,6 @@ pub struct AuthResp {
     pub ok: bool,
     pub uid: Option<String>,
     pub token: Option<String>,
+    pub expire_at: Option<u64>,
     pub error: Option<String>,
 }

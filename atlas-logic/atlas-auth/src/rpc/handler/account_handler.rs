@@ -52,59 +52,70 @@ pub async fn basic_auth(request: AtlasWireMessage<BasicAuthReq>) -> AtlasWireMes
         .filter(atlas_user::Column::Account.eq(basic_auth_req.account))
         .one(get_db())
         .await;
-    let mut login_resp = AtlasWireMessage {
+    let mut resp = AtlasWireMessage {
         header: request.header.with_kind(ResponseErr),
         payload: AuthResp {
             ok: false,
             uid: None,
             token: None,
+            expire_at: None,
             error: None,
         },
     };
     match result {
         Ok(Some(user)) => {
             if user.password != basic_auth_req.password {
-                login_resp.payload.error = Some("Invalid password".into());
-                return login_resp;
+                resp.payload.error = Some("Invalid password".into());
+                return resp;
             }
             let token = Ulid::new().to_string();
-            login_resp.payload.ok = true;
-            login_resp.payload.uid = Some(user.id.clone());
-            login_resp.payload.token = Some(token.clone());
-            login_resp.header.kind = ResponseOk;
-            store_token(token.as_str(), user.id.as_str()).await;
+            match store_token(token.as_str(), user.id.as_str()).await {
+                Ok(expire_at) => {
+                    resp.payload.ok = true;
+                    resp.payload.uid = Some(user.id.clone());
+                    resp.payload.token = Some(token.clone());
+                    resp.payload.expire_at = Some(expire_at);
+                    resp.header.kind = ResponseOk;
+                }
+                Err(err) => {
+                    resp.payload.error = Some(err.into());
+                }
+            };
+
         }
         Ok(None) =>  {
-            login_resp.payload.error = Some("account not found".into());
+            resp.payload.error = Some("account not found".into());
         },
         Err(e) => {
-            login_resp.payload.error = Some(format!("auth failed: {}", e));
+            resp.payload.error = Some(format!("auth failed: {}", e));
         },
     };
-    login_resp
+    resp
 }
 
 pub async fn token_auth(request: AtlasWireMessage<TokenAuthReq>) -> AtlasWireMessage<AuthResp> {
     let token_auth_req = request.payload;
-    let mut login_resp = AtlasWireMessage {
+    let mut resp = AtlasWireMessage {
         header: request.header.with_kind(ResponseErr),
         payload: AuthResp {
             ok: false,
             uid: None,
             token: None,
+            expire_at: None,
             error: None,
         },
     };
     match validate_token(token_auth_req.token.as_str()).await {
-        Ok(uid) => {
-            login_resp.payload.ok = true;
-            login_resp.payload.uid = Some(uid);
-            login_resp.payload.token = Some(token_auth_req.token);
-            login_resp.header.kind = ResponseOk;
+        Ok((uid,expire_at)) => {
+            resp.payload.ok = true;
+            resp.payload.uid = Some(uid);
+            resp.payload.token = Some(token_auth_req.token);
+            resp.payload.expire_at = Some(expire_at);
+            resp.header.kind = ResponseOk;
         }
         Err(err) => {
-            login_resp.payload.error = Some(err.into());
+            resp.payload.error = Some(err.into());
         }
     }
-    login_resp
+    resp
 }

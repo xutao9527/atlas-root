@@ -38,7 +38,8 @@ fn expire_heap() -> &'static Arc<Mutex<BinaryHeap<Reverse<(SystemTime, String)>>
 
 /// 存储 token，如果同一账号已有 token，先删除旧 token
 /// 同时将 token 加入最小堆用于过期清理
-pub async fn store_token(token: &str, uid: &str) {
+/// 返回 expire_at（unix seconds）
+pub async fn store_token(token: &str, uid: &str) -> Result<u64, &'static str> {
     let expire_at = SystemTime::now() + TOKEN_TTL;
 
     // 删除同一账号旧 token
@@ -53,25 +54,39 @@ pub async fn store_token(token: &str, uid: &str) {
     // 将 token 插入优先队列
     let mut heap = expire_heap().lock().await;
     heap.push(Reverse((expire_at, token.to_string())));
+
+    let expire_at_unix = expire_at
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map_err(|_| "invalid system time")?
+        .as_secs();
+
+    Ok(expire_at_unix)
 }
 
-/// 验证 token 是否有效，如果过期自动删除
-/// 返回 Ok(uid) 表示 token 有效，Err(&str) 表示无效或过期
-pub async fn validate_token(token: &str) -> Result<String, &'static str> {
+/// 验证 token 是否有效（Sliding TTL）
+/// 成功：返回 (uid, expire_at_unix)
+/// 失败：返回错误原因
+pub async fn validate_token(token: &str) -> Result<(String, u64), &'static str> {
     match token_map().get_mut(token) {
         Some(mut entry) => {
-
             let now = SystemTime::now();
-            if entry.value().1 > now {
-
+            let (uid, expire_at) = entry.value_mut();
+            if *expire_at > now {
+                // 1️⃣ Sliding TTL：续签
                 let new_expire = now + TOKEN_TTL;
-                entry.value_mut().1 = new_expire;
-
+                *expire_at = new_expire;
+                // 2️⃣ 推入 heap（旧 expire 由 cleaner 忽略）
                 let mut heap = expire_heap().lock().await;
                 heap.push(Reverse((new_expire, token.to_string())));
-                Ok(entry.value().0.clone())
+                // 3️⃣ 转成 unix seconds 返回
+                let expire_at_unix = new_expire
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .map_err(|_| "invalid system time")?
+                    .as_secs();
+
+                Ok((uid.clone(), expire_at_unix))
             } else {
-                // token 过期，删除
+                // token 已过期，删除
                 if let Some((uid, _)) = token_map().remove(token) {
                     uid_map().remove(&uid);
                 }
