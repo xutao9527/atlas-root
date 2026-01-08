@@ -1,4 +1,4 @@
-use rand::prelude::*;
+
 use sha2::{Digest, Sha256};
 
 /// 计算 SHA256 并返回十六进制字符串
@@ -7,10 +7,6 @@ fn sha256_hex(input: &str) -> String {
     hex::encode(hash)
 }
 
-/// 使用操作系统真随机源生成随机种子
-fn generate_random_seed() -> u64 {
-    rand::random()
-}
 
 /// 根据 ServerSeed + ClientSeed + Nonce 生成可复现随机种子
 fn generate_seed(server_seed: &str, client_seed: &str, nonce: u32) -> u64 {
@@ -36,8 +32,14 @@ fn shuffling_with_seed(mut numbers: Vec<u32>, mut seed: u64) -> Vec<u32> {
 
 #[cfg(test)]
 mod tests {
+    use rand::prelude::{*};
     use crate::logic::shuffle::{generate_seed, sha256_hex, shuffling_with_seed};
-    use rand::prelude::{IndexedRandom, SliceRandom};
+
+    #[test]
+    pub fn test_rand(){
+
+
+    }
 
     #[test]
     pub fn shuffling(){
@@ -60,14 +62,7 @@ mod tests {
         println!("Nonce {}: ClientSeed (player knows): {}", nonce, client_seed);
         println!("Nonce {}: ServerSeed (reveal after game): {}", nonce, server_seed);
 
-        let mut rng = rand::rng();
-        // Generate and shuffle a sequence:
-        let mut nums: Vec<i32> = (1..53).collect();
-        nums.shuffle(&mut rng);
-        // And take a random pick (yes, we didn't need to shuffle first!):
-        let n = nums.choose(&mut rng).unwrap();
-        println!("Random pick: {:?}", *n);
-        println!("{:?}", nums);
+
     }
 
 }
