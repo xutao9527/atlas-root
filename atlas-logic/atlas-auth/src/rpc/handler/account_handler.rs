@@ -70,7 +70,7 @@ pub async fn basic_auth(request: AtlasWireMessage<BasicAuthReq>) -> AtlasWireMes
             let token = Ulid::new().to_string();
             login_resp.payload.ok = true;
             login_resp.payload.uid = Some(user.id.clone());
-            login_resp.payload.token = Some(Ulid::new().to_string());
+            login_resp.payload.token = Some(token.clone());
             login_resp.header.kind = ResponseOk;
             store_token(token.as_str(), user.id.as_str()).await;
         }

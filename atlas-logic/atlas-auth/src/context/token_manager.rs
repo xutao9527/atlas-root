@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, SystemTime};
 use tokio::sync::Mutex;
+use tracing::debug;
 
 /// token 默认有效期：1 小时
 const TOKEN_TTL: Duration = Duration::from_secs(3600);
@@ -89,11 +90,63 @@ pub fn start_token_cleaner() {
         return;
     }
 
-    let token_map = token_map().clone();
-    let uid_map = uid_map().clone();
-    let heap = expire_heap().clone();
+    tokio::spawn(async move{
+        let token_map = token_map();
+        let uid_map = uid_map();
+        let heap = expire_heap();
+        loop {
+            tokio::time::sleep(Duration::from_secs(3)).await;
+            debug!("================ TOKEN DEBUG ================");
+            // 打印 token_map
+            debug!("TOKEN_MAP:");
+            for entry in token_map.iter() {
+                let token = entry.key();
+                let (uid, expire) = entry.value();
+                let ttl = expire
+                    .duration_since(SystemTime::now())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+
+                debug!(
+                    "  token={} uid={} ttl={}s",
+                    token, uid, ttl
+                );
+            }
+            // 打印 uid_map
+            debug!("UID_MAP:");
+            for entry in uid_map.iter() {
+                debug!(
+                    "  uid={} -> token={}",
+                    entry.key(),
+                    entry.value()
+                );
+            }
+
+            // 打印 heap（注意：这里只能 clone 一下用于调试）
+            let heap_snapshot = {
+                let heap_lock = heap.lock().await;
+                heap_lock.clone()
+            };
+
+            debug!("EXPIRE_HEAP (top 5):");
+            for Reverse((expire, token)) in heap_snapshot.into_iter().take(10) {
+                let ttl = expire
+                    .duration_since(SystemTime::now())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+
+                debug!(
+                    "  token={} expire_in={}s",
+                    token, ttl
+                );
+            }
+        }
+    });
 
     tokio::spawn(async move {
+        let token_map = token_map().clone();
+        let uid_map = uid_map().clone();
+        let heap = expire_heap().clone();
         loop {
             tokio::time::sleep(CLEAN_INTERVAL).await;
             let now = SystemTime::now();
@@ -104,13 +157,14 @@ pub fn start_token_cleaner() {
                     Some(entry) => {
                         let actual_expire = entry.value().1;
                         if actual_expire <= now {
+                            debug!("token {} expired", token);
                             // token 真的过期，直接 remove 返回 value
                             if let Some((uid, _)) = token_map.remove(token) {
                                 uid_map.remove(&uid);
                             }
                             heap_lock.pop();
                         } else {
-                            // heap 顶部 token 还没过期，停止循环
+                            debug!("token {} is not expired yet", token);
                             break;
                         }
                     }

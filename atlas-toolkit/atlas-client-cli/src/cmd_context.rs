@@ -1,7 +1,7 @@
 use crate::ws_client::WsClient;
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::dto::auth_model::{BasicAuthReq, RegisterReq};
-use atlas_scheme::module_method::auth_method::{BasicAuthRpc, RegisterRpc};
+use atlas_scheme::dto::auth_model::{BasicAuthReq, RegisterReq, TokenAuthReq};
+use atlas_scheme::module_method::auth_method::{BasicAuthRpc, RegisterRpc, TokenAuthRpc};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
@@ -83,18 +83,7 @@ impl CmdContext {
                     client.send_text(text.to_string()).await
                 }
             },
-            ["api","login",account, password] => {
-                if let Some(client) = &self.client {
-                    let req = BasicAuthRpc::build_request(BasicAuthReq {
-                        account: account.to_string(),
-                        password: password.to_string(),
-                    }).unwrap();
-                    println!("Send: {:?}", req);
-                    let bytes = req.into_wire_bytes();
-                    client.send_byte(bytes).await;
-                }
-            }
-            ["api", "register", account, password,nickname] => {
+            ["api", "reg", account, password,nickname] => {
                 if let Some(client) = &self.client {
                     let req = RegisterRpc::build_request(RegisterReq {
                         account: account.to_string(),
@@ -104,7 +93,29 @@ impl CmdContext {
 
                     client.send_byte(req.into_wire_bytes()).await;
                 }
+            },
+            ["api","log",account, password] => {
+                if let Some(client) = &self.client {
+                    let req = BasicAuthRpc::build_request(BasicAuthReq {
+                        account: account.to_string(),
+                        password: password.to_string(),
+                    }).unwrap();
+                    println!("Send: {:?}", req);
+                    let bytes = req.into_wire_bytes();
+                    client.send_byte(bytes).await;
+                }
+            },
+            ["api","auth",token] => {
+                if let Some(client) = &self.client {
+                    let req = TokenAuthRpc::build_request(TokenAuthReq {
+                        token: token.to_string(),
+                    }).unwrap();
+                    println!("Send: {:?}", req);
+                    let bytes = req.into_wire_bytes();
+                    client.send_byte(bytes).await;
+                }
             }
+
             _ => {}
         }
         true
