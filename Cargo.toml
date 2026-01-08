@@ -42,6 +42,7 @@ slab = "0.4"
 clap = "4.5"
 ulid = "1.2"
 chrono = "0.4"
+dashmap = "6.1.0"
 
 # client common
 reqwest = "0.13"
