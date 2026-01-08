@@ -8,7 +8,7 @@ use tokio::sync::Mutex;
 use tracing::debug;
 
 /// token 默认有效期：1 小时
-const TOKEN_TTL: Duration = Duration::from_secs(3600);
+const TOKEN_TTL: Duration = Duration::from_secs(3 * 24 * 3600);
 /// 后台清理间隔：60 秒
 const CLEAN_INTERVAL: Duration = Duration::from_secs(60);
 /// 清理标志
@@ -110,7 +110,7 @@ pub fn start_token_cleaner() {
         let uid_map = uid_map();
         let heap = expire_heap();
         loop {
-            tokio::time::sleep(Duration::from_secs(3)).await;
+            tokio::time::sleep(Duration::from_secs(1)).await;
             debug!("================ TOKEN DEBUG ================");
             // 打印 token_map
             debug!("TOKEN_MAP:");

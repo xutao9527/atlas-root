@@ -51,7 +51,7 @@ pub async fn handle_binary_message(
         .await;
 }
 
-async fn process_auth_resp(resp: Bytes, ws_session: Arc<tokio::sync::RwLock<WsSession>>) {
+pub async fn process_auth_resp(resp: Bytes, ws_session: Arc<tokio::sync::RwLock<WsSession>>) {
     let header = match AtlasWireHeader::read_wire_header(&resp) {
         Ok(h) => h,
         Err(_) => return,

@@ -1,6 +1,6 @@
 mod binary_handle;
 pub mod ws_session;
-use crate::ws::binary_handle::handle_binary_message;
+use crate::ws::binary_handle::{handle_binary_message, process_auth_resp};
 use crate::ws::ws_session::WsSession;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use axum::extract::WebSocketUpgrade;
@@ -9,9 +9,16 @@ use axum::response::IntoResponse;
 use bytes::Bytes;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
+use std::time::{Duration, SystemTime};
+use tokio::select;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::channel;
 use tracing::{info};
+use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
+use atlas_core::net::rpc::router::AtlasRpcSpec;
+use atlas_scheme::dto::auth_model::{AuthResp, TokenAuthReq};
+use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
@@ -22,6 +29,7 @@ pub async fn ws_handler(
 
 const MAX_INFLIGHT: usize = 8192; // 每 WS 连接最大 RPC 并发
 const RESP_QUEUE: usize = 8192; // 回包队列
+const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
 
 async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     info!("WS connected");
@@ -35,6 +43,8 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     let inflight = Arc::new(tokio::sync::Semaphore::new(MAX_INFLIGHT));
     // ===== writer：唯一 socket IO =====
 
+    let mut heartbeat = tokio::time::interval(HEARTBEAT_INTERVAL);
+
     let writer = tokio::spawn(async move {
         while let Some(resp) = resp_rx.recv().await {
             if ws_tx.send(Message::Binary(resp)).await.is_err() {
@@ -43,35 +53,85 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
         }
     });
 
-    // ===== reader：解析 + RPC =====
-    while let Some(msg) = ws_rx.next().await {
-        match msg {
-            Ok(Message::Binary(bin)) => {
-                handle_binary_message(
-                    bin,
-                    ws_session.clone(),
-                    auth_client.clone(),
-                    resp_tx.clone(),
-                    inflight.clone(),
-                )
-                .await;
+    loop {
+        select! {
+            ws_msg = ws_rx.next() => {
+                match ws_msg {
+                    Some(msg) => {
+                        match msg {
+                            Ok(Message::Binary(bin)) => {
+                                handle_binary_message(
+                                    bin,
+                                    ws_session.clone(),
+                                    auth_client.clone(),
+                                    resp_tx.clone(),
+                                    inflight.clone(),
+                                )
+                                .await;
+                            }
+                            Ok(Message::Text(txt)) => {
+                                info!("WS received text message: {}", txt);
+                            }
+                            Ok(Message::Ping(_)) => {
+                                info!("WS received ping message: {:?}", msg);
+                            }
+                            Ok(Message::Pong(_)) => {
+                                info!("WS received pong message");
+                            }
+                            Ok(Message::Close(_)) => {
+                                info!("WS received close message");
+                                break
+                            }
+                            Err(_) => { break }
+                        }
+                    }
+                    None => {},
+                }
             }
-            Ok(Message::Text(txt)) => {
-                info!("WS received text message: {}", txt);
+            _ = heartbeat.tick() => {
+                let  guard = ws_session.read().await;
+
+                if let (Some(token), Some(expire_at_unix)) = (&guard.token, guard.expire_at) {
+                    let now_unix = SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+
+                    if expire_at_unix.saturating_sub(now_unix) < 3600 {
+                        let token = token.clone();
+                        let client = auth_client.clone();
+                        let session = ws_session.clone();
+                        tokio::spawn(async move {
+                             refresh_token_if_needed(token.as_str(), client, session).await;
+                        });
+                    }
+                    info!("now_unix => expire_at_unix: {:?} - {:?} = {:?}s", expire_at_unix ,now_unix ,expire_at_unix - now_unix);
+                }
             }
-            Ok(Message::Ping(_)) => {
-                info!("WS received ping message: {:?}", msg);
-            }
-            Ok(Message::Pong(_)) => {
-                info!("WS received pong message");
-            }
-            Ok(Message::Close(_)) => {
-                info!("WS received close message");
-            }
-            Err(_) => {}
         }
+
     }
     drop(resp_tx);
     let _ = writer.await;
     info!("WS disconnected");
+}
+
+// 续签 token
+async fn refresh_token_if_needed(
+    token: &str,
+    auth_client: Arc<AtlasRpcClient>,
+    ws_session: Arc<RwLock<WsSession>>,
+) {
+    let req = TokenAuthRpc::build_request(TokenAuthReq {
+        token: token.to_string(),
+    }).unwrap();
+    let bytes = req.into_wire_bytes();
+
+    auth_client.call_cb(bytes, move |resp| {
+        let ws_session = ws_session.clone();
+        async move {
+            process_auth_resp(resp, ws_session).await;
+        }
+    }).await;
+
 }
