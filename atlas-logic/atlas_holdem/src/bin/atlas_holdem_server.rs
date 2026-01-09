@@ -1,8 +1,9 @@
+use atlas_holdem::model::{Player, Table};
 use std::sync::{Arc, OnceLock};
 use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::{mpsc, Mutex};
-use atlas_holdem::model::Table;
+use ulid::Ulid;
 
 static G_TABLE: OnceLock<Arc<Mutex<Table>>> = OnceLock::new();
 fn get_table() -> &'static Mutex<Table> {
@@ -41,7 +42,7 @@ async fn run_cmd(){
 async fn handle_cmd(cmd: String) -> bool {
     let parts: Vec<&str> = cmd.trim().split_whitespace().collect();
     let command = parts.as_slice();
-    let table = get_table().lock().await;
+    let mut table = get_table().lock().await;
     match command {
         ["quit"] => {
             return false;
@@ -49,8 +50,39 @@ async fn handle_cmd(cmd: String) -> bool {
         ["show"] => {
             println!("{}", *table);
         }
-        _ => {
+        ["sit", seat, balance] => {
+            let seat: usize = match seat.parse() {
+                Ok(v) => v,
+                Err(_) => {
+                    println!("invalid seat");
+                    return true;
+                }
+            };
+            let balance: u64 = match balance.parse() {
+                Ok(v) => v,
+                Err(_) => {
+                    println!("invalid balance");
+                    return true;
+                }
+            };
 
+            let player = Player {
+                id: Ulid::new().to_string(),
+                nickname: format!("player00{}", seat),
+                balance,
+            };
+
+            match table.sit(seat, player) {
+                Ok(_) => {
+                    println!("{}", *table);
+                }
+                Err(e) => {
+                    println!("sit failed: {:?}", e);
+                }
+            }
+        }
+        _ => {
+            println!("unknown command: {:?}", command);
         }
     }
     true

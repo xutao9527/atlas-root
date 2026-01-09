@@ -3,7 +3,7 @@ use ulid::Ulid;
 
 #[derive(Debug, Clone)]
 pub struct Player {
-    pub id: u32,
+    pub id: String,
     pub nickname: String,
     pub balance: u64,
 }
@@ -14,6 +14,13 @@ pub enum TableState {
     Preparing,
     Battling,
     Concluding,
+}
+
+#[derive(Debug)]
+pub enum TableError {
+    InvalidSeat,
+    SeatOccupied,
+    InvalidState,
 }
 
 pub struct Table {
@@ -33,6 +40,20 @@ impl Table {
             pot: 0,
             current_bet: 0,
         }
+    }
+
+    pub fn sit(&mut self,  seat: usize, player: Player) -> Result<(), TableError> {
+        if seat >= self.seats.len() {
+            return Err(TableError::InvalidSeat);
+        }
+        if self.state != TableState::Waiting {
+            return Err(TableError::InvalidState);
+        }
+        if self.seats[seat].is_some() {
+            return Err(TableError::SeatOccupied);
+        }
+        self.seats[seat] = Some(player);
+        Ok(())
     }
 }
 
@@ -57,7 +78,7 @@ impl fmt::Display for Table {
         }
         writeln!(f, "{}", "=".repeat(40))?;
 
-        write!(f, "{}", "command: [show;quit;]")?;
+        write!(f, "{}", "command: [show; quit; sit<seat, name, balance>]")?;
         Ok(())
     }
 }
