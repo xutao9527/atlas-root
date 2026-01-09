@@ -13,6 +13,10 @@ pub struct Player {
     pub street_bet: u64,
     /// 是否仍在牌局中（Fold 后为 false）
     pub is_active: bool,
+    // 本下注轮是否已经行动过
+    pub has_acted: bool,
+    // 是否已经 all-in
+    pub is_all_in: bool,
 }
 
 #[derive(Debug)]
@@ -182,7 +186,7 @@ impl Table {
 
         self.state = TableState::Preparing;
         // =============== 初始化新的一局 ===============
-        // ===========================================
+
         // 生成新一局 hand_id
         self.hand_id = Ulid::new().to_string();
 
@@ -190,6 +194,14 @@ impl Table {
         self.street = Street::PreFlop;
         self.pot = 0;
         self.current_bet = 0;
+
+        // 重置所有玩家的状态
+        for p in self.seats.iter_mut().flatten() {
+            p.is_active = true;
+            p.has_acted = false;
+            p.is_all_in = false;
+            p.street_bet = 0;
+        }
 
         // 推进庄家按钮
         self.dealer_pos = self.next_occupied_seat(self.dealer_pos);
@@ -224,32 +236,47 @@ impl Table {
         }
 
         let player = self.seats[seat].as_mut().unwrap();
-        if !player.is_active {
+        if !player.is_active || player.is_all_in {
             return Err(TableError::InvalidAction);
         }
-        let acted_seat = seat;
+
+        // ★ 是否重新打开下注轮（Raise 且有效）
+        let mut reopened_betting = false;
+
         // 先处理动作
         match action {
             PlayerAction::Fold => {
                 player.is_active = false;
+                player.has_acted = true;
             }
             PlayerAction::Check  => {
                 if player.street_bet != self.current_bet {
                     return Err(TableError::InvalidAction);
                 }
+                player.has_acted = true;
             }
             PlayerAction::Call  => {
                 let need = self.current_bet - player.street_bet;
                 let actual = need.min(player.balance);
+
                 player.balance -= actual;
                 player.street_bet += actual;
                 self.pot += actual;
+
+                if player.balance == 0 {
+                    player.is_all_in = true;
+                }
+
+                player.has_acted = true;
             }
             PlayerAction::Raise(raise_amount) => {
-                // 目标下注额 = 当前最大注额 + 加注额
+                // 规则：raise_amount 是“在当前 bet 基础上的加注额”
                 let target_bet = self.current_bet + raise_amount;
 
-                // 玩家需要补到 target_bet
+                if target_bet <= self.current_bet {
+                    return Err(TableError::InvalidAction);
+                }
+
                 let need = target_bet - player.street_bet;
                 let actual = need.min(player.balance);
 
@@ -257,16 +284,40 @@ impl Table {
                 player.street_bet += actual;
                 self.pot += actual;
 
-                // 更新桌面状态
-                self.current_bet = player.street_bet;
-                self.last_raiser_pos = seat;
+                if player.balance == 0 {
+                    player.is_all_in = true;
+                }
 
+                // 是否真正形成 raise
+                if player.street_bet > self.current_bet {
+                    // 更新桌面状态
+                    self.current_bet = player.street_bet;
+                    self.last_raiser_pos = seat;
+                    reopened_betting = true;
+
+                }
+                player.has_acted = true;
             }
         }
-        // 再推进 current_turn
+
+        // ===== 到这里，player 的 &mut 借用已经结束 =====
+
+        // ★ Raise 会让其他人“重新需要回应”
+        if reopened_betting {
+            for p in self.seats.iter_mut().flatten() {
+                if p.is_active && !p.is_all_in {
+                    p.has_acted = false;
+                }
+            }
+            // Raise 的人自己已经 acted
+            self.seats[seat].as_mut().unwrap().has_acted = true;
+        }
+
+        // ===== 推进行动顺序 =====
         self.current_turn = self.next_occupied_seat(seat);
+
         // ★ 下注轮结束判断
-        if acted_seat == self.last_raiser_pos {
+        if self.is_betting_round_finished() {
             self.end_betting_round();
         }
         Ok(())
@@ -276,8 +327,9 @@ impl Table {
         println!("betting round finished: {:?}", self.street);
 
         // 重置所有玩家的 street_bet
-        for seat in self.seats.iter_mut().flatten() {
-            seat.street_bet = 0;
+        for p in self.seats.iter_mut().flatten() {
+            p.street_bet = 0;
+            p.has_acted = false;
         }
         self.current_bet = 0;
 
@@ -285,7 +337,6 @@ impl Table {
             Street::PreFlop => {
                 // Pre-Flop 下注结束 → 进入 Flop
                 self.street = Street::Flop;
-
                 self.current_turn = self.next_occupied_seat(self.dealer_pos);
                 self.last_raiser_pos = self.dealer_pos;
             }
@@ -298,7 +349,6 @@ impl Table {
             Street::Turn => {
                 // Turn 下注结束 → 进入 River
                 self.street = Street::River;
-
                 self.current_turn = self.next_occupied_seat(self.dealer_pos);
                 self.last_raiser_pos = self.dealer_pos;
             }
@@ -308,6 +358,25 @@ impl Table {
                 println!("hand finished, go to showdown");
             }
         }
+    }
+
+    fn is_betting_round_finished(&self) -> bool {
+        for p in self.seats.iter().flatten() {
+            if !p.is_active {
+                continue;
+            }
+            if p.is_all_in {
+                continue;
+            }
+            if !p.has_acted {
+                return false;
+            }
+            // 还没行动过，或者下注没跟平
+            if !p.has_acted || p.street_bet != self.current_bet {
+                return false;
+            }
+        }
+        true
     }
 
     /// 扣除指定座位玩家的盲注
