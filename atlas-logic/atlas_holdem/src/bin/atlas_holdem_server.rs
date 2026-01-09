@@ -16,6 +16,7 @@ async fn main() {
 }
 
 async fn run_cmd(){
+
     // 发送命令行
     let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<String>();
     tokio::spawn(async move {
@@ -23,17 +24,18 @@ async fn run_cmd(){
 
         while let Ok(Some(line)) = stdin.next_line().await {
             let _ = cmd_tx.send(line.clone());
-            if line.trim() == "q" {
+            if line.trim() == "quit" {
                 break;
             }
         }
     });
+    handle_cmd("show".into()).await;
     while let Some(cmd) = cmd_rx.recv().await {
         if !handle_cmd(cmd).await {
-
             break
         }
     }
+
 }
 
 async fn handle_cmd(cmd: String) -> bool {
@@ -41,7 +43,7 @@ async fn handle_cmd(cmd: String) -> bool {
     let command = parts.as_slice();
     let table = get_table().lock().await;
     match command {
-        ["q"] => {
+        ["quit"] => {
             return false;
         },
         ["show"] => {

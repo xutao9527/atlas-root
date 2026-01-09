@@ -57,7 +57,7 @@ impl fmt::Display for Table {
         }
         writeln!(f, "{}", "=".repeat(40))?;
 
-        write!(f, "{}", "command:")?;
+        write!(f, "{}", "command: [show;quit;]")?;
         Ok(())
     }
 }
