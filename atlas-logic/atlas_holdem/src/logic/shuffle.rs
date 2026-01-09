@@ -25,7 +25,7 @@ use rand::prelude::*;
 //     numbers
 // }
 
-fn shuffling()-> Vec<u8>{
+fn _shuffling()-> Vec<u8>{
     let mut deck: Vec<u8> = (0..52).collect();
     let mut rng = rand::rng();
     deck.shuffle(&mut rng);

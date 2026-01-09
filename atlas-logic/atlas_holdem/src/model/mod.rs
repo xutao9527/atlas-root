@@ -11,6 +11,14 @@ pub struct Player {
     pub balance: u64,
 }
 
+#[derive(Debug)]
+pub enum PlayerAction {
+    Fold,
+    Call,
+    Check,
+    Raise(u64), // 先留着，不急着实现
+}
+
 #[derive(Debug, PartialEq)]
 pub enum TableState {
     /// 空闲状态：
@@ -159,6 +167,31 @@ impl Table {
 
         // 进入对战阶段
         self.state = TableState::Battling;
+        Ok(())
+    }
+
+    pub fn act(&mut self, seat: usize, action: PlayerAction) -> Result<(), TableError> {
+        if self.state != TableState::Battling {
+            return Err(TableError::InvalidState);
+        }
+        if seat != self.current_turn {
+            return Err(TableError::InvalidSeat); // 之后可以细化
+        }
+        match action {
+            PlayerAction::Fold => {
+                self.current_turn = self.next_occupied_seat(seat);
+            }
+            PlayerAction::Call => {
+                self.current_turn = self.next_occupied_seat(seat);
+            }
+            PlayerAction::Check => {
+                self.current_turn = self.next_occupied_seat(seat);
+            }
+            PlayerAction::Raise(_) => {
+                self.current_turn = self.next_occupied_seat(seat);
+            }
+        }
+
         Ok(())
     }
 

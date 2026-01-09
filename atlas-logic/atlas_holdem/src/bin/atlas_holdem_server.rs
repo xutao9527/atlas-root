@@ -1,4 +1,4 @@
-use atlas_holdem::model::{Player, Table};
+use atlas_holdem::model::{Player, PlayerAction, Table};
 use std::sync::{Arc, OnceLock};
 use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -99,9 +99,36 @@ async fn handle_cmd(cmd: String) -> bool {
                 }
             }
         }
+        ["atc", "fold"] => {
+            act_and_show(&mut table, PlayerAction::Fold);
+        }
+        ["atc", "call"] => {
+            act_and_show(&mut table, PlayerAction::Call);
+        }
+        ["atc", "check"] => {
+            act_and_show(&mut table, PlayerAction::Check);
+        }
+        ["atc", "raise", amount] => {
+            let amount: u64 = match amount.parse() {
+                Ok(v) => v,
+                Err(_) => {
+                    println!("invalid raise amount");
+                    return true;
+                }
+            };
+            act_and_show(&mut table, PlayerAction::Raise(amount));
+        }
         _ => {
             println!("unknown command: {:?}", command);
         }
     }
     true
+}
+
+fn act_and_show(table: &mut Table, action: PlayerAction) {
+    let seat = table.current_turn;
+    match table.act(seat, action) {
+        Ok(_) => println!("{}", *table),
+        Err(e) => println!("act failed: {:?}", e),
+    }
 }
