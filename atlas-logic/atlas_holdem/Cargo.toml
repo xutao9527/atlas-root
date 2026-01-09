@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# runtime
+tokio = { workspace = true, features = ["full"] }
+
+# common
+ulid = { workspace = true, features = ["serde"] }
 sha2 = "0.10.9"
 hex = "0.4.3"
 rand = "0.9"

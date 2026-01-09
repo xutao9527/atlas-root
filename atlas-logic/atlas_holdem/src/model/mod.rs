@@ -1,3 +1,5 @@
+use ulid::Ulid;
+
 #[derive(Debug, Clone)]
 pub struct Player {
     pub id: u32,
@@ -15,7 +17,17 @@ pub enum TableState {
 }
 
 pub struct Table {
-    pub table_id: u32,
+    pub id: String,
     pub seats: [Option<Player>; 10],
     pub state: TableState,
+}
+
+impl Table {
+    pub fn new() -> Self {
+        Self {
+            id: Ulid::new().to_string(),
+            seats: Default::default(),
+            state: TableState::Waiting,
+        }
+    }
 }
