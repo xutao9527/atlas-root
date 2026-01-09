@@ -9,6 +9,10 @@ pub struct Player {
     pub nickname: String,
     /// 玩家当前可用筹码
     pub balance: u64,
+    /// 本下注轮（当前 street）中已投入的筹码
+    pub street_bet: u64,
+    /// 是否仍在牌局中（Fold 后为 false）
+    pub is_active: bool,
 }
 
 #[derive(Debug)]
@@ -42,6 +46,31 @@ pub enum TableState {
     Concluding,
 }
 
+/// 一局德州扑克中的「下注阶段」（也称 Street）
+///
+/// 每个阶段都会经历一次完整的下注轮：
+/// 所有仍在牌局中的玩家都有机会行动，直到下注轮结束。
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Street {
+    /// 翻牌前（Pre-Flop）
+    /// - 发底牌之后
+    /// - 扣完小盲 / 大盲
+    /// - 第一轮下注从大盲左手开始
+    PreFlop,
+    /// 翻牌圈（Flop）
+    /// - 公共牌一次性发出 3 张
+    /// - 新一轮下注从庄家左手开始
+    Flop,
+    /// 转牌圈（Turn）
+    /// - 公共牌第 4 张
+    /// - 新一轮下注从庄家左手开始
+    Turn,
+    /// 河牌圈（River）
+    /// - 公共牌第 5 张
+    /// - 最后一轮下注
+    River,
+}
+
 #[derive(Debug)]
 pub enum TableError {
     /// 座位索引非法（超出 0..10）
@@ -52,6 +81,8 @@ pub enum TableError {
     InvalidState,
     /// 坐下的玩家数量不足，无法开始一局
     NotEnoughPlayers,
+    /// 动作在当前下注状态下不合法（如非法 check）
+    InvalidAction,
 }
 
 pub struct Table {
@@ -64,7 +95,10 @@ pub struct Table {
     pub seats: [Option<Player>; 10],
     /// 当前桌子的状态机状态
     pub state: TableState,
-
+    /// 当前所处的下注阶段（Street）
+    /// - 决定是否需要发公共牌
+    /// - 决定下注轮结束后要进入哪里
+    pub street: Street,
     /// 当前这一局（hand）的唯一标识
     /// - 每次 start() 生成
     /// - 用于日志、回放、审计
@@ -103,6 +137,7 @@ impl Table {
             id: Ulid::new().to_string(),
             seats: Default::default(),
             state: TableState::Waiting,
+            street: Street::PreFlop,
             hand_id: String::new(),
             small_blind_amount: 10,
             big_blind_amount: 20,
@@ -146,10 +181,13 @@ impl Table {
         }
 
         self.state = TableState::Preparing;
-        // ===== 初始化新的一局 =====
-
+        // =============== 初始化新的一局 ===============
+        // ===========================================
         // 生成新一局 hand_id
         self.hand_id = Ulid::new().to_string();
+
+        // 初始化 Street
+        self.street = Street::PreFlop;
         self.pot = 0;
         self.current_bet = 0;
 
@@ -170,7 +208,7 @@ impl Table {
 
         // Pre-Flop 第一个行动的人（大盲左手）
         self.current_turn = self.next_occupied_seat(self.big_blind_pos);
-        // ======================
+        // ===========================================
 
         // 进入对战阶段
         self.state = TableState::Battling;
@@ -184,33 +222,93 @@ impl Table {
         if seat != self.current_turn {
             return Err(TableError::InvalidSeat); // 之后可以细化
         }
+
+        let player = self.seats[seat].as_mut().unwrap();
+        if !player.is_active {
+            return Err(TableError::InvalidAction);
+        }
+        let acted_seat = seat;
+        // 先处理动作
         match action {
             PlayerAction::Fold => {
-                self.current_turn = self.next_occupied_seat(seat);
+                player.is_active = false;
             }
-            PlayerAction::Call | PlayerAction::Check  => {
-                self.current_turn = self.next_occupied_seat(seat);
+            PlayerAction::Check  => {
+                if player.street_bet != self.current_bet {
+                    return Err(TableError::InvalidAction);
+                }
             }
-            PlayerAction::Raise(_) => {
+            PlayerAction::Call  => {
+                let need = self.current_bet - player.street_bet;
+                let actual = need.min(player.balance);
+                player.balance -= actual;
+                player.street_bet += actual;
+                self.pot += actual;
+            }
+            PlayerAction::Raise(raise_amount) => {
+                // 目标下注额 = 当前最大注额 + 加注额
+                let target_bet = self.current_bet + raise_amount;
+
+                // 玩家需要补到 target_bet
+                let need = target_bet - player.street_bet;
+                let actual = need.min(player.balance);
+
+                player.balance -= actual;
+                player.street_bet += actual;
+                self.pot += actual;
+
+                // 更新桌面状态
+                self.current_bet = player.street_bet;
                 self.last_raiser_pos = seat;
-                self.current_turn = self.next_occupied_seat(seat);
+
             }
         }
+        // 再推进 current_turn
+        self.current_turn = self.next_occupied_seat(seat);
         // ★ 下注轮结束判断
-        if self.current_turn == self.last_raiser_pos {
+        if acted_seat == self.last_raiser_pos {
             self.end_betting_round();
         }
-
         Ok(())
     }
 
     fn end_betting_round(&mut self) {
-        println!("betting round finished");
+        println!("betting round finished: {:?}", self.street);
 
-        // 现在先不发牌、不比牌
-        // 你可以先简单打印 / 切状态
+        // 重置所有玩家的 street_bet
+        for seat in self.seats.iter_mut().flatten() {
+            seat.street_bet = 0;
+        }
+        self.current_bet = 0;
+
+        match self.street {
+            Street::PreFlop => {
+                // Pre-Flop 下注结束 → 进入 Flop
+                self.street = Street::Flop;
+
+                self.current_turn = self.next_occupied_seat(self.dealer_pos);
+                self.last_raiser_pos = self.dealer_pos;
+            }
+            Street::Flop => {
+                // Flop 下注结束 → 进入 Turn
+                self.street = Street::Turn;
+                self.current_turn = self.next_occupied_seat(self.dealer_pos);
+                self.last_raiser_pos = self.dealer_pos;
+            }
+            Street::Turn => {
+                // Turn 下注结束 → 进入 River
+                self.street = Street::River;
+
+                self.current_turn = self.next_occupied_seat(self.dealer_pos);
+                self.last_raiser_pos = self.dealer_pos;
+            }
+            Street::River => {
+                // River 下注结束 → 进入结算
+                self.state = TableState::Concluding;
+                println!("hand finished, go to showdown");
+            }
+        }
     }
-
 
     /// 扣除指定座位玩家的盲注
     ///
@@ -226,6 +324,7 @@ impl Table {
         let actual = amount.min(player.balance);
         // 更新玩家余额和底池
         player.balance -= actual;
+        player.street_bet += actual; // ★★★ 关键
         self.pot += actual;
     }
 
@@ -237,8 +336,10 @@ impl Table {
     fn next_occupied_seat(&self, from: usize) -> usize {
         let mut i = (from + 1) % self.seats.len();
         loop {
-            if self.seats[i].is_some() {
-                return i;
+            if let Some(p) = &self.seats[i] {
+                if p.is_active {
+                    return i;
+                }
             }
             i = (i + 1) % self.seats.len();
         }
@@ -250,7 +351,9 @@ impl fmt::Display for Table {
         // \x1B[2J: 清屏, \x1B[1;1H: 光标移动到 (1,1)
         writeln!(f, "\x1B[2J\x1B[1;1H")?;
         writeln!(f, "\n{}", "=".repeat(60))?;
-        writeln!(f, "TABLE ID: {} | STATE: {:?}", self.id, self.state)?;
+        writeln!(f, "TABLE ID: {} | HAND ID: {}", self.id, self.hand_id)?;
+        writeln!(f, "STATE: {:?} | STREET: {:?}", self.state, self.street)?;
+        writeln!(f, "TABLE ID: {} | STATE: {:?} | street: {:?}", self.id, self.state, self.street)?;
         writeln!(f, "POT: ${} | CURRENT BET:${} | BLIND_AMOUNT :$({}/{})",
                  self.pot, self.current_bet, self.small_blind_amount,self.big_blind_amount)?;
         writeln!(f, "DEALER_POS: {} | SMALL_BLIND_POS BET: {} | BIG_BLIND_POS BET: {} | CURRENT_TURN_POS: {} | LAST_RAISER_POS: {}",
@@ -260,7 +363,19 @@ impl fmt::Display for Table {
         for i in 0..10 {
             match &self.seats[i] {
                 Some(p) => {
-                    writeln!(f, "  [{}] {}: ${}", i, p.nickname, p.balance)?;
+                    let current_turn_mark = if self.current_turn == i { "*" } else { " " };
+                    let last_raiser_mark = if self.last_raiser_pos == i { "R" } else { " " };
+                    let dentity_mark;
+                    if self.dealer_pos == i { dentity_mark = "D" }
+                    else if self.big_blind_pos == i { dentity_mark = "B" }
+                    else if self.small_blind_pos == i { dentity_mark = "S"  }
+                    else { dentity_mark = " " };
+                    // [*][R][S/B/D][i]  nickname balance
+
+                    writeln!(f,
+                             " [{}][{}][{}] [{}]: ${}  {} {}",
+                             current_turn_mark, last_raiser_mark,dentity_mark, i, p.nickname, p.balance, p.street_bet
+                    )?;
                 }
                 None => {
                     writeln!(f, "  [{}] (Empty Seat)", i)?;
@@ -269,7 +384,7 @@ impl fmt::Display for Table {
         }
         writeln!(f, "{}", "=".repeat(60))?;
 
-        write!(f, "{}", "command: [show; quit; sit <seat> <balance>; start]")?;
+        write!(f, "{}", "command: [show; quit; sit <seat> <balance>; start; act <check> <fold> <call> <raise amount>;]")?;
         Ok(())
     }
 }
