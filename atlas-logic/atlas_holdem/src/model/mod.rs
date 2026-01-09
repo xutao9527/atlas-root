@@ -199,10 +199,13 @@ impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // \x1B[2J: 清屏, \x1B[1;1H: 光标移动到 (1,1)
         writeln!(f, "\x1B[2J\x1B[1;1H")?;
-        writeln!(f, "\n{}", "=".repeat(40))?;
+        writeln!(f, "\n{}", "=".repeat(60))?;
         writeln!(f, "TABLE ID: {} | STATE: {:?}", self.id, self.state)?;
-        writeln!(f, "POT: $ {} | CURRENT BET: $ {}", self.pot, self.current_bet)?;
-        writeln!(f, "{}", "-".repeat(40))?;
+        writeln!(f, "POT: ${} | CURRENT BET:${} | BLIND_AMOUNT :$({}/{})",
+                 self.pot, self.current_bet, self.small_blind_amount,self.big_blind_amount)?;
+        writeln!(f, "DEALER_POS: {} | SMALL_BLIND_POS BET: {} | BIG_BLIND_POS BET: {} | CURRENT_TURN_POS: {}",
+                 self.dealer_pos, self.small_blind_pos, self.big_blind_pos, self.current_turn)?;
+        writeln!(f, "{}", "-".repeat(60))?;
 
         for i in 0..10 {
             match &self.seats[i] {
@@ -214,9 +217,9 @@ impl fmt::Display for Table {
                 }
             }
         }
-        writeln!(f, "{}", "=".repeat(40))?;
+        writeln!(f, "{}", "=".repeat(60))?;
 
-        write!(f, "{}", "command: [show; quit; sit <seat> <balance>]")?;
+        write!(f, "{}", "command: [show; quit; sit <seat> <balance>; start]")?;
         Ok(())
     }
 }
