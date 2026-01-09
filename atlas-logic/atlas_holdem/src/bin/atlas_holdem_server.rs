@@ -1,4 +1,4 @@
-use atlas_holdem::model::{Player, PlayerAction, Table};
+use atlas_holdem::model::table::{Player, PlayerAction, Table};
 use std::sync::{Arc, OnceLock};
 use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -36,10 +36,10 @@ async fn run_cmd(){
     handle_cmd("sit 3 2000".into()).await;
     handle_cmd("sit 4 500".into()).await;
     handle_cmd("sit 5 2000".into()).await;
-    handle_cmd("sit 6 2000".into()).await;
-    handle_cmd("sit 7 1000".into()).await;
-    handle_cmd("sit 8 1200".into()).await;
-    handle_cmd("sit 9 2000".into()).await;
+    // handle_cmd("sit 6 2000".into()).await;
+    // handle_cmd("sit 7 1000".into()).await;
+    // handle_cmd("sit 8 1200".into()).await;
+    // handle_cmd("sit 9 2000".into()).await;
     handle_cmd("start".into()).await;
     while let Some(cmd) = cmd_rx.recv().await {
         if !handle_cmd(cmd).await {
@@ -84,6 +84,7 @@ async fn handle_cmd(cmd: String) -> bool {
                 is_active: false,
                 has_acted: false,
                 is_all_in: false,
+                hole_cards: [None;2],
             };
 
             match table.sit(seat, player) {
