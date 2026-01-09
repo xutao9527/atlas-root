@@ -99,16 +99,16 @@ async fn handle_cmd(cmd: String) -> bool {
                 }
             }
         }
-        ["atc", "fold"] => {
+        ["act", "fold"] => {
             act_and_show(&mut table, PlayerAction::Fold);
         }
-        ["atc", "call"] => {
+        ["act", "call"] => {
             act_and_show(&mut table, PlayerAction::Call);
         }
-        ["atc", "check"] => {
+        ["act", "check"] => {
             act_and_show(&mut table, PlayerAction::Check);
         }
-        ["atc", "raise", amount] => {
+        ["act", "raise", amount] => {
             let amount: u64 = match amount.parse() {
                 Ok(v) => v,
                 Err(_) => {

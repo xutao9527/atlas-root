@@ -91,6 +91,10 @@ pub struct Table {
     pub big_blind_pos: usize,
     /// 当前轮到行动的座位索引
     pub current_turn: usize,
+    /// 当前下注轮中，最后一次加注的玩家位置
+    /// - 初始为大盲
+    /// - 每次 Raise 更新
+    pub last_raiser_pos: usize,
 }
 
 impl Table {
@@ -108,11 +112,11 @@ impl Table {
             small_blind_pos: 0,
             big_blind_pos: 0,
             current_turn: 0,
+            last_raiser_pos: 0,
         }
     }
 
     /// 玩家坐下
-    ///
     /// 规则：
     /// - 只能在 Waiting 状态下调用
     /// - 玩家必须指定一个空座位
@@ -161,6 +165,9 @@ impl Table {
         // 当前下注轮的最高注额 = 大盲
         self.current_bet = self.big_blind_amount;
 
+        // Pre-Flop：大盲视为初始加注者
+        self.last_raiser_pos = self.big_blind_pos;
+
         // Pre-Flop 第一个行动的人（大盲左手）
         self.current_turn = self.next_occupied_seat(self.big_blind_pos);
         // ======================
@@ -181,19 +188,29 @@ impl Table {
             PlayerAction::Fold => {
                 self.current_turn = self.next_occupied_seat(seat);
             }
-            PlayerAction::Call => {
-                self.current_turn = self.next_occupied_seat(seat);
-            }
-            PlayerAction::Check => {
+            PlayerAction::Call | PlayerAction::Check  => {
                 self.current_turn = self.next_occupied_seat(seat);
             }
             PlayerAction::Raise(_) => {
+                self.last_raiser_pos = seat;
                 self.current_turn = self.next_occupied_seat(seat);
             }
+        }
+        // ★ 下注轮结束判断
+        if self.current_turn == self.last_raiser_pos {
+            self.end_betting_round();
         }
 
         Ok(())
     }
+
+    fn end_betting_round(&mut self) {
+        println!("betting round finished");
+
+        // 现在先不发牌、不比牌
+        // 你可以先简单打印 / 切状态
+    }
+
 
     /// 扣除指定座位玩家的盲注
     ///
@@ -236,8 +253,8 @@ impl fmt::Display for Table {
         writeln!(f, "TABLE ID: {} | STATE: {:?}", self.id, self.state)?;
         writeln!(f, "POT: ${} | CURRENT BET:${} | BLIND_AMOUNT :$({}/{})",
                  self.pot, self.current_bet, self.small_blind_amount,self.big_blind_amount)?;
-        writeln!(f, "DEALER_POS: {} | SMALL_BLIND_POS BET: {} | BIG_BLIND_POS BET: {} | CURRENT_TURN_POS: {}",
-                 self.dealer_pos, self.small_blind_pos, self.big_blind_pos, self.current_turn)?;
+        writeln!(f, "DEALER_POS: {} | SMALL_BLIND_POS BET: {} | BIG_BLIND_POS BET: {} | CURRENT_TURN_POS: {} | LAST_RAISER_POS: {}",
+                 self.dealer_pos, self.small_blind_pos, self.big_blind_pos, self.current_turn, self.last_raiser_pos)?;
         writeln!(f, "{}", "-".repeat(60))?;
 
         for i in 0..10 {
