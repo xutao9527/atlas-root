@@ -31,14 +31,14 @@ async fn run_cmd(){
         }
     });
     handle_cmd("sit 0 2000".into()).await;
-    handle_cmd("sit 1 2000".into()).await;
+    handle_cmd("sit 1 600".into()).await;
     handle_cmd("sit 2 2000".into()).await;
     handle_cmd("sit 3 2000".into()).await;
-    handle_cmd("sit 4 2000".into()).await;
+    handle_cmd("sit 4 500".into()).await;
     handle_cmd("sit 5 2000".into()).await;
     handle_cmd("sit 6 2000".into()).await;
-    handle_cmd("sit 7 2000".into()).await;
-    handle_cmd("sit 8 2000".into()).await;
+    handle_cmd("sit 7 1000".into()).await;
+    handle_cmd("sit 8 1200".into()).await;
     handle_cmd("sit 9 2000".into()).await;
     handle_cmd("start".into()).await;
     while let Some(cmd) = cmd_rx.recv().await {

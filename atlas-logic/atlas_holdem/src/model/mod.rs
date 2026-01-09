@@ -406,7 +406,7 @@ impl Table {
         let mut i = (from + 1) % self.seats.len();
         loop {
             if let Some(p) = &self.seats[i] {
-                if p.is_active {
+                if p.is_active && !p.is_all_in {
                     return i;
                 }
             }
@@ -434,16 +434,17 @@ impl fmt::Display for Table {
                 Some(p) => {
                     let current_turn_mark = if self.current_turn == i { "*" } else { " " };
                     let last_raiser_mark = if self.last_raiser_pos == i { "R" } else { " " };
+                    let is_active_mark = if p.is_active { "✅" } else { "❌" };
+                    let is_all_in_mark = if p.is_all_in { "all-in" } else { "      " };
                     let dentity_mark;
                     if self.dealer_pos == i { dentity_mark = "D" }
                     else if self.big_blind_pos == i { dentity_mark = "B" }
                     else if self.small_blind_pos == i { dentity_mark = "S"  }
                     else { dentity_mark = " " };
                     // [*][R][S/B/D][i]  nickname balance
-
                     writeln!(f,
-                             " [{}][{}][{}] [{}]: ${}  {} {}",
-                             current_turn_mark, last_raiser_mark,dentity_mark, i, p.nickname, p.balance, p.street_bet
+                             " [{}][{}][{}] [{}]: ${} {} {}   {} {}",
+                             current_turn_mark, last_raiser_mark,dentity_mark, i, p.nickname, is_active_mark,is_all_in_mark,p.balance, p.street_bet
                     )?;
                 }
                 None => {
@@ -452,8 +453,7 @@ impl fmt::Display for Table {
             }
         }
         writeln!(f, "{}", "=".repeat(60))?;
-
-        write!(f, "{}", "command: [show; quit; sit <seat> <balance>; start; act <check> <fold> <call> <raise amount>;]")?;
+        write!(f, "{}", "command: [1)show; 2)quit; 3)sit <seat> <balance>; 4)start; 5)act <check> <fold> <call> <raise amount>;]")?;
         Ok(())
     }
 }
