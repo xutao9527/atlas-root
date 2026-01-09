@@ -323,41 +323,44 @@ impl Table {
 
     fn end_betting_round(&mut self) {
         println!("betting round finished: {:?}", self.street);
-
-        // 重置所有玩家的 street_bet
+        // 清空 street 状态
         for p in self.seats.iter_mut().flatten() {
             p.street_bet = 0;
             p.has_acted = false;
         }
         self.current_bet = 0;
 
+        // ★ 核心判断：是否还有人能下注
+        let can_bet = self.seats.iter().flatten().any(|p| p.is_active && !p.is_all_in);
+
+
         match self.street {
-            Street::PreFlop => {
-                // Pre-Flop 下注结束 → 进入 Flop
-                self.street = Street::Flop;
-            }
-            Street::Flop => {
-                // Flop 下注结束 → 进入 Turn
-                self.street = Street::Turn;
-            }
-            Street::Turn => {
-                // Turn 下注结束 → 进入 River
-                self.street = Street::River;
-            }
+            Street::PreFlop => self.street = Street::Flop,
+            Street::Flop    => self.street = Street::Turn,
+            Street::Turn    => self.street = Street::River,
             Street::River => {
-                // River 下注结束 → 进入结算
                 self.state = TableState::Concluding;
                 println!("hand finished, go to showdown");
                 return;
             }
         }
 
+        if !can_bet {
+            // ★ 自动推进，直到 River
+            self.end_betting_round();
+            return;
+        }
+
+        // 正常新一轮下注
         match self.next_occupied_seat(self.dealer_pos) {
             Some(pos) => {
                 self.current_turn = pos;
                 self.last_raiser_pos = self.dealer_pos;
             },
-            None => self.state = TableState::Concluding,
+            None => {
+                // ★ 注意：这里不再直接 Concluding
+                // self.state = TableState::Concluding;
+            }
         }
     }
 
