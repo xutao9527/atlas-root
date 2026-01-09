@@ -81,6 +81,16 @@ async fn handle_cmd(cmd: String) -> bool {
                 }
             }
         }
+        ["start"] => {
+            match table.start() {
+                Ok(_) => {
+                    println!("{}", *table);
+                }
+                Err(e) => {
+                    println!("start failed: {:?}", e);
+                }
+            }
+        }
         _ => {
             println!("unknown command: {:?}", command);
         }
