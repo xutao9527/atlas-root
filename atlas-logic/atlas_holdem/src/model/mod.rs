@@ -179,22 +179,19 @@ impl Table {
         if self.state != TableState::Waiting {
             return Err(TableError::InvalidState);
         }
-        let player_count = self.seats.iter().filter(|s| s.is_some()).count();
-        if player_count < 2 {
+
+        if self.seats.iter().filter(|s| s.is_some()).count() < 2 {
             return Err(TableError::NotEnoughPlayers);
         }
 
         self.state = TableState::Preparing;
         // =============== 初始化新的一局 ===============
-
         // 生成新一局 hand_id
         self.hand_id = Ulid::new().to_string();
-
         // 初始化 Street
         self.street = Street::PreFlop;
         self.pot = 0;
         self.current_bet = 0;
-
         // 重置所有玩家的状态
         for p in self.seats.iter_mut().flatten() {
             p.is_active = true;
@@ -202,11 +199,10 @@ impl Table {
             p.is_all_in = false;
             p.street_bet = 0;
         }
-
         // 推进庄家按钮
-        self.dealer_pos = self.next_occupied_seat(self.dealer_pos);
-        self.small_blind_pos = self.next_occupied_seat(self.dealer_pos);
-        self.big_blind_pos   = self.next_occupied_seat(self.small_blind_pos);
+        self.dealer_pos = self.next_occupied_seat(self.dealer_pos).unwrap();
+        self.small_blind_pos = self.next_occupied_seat(self.dealer_pos).unwrap();
+        self.big_blind_pos   = self.next_occupied_seat(self.small_blind_pos).unwrap();
 
         // 扣盲注（强制）
         self.post_blind(self.small_blind_pos, self.small_blind_amount);
@@ -219,7 +215,7 @@ impl Table {
         self.last_raiser_pos = self.big_blind_pos;
 
         // Pre-Flop 第一个行动的人（大盲左手）
-        self.current_turn = self.next_occupied_seat(self.big_blind_pos);
+        self.current_turn = self.next_occupied_seat(self.big_blind_pos).unwrap();
         // ===========================================
 
         // 进入对战阶段
@@ -232,7 +228,7 @@ impl Table {
             return Err(TableError::InvalidState);
         }
         if seat != self.current_turn {
-            return Err(TableError::InvalidSeat); // 之后可以细化
+            return Err(TableError::InvalidSeat);
         }
 
         let player = self.seats[seat].as_mut().unwrap();
@@ -247,13 +243,13 @@ impl Table {
         match action {
             PlayerAction::Fold => {
                 player.is_active = false;
-                player.has_acted = true;
+
             }
             PlayerAction::Check  => {
                 if player.street_bet != self.current_bet {
                     return Err(TableError::InvalidAction);
                 }
-                player.has_acted = true;
+
             }
             PlayerAction::Call  => {
                 let need = self.current_bet - player.street_bet;
@@ -267,16 +263,11 @@ impl Table {
                     player.is_all_in = true;
                 }
 
-                player.has_acted = true;
+
             }
             PlayerAction::Raise(raise_amount) => {
                 // 规则：raise_amount 是“在当前 bet 基础上的加注额”
                 let target_bet = self.current_bet + raise_amount;
-
-                if target_bet <= self.current_bet {
-                    return Err(TableError::InvalidAction);
-                }
-
                 let need = target_bet - player.street_bet;
                 let actual = need.min(player.balance);
 
@@ -296,10 +287,10 @@ impl Table {
                     reopened_betting = true;
 
                 }
-                player.has_acted = true;
+
             }
         }
-
+        player.has_acted = true;
         // ===== 到这里，player 的 &mut 借用已经结束 =====
 
         // ★ Raise 会让其他人“重新需要回应”
@@ -314,11 +305,18 @@ impl Table {
         }
 
         // ===== 推进行动顺序 =====
-        self.current_turn = self.next_occupied_seat(seat);
-
-        // ★ 下注轮结束判断
-        if self.is_betting_round_finished() {
-            self.end_betting_round();
+        match self.next_occupied_seat(seat) {
+            Some(next) => {
+                self.current_turn = next;
+                // ★ 下注轮结束判断
+                if self.is_betting_round_finished() {
+                    self.end_betting_round();
+                }
+            }
+            None => {
+                // ★ 没有人还能 act，强制结束下注轮
+                self.end_betting_round();
+            }
         }
         Ok(())
     }
@@ -337,26 +335,29 @@ impl Table {
             Street::PreFlop => {
                 // Pre-Flop 下注结束 → 进入 Flop
                 self.street = Street::Flop;
-                self.current_turn = self.next_occupied_seat(self.dealer_pos);
-                self.last_raiser_pos = self.dealer_pos;
             }
             Street::Flop => {
                 // Flop 下注结束 → 进入 Turn
                 self.street = Street::Turn;
-                self.current_turn = self.next_occupied_seat(self.dealer_pos);
-                self.last_raiser_pos = self.dealer_pos;
             }
             Street::Turn => {
                 // Turn 下注结束 → 进入 River
                 self.street = Street::River;
-                self.current_turn = self.next_occupied_seat(self.dealer_pos);
-                self.last_raiser_pos = self.dealer_pos;
             }
             Street::River => {
                 // River 下注结束 → 进入结算
                 self.state = TableState::Concluding;
                 println!("hand finished, go to showdown");
+                return;
             }
+        }
+
+        match self.next_occupied_seat(self.dealer_pos) {
+            Some(pos) => {
+                self.current_turn = pos;
+                self.last_raiser_pos = self.dealer_pos;
+            },
+            None => self.state = TableState::Concluding,
         }
     }
 
@@ -367,9 +368,6 @@ impl Table {
             }
             if p.is_all_in {
                 continue;
-            }
-            if !p.has_acted {
-                return false;
             }
             // 还没行动过，或者下注没跟平
             if !p.has_acted || p.street_bet != self.current_bet {
@@ -402,16 +400,21 @@ impl Table {
     ///   - 推进庄家按钮
     ///   - 计算盲注位置
     ///   - 推进行动顺序
-    fn next_occupied_seat(&self, from: usize) -> usize {
+    fn next_occupied_seat(&self, from: usize) -> Option<usize> {
         let mut i = (from + 1) % self.seats.len();
+        let start = i;
         loop {
             if let Some(p) = &self.seats[i] {
                 if p.is_active && !p.is_all_in {
-                    return i;
+                    return Some(i);
                 }
             }
             i = (i + 1) % self.seats.len();
+            if i == start {
+                break;
+            }
         }
+        None // ★ 没有人还能 act
     }
 }
 
