@@ -8,7 +8,7 @@ use ulid::Ulid;
 static G_TABLE: OnceLock<Arc<Mutex<Table>>> = OnceLock::new();
 fn get_table() -> &'static Mutex<Table> {
     // get_or_init 确保只初始化一次
-    G_TABLE.get_or_init(|| Arc::new(Mutex::new(Table::new())))
+    G_TABLE.get_or_init(|| Arc::new(Mutex::new(Table::new_six(10,20))))
 }
 
 #[tokio::main]
@@ -17,7 +17,6 @@ async fn main() {
 }
 
 async fn run_cmd(){
-
     // 发送命令行
     let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<String>();
     tokio::spawn(async move {
@@ -35,8 +34,8 @@ async fn run_cmd(){
     handle_cmd("sit 2 2000".into()).await;
     handle_cmd("sit 3 2000".into()).await;
     handle_cmd("sit 4 500".into()).await;
-    // handle_cmd("sit 5 2000".into()).await;
-    // handle_cmd("sit 6 2000".into()).await;
+    handle_cmd("sit 5 2000".into()).await;
+    handle_cmd("sit 6 2000".into()).await;
     // handle_cmd("sit 7 1000".into()).await;
     // handle_cmd("sit 8 1200".into()).await;
     // handle_cmd("sit 9 2000".into()).await;

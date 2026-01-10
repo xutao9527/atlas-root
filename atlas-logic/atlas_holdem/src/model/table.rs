@@ -48,9 +48,8 @@ pub enum TableError {
 }
 
 pub struct Table {
-
     pub id: String,                             // 桌子的唯一 ID（生命周期贯穿整个桌子）
-    pub seats: [Option<Player>; 10],            // 桌子上的固定座位数组
+    pub seats: Vec<Option<Player>>,             // 桌子上的固定座位数组
     pub state: TableState,                      // 当前桌子的状态机状态
     pub street: Street,                         // 当前所处的下注阶段（Street）
     pub hand_id: String,                        // 当前这一局（hand）的唯一标识
@@ -68,27 +67,6 @@ pub struct Table {
 }
 
 impl Table {
-    pub fn new() -> Self {
-        Self {
-            id: Ulid::new().to_string(),
-            seats: Default::default(),
-            state: TableState::Waiting,
-            street: Street::PreFlop,
-            hand_id: String::new(),
-            small_blind_amount: 10,
-            big_blind_amount: 20,
-            pot: 0,
-            current_bet: 0,
-            dealer_pos: 0,
-            small_blind_pos: 0,
-            big_blind_pos: 0,
-            current_turn: 0,
-            last_raiser_pos: 0,
-            deck: Deck::new(),
-            community_cards: Default::default(),
-        }
-    }
-
     /// 玩家坐下
     /// 规则：
     /// - 只能在 Waiting 状态下调用

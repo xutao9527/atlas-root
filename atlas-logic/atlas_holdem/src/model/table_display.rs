@@ -33,8 +33,9 @@ impl fmt::Display for Table {
         }
         writeln!(f)?;
         writeln!(f, "{}", "-".repeat(80))?;
-        for i in 0..10 {
-            match &self.seats[i] {
+
+        for (i,r) in self.seats.iter().enumerate() {
+            match r {
                 Some(p) => {
                     let current_turn_mark = if self.current_turn == i { "*" } else { " " };
                     let last_raiser_mark = if self.last_raiser_pos == i { "R" } else { " " };
@@ -67,6 +68,7 @@ impl fmt::Display for Table {
                 }
             }
         }
+
         writeln!(f, "{}", "=".repeat(80))?;
         write!(f, "{}", "command: [1)show; 2)quit; 3)sit <seat> <balance>; 4)start; 5)act <check> <fold> <call> <raise amount>;]")?;
         Ok(())
