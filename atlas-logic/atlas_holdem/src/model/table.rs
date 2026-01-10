@@ -1,25 +1,6 @@
 use crate::model::card::{Card, Deck};
 use ulid::Ulid;
-
-#[derive(Debug, Clone)]
-pub struct Player {
-    pub id: String,                             // 玩家全局唯一 ID
-    pub nickname: String,                       // 玩家昵称
-    pub balance: u64,                           // 玩家当前可用筹码
-    pub street_bet: u64,                        // 本下注轮（当前 street）中已投入的筹码
-    pub is_active: bool,                        // 是否仍在牌局中（Fold 后为 false）
-    pub has_acted: bool,                        // 本下注轮是否已经行动过
-    pub is_all_in: bool,                        // 是否已经 all-in
-    pub hole_cards: [Option<Card>; 2],          //  玩家手牌（底牌），每人 2 张
-}
-
-#[derive(Debug)]
-pub enum PlayerAction {
-    Fold,
-    Call,
-    Check,
-    Raise(u64),
-}
+use crate::model::player::{Player, PlayerAction};
 
 #[derive(Debug, PartialEq)]
 pub enum TableState {
@@ -31,7 +12,7 @@ pub enum TableState {
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Street {
+pub enum TableStreet {
     PreFlop,                                    // 翻牌前（Pre-Flop）
     Flop,                                       // 翻牌圈（Flop）
     Turn,                                       // 转牌圈（Turn）
@@ -51,7 +32,7 @@ pub struct Table {
     pub id: String,                             // 桌子的唯一 ID（生命周期贯穿整个桌子）
     pub seats: Vec<Option<Player>>,             // 桌子上的固定座位数组
     pub state: TableState,                      // 当前桌子的状态机状态
-    pub street: Street,                         // 当前所处的下注阶段（Street）
+    pub street: TableStreet,                    // 当前所处的下注阶段（Street）
     pub hand_id: String,                        // 当前这一局（hand）的唯一标识
     pub small_blind_amount: u64,                // 小盲注金额（桌子级别的固定规则）
     pub big_blind_amount: u64,                  // 大盲注金额（桌子级别的固定规则）
@@ -101,7 +82,7 @@ impl Table {
         // 生成新一局 hand_id
         self.hand_id = Ulid::new().to_string();
         // 初始化 Street
-        self.street = Street::PreFlop;
+        self.street = TableStreet::PreFlop;
         self.pot = 0;
         self.current_bet = 0;
         // 重置所有玩家的状态
@@ -269,24 +250,24 @@ impl Table {
 
 
         match self.street {
-            Street::PreFlop => {
-                self.street = Street::Flop;
+            TableStreet::PreFlop => {
+                self.street = TableStreet::Flop;
                 // 发三张 Flop 公共牌
                 for i in 0..3 {
                     self.community_cards[i] = self.deck.deal_one();
                 }
             }
-            Street::Flop => {
-                self.street = Street::Turn;
+            TableStreet::Flop => {
+                self.street = TableStreet::Turn;
                 // 发 Turn 第 4 张
                 self.community_cards[3] = self.deck.deal_one();
             }
-            Street::Turn => {
-                self.street = Street::River;
+            TableStreet::Turn => {
+                self.street = TableStreet::River;
                 // 发 River 第 5 张
                 self.community_cards[4] = self.deck.deal_one();
             }
-            Street::River => {
+            TableStreet::River => {
                 self.state = TableState::Concluding;
                 println!("hand finished, go to showdown");
                 return;

@@ -1,5 +1,5 @@
-pub mod table;
 pub mod card;
-mod table_display;
-mod table_logic;
-
+pub mod player;
+pub mod table;
+pub mod table_display;
+pub mod table_logic;

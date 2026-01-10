@@ -1,5 +1,5 @@
 use crate::model::card::Deck;
-use crate::model::table::{Street, Table, TableState};
+use crate::model::table::{TableStreet, Table, TableState};
 use ulid::Ulid;
 
 impl Table {
@@ -8,7 +8,7 @@ impl Table {
             id: Ulid::new().to_string(),
             seats: vec![None; size],
             state: TableState::Waiting,
-            street: Street::PreFlop,
+            street: TableStreet::PreFlop,
             hand_id: String::new(),
             small_blind_amount: small_blind,
             big_blind_amount: big_blind,

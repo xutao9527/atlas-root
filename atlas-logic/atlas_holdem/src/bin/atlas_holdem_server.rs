@@ -1,9 +1,10 @@
-use atlas_holdem::model::table::{Player, PlayerAction, Table};
+use atlas_holdem::model::table::{Table};
 use std::sync::{Arc, OnceLock};
 use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::{mpsc, Mutex};
 use ulid::Ulid;
+use atlas_holdem::model::player::{Player, PlayerAction};
 
 static G_TABLE: OnceLock<Arc<Mutex<Table>>> = OnceLock::new();
 fn get_table() -> &'static Mutex<Table> {
