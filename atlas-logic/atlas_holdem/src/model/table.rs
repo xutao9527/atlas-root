@@ -325,6 +325,17 @@ impl Table {
             self.seats[seat].as_mut().unwrap().has_acted = true;
         }
 
+        // ★ 检查是否还有人可以行动
+        let can_act = self.seats.iter().flatten().any(|p| {
+            p.is_active && !p.is_all_in && (p.street_bet != self.current_bet || !p.has_acted)
+        });
+
+        if !can_act {
+            // ★ 没有人还能 act，直接结束下注轮
+            self.end_betting_round();
+            return Ok(());
+        }
+
         // ===== 推进行动顺序 =====
         match self.next_occupied_seat(seat) {
             Some(next) => {
