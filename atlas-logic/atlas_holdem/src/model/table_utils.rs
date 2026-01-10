@@ -1,4 +1,4 @@
-use crate::model::table::Table;
+use crate::model::table::{Table, TableError};
 
 impl Table {
     // 从某个座位开始，顺时针查找下一个有玩家的座位
@@ -18,24 +18,12 @@ impl Table {
         }
         None // ★ 没有人还能 act
     }
-    
+
     // 判断本轮是否结束
     pub fn betting_round_complete(&mut self)-> bool{
-        for p in self.seats.iter().flatten() {
-            if !p.is_active {
-                continue;
-            }
-            if p.is_all_in {
-                continue;
-            }
-            if !p.has_acted {
-                return false;
-            }
-            if p.street_bet != self.current_bet {
-                return false;
-            }
-        }
-        true
+        self.seats.iter().flatten().all(|p| {
+            !p.is_active || p.is_all_in || p.has_acted
+        })
     }
 
     // 玩家支付金额
@@ -45,5 +33,21 @@ impl Table {
         player.balance -= actual;
         player.street_bet += actual; // ★★★ 关键
         self.pot += actual;
+    }
+
+    pub(crate) fn handle_raise_to(&mut self, seat: usize, target: u64) -> Result<(), TableError> {
+        let need = {
+            let p = self.seats[seat].as_ref().unwrap();
+            target.saturating_sub(p.street_bet)
+        };
+        self.post_amount(seat, need);
+        self.current_bet = target;
+        self.last_raiser_pos = seat;
+        let p = self.seats[seat].as_mut().unwrap();
+        p.has_acted = true;
+        if p.balance == 0 {
+            p.is_all_in = true;
+        }
+        Ok(())
     }
 }
