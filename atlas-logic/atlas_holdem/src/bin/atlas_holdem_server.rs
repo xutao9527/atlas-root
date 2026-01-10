@@ -36,7 +36,7 @@ async fn run_cmd(){
         handle_cmd("sit 1 2000".into()).await;
         handle_cmd("sit 2 2000".into()).await;
         handle_cmd("sit 3 2000".into()).await;
-        handle_cmd("sit 4 1500".into()).await;
+        handle_cmd("sit 4 2000".into()).await;
         handle_cmd("start".into()).await;
         handle_cmd("show".into()).await;
     });
