@@ -70,7 +70,7 @@ impl fmt::Display for Table {
         }
 
         writeln!(f, "{}", "=".repeat(80))?;
-        write!(f, "{}", "command: [1)show; 2)quit; 3)sit <seat> <balance>; 4)start; 5)act <check> <fold> <call> <raise amount>;]")?;
+        write!(f, "{}", "command: [1)show; 2)quit; 3)sit <seat> <balance>; 4)start; 5)act <check> <fold> <call> <bet amount> <raise amount>;]")?;
         Ok(())
     }
 }

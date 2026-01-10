@@ -52,7 +52,6 @@ impl Table {
     }
 
     /// 开始新的一局（**系统行为**） 不是玩家指令
-
     pub fn start(&mut self) -> Result<(), TableError> {
         if self.state != TableState::Waiting {
             return Err(TableError::InvalidState);
@@ -60,53 +59,41 @@ impl Table {
         if self.seats.iter().filter(|s| s.is_some()).count() < 2 {
             return Err(TableError::NotEnoughPlayers);
         }
-        self.state = TableState::Preparing;
-        // =============== 初始化新的一局 ===============
-        // 生成新一局 hand_id
-        self.hand_id = Ulid::new().to_string();
-        // 初始化 Street
-        self.street = TableStreet::PreFlop;
-        self.pot = 0;
-        self.current_bet = 0;
+        self.state = TableState::Preparing;                                             // 进入战前阶段
+        // ======================================= init new hand =======================================
+        // <-------------------------------------- reset player -------------------------------------->
         // 重置所有玩家的状态
         for p in self.seats.iter_mut().flatten() {
-            p.is_active = true;
-            p.has_acted = false;
-            p.is_all_in = false;
-            p.street_bet = 0;
+            p.is_active = true;                                                         // 更新玩家状态
+            p.has_acted = false;                                                        // 更新行动状态
+            p.is_all_in = false;                                                        // 更新all_in状态
+            p.street_bet = 0;                                                           // 更新本轮投注额
         }
-        // 推进庄家按钮
+        // <-------------------------------------- reset table -------------------------------------->
+        self.hand_id = Ulid::new().to_string();                                         // 生成hand_id
+        self.street = TableStreet::PreFlop;                                             // 更新状态机
+        self.pot = 0;                                                                   // 更新底池
+        self.current_bet = 0;                                                           // 更新当前下注额
+        // 更行并推进庄家按钮
         self.dealer_pos = self.next_occupied_seat(self.dealer_pos).unwrap();
         self.small_blind_pos = self.next_occupied_seat(self.dealer_pos).unwrap();
         self.big_blind_pos   = self.next_occupied_seat(self.small_blind_pos).unwrap();
 
-        // 扣盲注（强制）
-        self.post_amount(self.small_blind_pos, self.small_blind_amount);
-        self.post_amount(self.big_blind_pos, self.big_blind_amount);
-
-        // 当前下注轮的最高注额 = 大盲
-        self.current_bet = self.big_blind_amount;
-
-        // Pre-Flop：大盲视为初始加注者
-        self.last_raiser_pos = self.big_blind_pos;
-
-        // Pre-Flop 第一个行动的人（大盲左手）
-        self.current_turn = self.next_occupied_seat(self.big_blind_pos).unwrap();
-
-        // 生成并洗牌
-        self.deck.shuffle();
-
+        self.post_amount(self.small_blind_pos, self.small_blind_amount);                // 扣小盲注（强制）
+        self.post_amount(self.big_blind_pos, self.big_blind_amount);                    // 扣大盲注（强制）
+        self.current_bet = self.big_blind_amount;                                       // 更新当前下注额(大盲)
+        self.last_raiser_pos = self.big_blind_pos;                                      // 更新加注者位置(大盲)
+        self.current_turn = self.next_occupied_seat(self.big_blind_pos).unwrap();       // 更新枪口位置(大盲左手)
+        // <-------------------------------------- reset cards -------------------------------------->
+        self.deck.shuffle();                                                            // 洗牌
         // 给每个玩家发两张底牌
         for p in self.seats.iter_mut().flatten() {
             p.hole_cards[0] = self.deck.deal_one();
             p.hole_cards[1] = self.deck.deal_one();
-        }
-        // 清空公共牌
+        }// 清空公共牌
         self.community_cards = [None; 5];
-        // ===========================================
-
-        // 进入对战阶段
-        self.state = TableState::Battling;
+        // =============================================================================================
+        self.state = TableState::Battling;                                              // 进入对战阶段
         Ok(())
     }
 }

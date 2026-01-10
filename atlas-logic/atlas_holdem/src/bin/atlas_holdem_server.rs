@@ -115,6 +115,16 @@ async fn handle_cmd(cmd: String) -> bool {
         ["act", "check"] => {
             act_and_show(&mut table, PlayerAction::Check);
         }
+        ["act", "bet", amount] => {
+            let amount: u64 = match amount.parse() {
+                Ok(v) => v,
+                Err(_) => {
+                    println!("invalid raise amount");
+                    return true;
+                }
+            };
+            act_and_show(&mut table, PlayerAction::Bet(amount));
+        }
         ["act", "raise", amount] => {
             let amount: u64 = match amount.parse() {
                 Ok(v) => v,
