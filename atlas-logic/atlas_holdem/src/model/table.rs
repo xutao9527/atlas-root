@@ -1,26 +1,16 @@
-use std::fmt;
-use std::process::Command;
-use ulid::Ulid;
 use crate::model::card::{Card, Deck};
+use ulid::Ulid;
 
 #[derive(Debug, Clone)]
 pub struct Player {
-    /// 玩家全局唯一 ID
-    pub id: String,
-    /// 玩家昵称
-    pub nickname: String,
-    /// 玩家当前可用筹码
-    pub balance: u64,
-    /// 本下注轮（当前 street）中已投入的筹码
-    pub street_bet: u64,
-    /// 是否仍在牌局中（Fold 后为 false）
-    pub is_active: bool,
-    // 本下注轮是否已经行动过
-    pub has_acted: bool,
-    // 是否已经 all-in
-    pub is_all_in: bool,
-    /// 玩家手牌（底牌），每人 2 张
-    pub hole_cards: [Option<Card>; 2],
+    pub id: String,                             // 玩家全局唯一 ID
+    pub nickname: String,                       // 玩家昵称
+    pub balance: u64,                           // 玩家当前可用筹码
+    pub street_bet: u64,                        // 本下注轮（当前 street）中已投入的筹码
+    pub is_active: bool,                        // 是否仍在牌局中（Fold 后为 false）
+    pub has_acted: bool,                        // 本下注轮是否已经行动过
+    pub is_all_in: bool,                        // 是否已经 all-in
+    pub hole_cards: [Option<Card>; 2],          //  玩家手牌（底牌），每人 2 张
 }
 
 #[derive(Debug)]
@@ -28,119 +18,53 @@ pub enum PlayerAction {
     Fold,
     Call,
     Check,
-    Raise(u64), // 先留着，不急着实现
+    Raise(u64),
 }
 
 #[derive(Debug, PartialEq)]
 pub enum TableState {
-    /// 空闲状态：
-    /// - 允许玩家 sit
-    /// - 不存在 hand_id
-    /// - 不允许下注、行动
-    Waiting,
-    /// 准备阶段：
-    /// - 系统初始化一局游戏
-    /// - 推进庄家、扣盲注、设置行动顺序
-    /// - 该状态通常是“瞬时状态”
-    Preparing,
-    /// 对战阶段：
-    /// - 玩家按顺序行动（fold / call / raise）
-    /// - current_turn 有效
-    Battling,
-    /// 结算阶段：
-    /// - 比牌
-    /// - 分配底池
-    /// - 更新玩家余额
-    Concluding,
+    Waiting,                                    // 空闲状态：
+    Preparing,                                  // 准备阶段：
+    Battling,                                   // 对战阶段：
+    Concluding,                                 // 结算阶段：
 }
 
-/// 一局德州扑克中的「下注阶段」（也称 Street）
-///
-/// 每个阶段都会经历一次完整的下注轮：
-/// 所有仍在牌局中的玩家都有机会行动，直到下注轮结束。
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Street {
-    /// 翻牌前（Pre-Flop）
-    /// - 发底牌之后
-    /// - 扣完小盲 / 大盲
-    /// - 第一轮下注从大盲左手开始
-    PreFlop,
-    /// 翻牌圈（Flop）
-    /// - 公共牌一次性发出 3 张
-    /// - 新一轮下注从庄家左手开始
-    Flop,
-    /// 转牌圈（Turn）
-    /// - 公共牌第 4 张
-    /// - 新一轮下注从庄家左手开始
-    Turn,
-    /// 河牌圈（River）
-    /// - 公共牌第 5 张
-    /// - 最后一轮下注
-    River,
+    PreFlop,                                    // 翻牌前（Pre-Flop）
+    Flop,                                       // 翻牌圈（Flop）
+    Turn,                                       // 转牌圈（Turn）
+    River,                                      // 河牌圈（River）
 }
 
 #[derive(Debug)]
 pub enum TableError {
-    /// 座位索引非法（超出 0..10）
-    InvalidSeat,
-    /// 该座位已经有玩家
-    SeatOccupied,
-    /// 当前桌子状态不允许该操作
-    InvalidState,
-    /// 坐下的玩家数量不足，无法开始一局
-    NotEnoughPlayers,
-    /// 动作在当前下注状态下不合法（如非法 check）
-    InvalidAction,
+    InvalidSeat,                                // 座位索引非法（超出 0..10）
+    SeatOccupied,                               // 该座位已经有玩家
+    InvalidState,                               // 当前桌子状态不允许该操作
+    NotEnoughPlayers,                           // 坐下的玩家数量不足，无法开始一局
+    InvalidAction,                              // 动作在当前下注状态下不合法（如非法 check）
 }
 
 pub struct Table {
-    /// 桌子的唯一 ID（生命周期贯穿整个桌子）
-    pub id: String,
 
-    /// 桌子上的固定座位数组
-    /// - 索引即座位号（0-9）
-    /// - None 表示空座
-    pub seats: [Option<Player>; 10],
-    /// 当前桌子的状态机状态
-    pub state: TableState,
-    /// 当前所处的下注阶段（Street）
-    /// - 决定是否需要发公共牌
-    /// - 决定下注轮结束后要进入哪里
-    pub street: Street,
-    /// 当前这一局（hand）的唯一标识
-    /// - 每次 start() 生成
-    /// - 用于日志、回放、审计
-    pub hand_id: String,
-
-    /// 小盲注金额（桌子级别的固定规则）
-    pub small_blind_amount: u64,
-    /// 大盲注金额（桌子级别的固定规则）
-    pub big_blind_amount: u64,
-
-    /// 当前局已经进入底池的总金额
-    pub pot: u64,
-    /// 当前下注轮中需要跟注的最大下注额
-    /// - Pre-Flop 初始为 big blind
-    pub current_bet: u64,
-
-    /// 当前局庄家按钮所在的座位索引
-    /// - 每局顺时针移动
-    /// - 用于计算盲注和行动顺序
-    pub dealer_pos: usize,
-    /// 当前局小盲注所在的座位索引
-    pub small_blind_pos: usize,
-    /// 当前局大盲注所在的座位索引
-    pub big_blind_pos: usize,
-    /// 当前轮到行动的座位索引
-    pub current_turn: usize,
-    /// 当前下注轮中，最后一次加注的玩家位置
-    /// - 初始为大盲
-    /// - 每次 Raise 更新
-    pub last_raiser_pos: usize,
-    /// 当前局的牌堆
-    pub deck: Deck,
-    /// 公共牌（Community Cards），最多 5 张
-    pub community_cards: [Option<Card>; 5],
+    pub id: String,                             // 桌子的唯一 ID（生命周期贯穿整个桌子）
+    pub seats: [Option<Player>; 10],            // 桌子上的固定座位数组
+    pub state: TableState,                      // 当前桌子的状态机状态
+    pub street: Street,                         // 当前所处的下注阶段（Street）
+    pub hand_id: String,                        // 当前这一局（hand）的唯一标识
+    pub small_blind_amount: u64,                // 小盲注金额（桌子级别的固定规则）
+    pub big_blind_amount: u64,                  // 大盲注金额（桌子级别的固定规则）
+    pub pot: u64,                               // 当前局已经进入底池的总金额
+    pub current_bet: u64,                       // 当前下注轮中需要跟注的最大下注额
+    pub dealer_pos: usize,                      // 当前局庄家按钮所在的座位索引
+    pub small_blind_pos: usize,                 // 当前局小盲注所在的座位索引
+    pub big_blind_pos: usize,                   // 当前局大盲注所在的座位索引
+    pub current_turn: usize,                    // 当前轮到行动的座位索引
+    pub last_raiser_pos: usize,                 // 当前下注轮中，最后一次加注的玩家位置
+    pub deck: Deck,                             // 当前局的牌堆
+    pub community_cards: [Option<Card>; 5],     // 公共牌（Community Cards），最多 5 张
 }
 
 impl Table {
@@ -458,76 +382,5 @@ impl Table {
             }
         }
         None // ★ 没有人还能 act
-    }
-}
-
-fn clear_screen() {
-    if cfg!(target_os = "windows") {
-        let _ = Command::new("cmd").arg("/c").arg("cls").status();
-    } else {
-        // 其他系统用 ANSI 转义码
-        print!("\x1B[2J\x1B[1;1H");
-    }
-}
-
-impl fmt::Display for Table {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // \x1B[2J: 清屏, \x1B[1;1H: 光标移动到 (1,1)
-        //writeln!(f, "\x1B[2J\x1B[1;1H")?;
-        clear_screen();
-        writeln!(f, "\n{}", "=".repeat(80))?;
-        writeln!(f, "TABLE ID: {} | HAND ID: {}", self.id, self.hand_id)?;
-        writeln!(f, "STATE: {:?} | STREET: {:?}", self.state, self.street)?;
-        writeln!(f, "TABLE ID: {} | STATE: {:?} | street: {:?}", self.id, self.state, self.street)?;
-        writeln!(f, "POT: ${} | CURRENT BET:${} | BLIND_AMOUNT :$({}/{})",
-                 self.pot, self.current_bet, self.small_blind_amount,self.big_blind_amount)?;
-        writeln!(f, "DEALER_POS: {} | SMALL_BLIND_POS BET: {} | BIG_BLIND_POS BET: {} | CURRENT_TURN_POS: {} | LAST_RAISER_POS: {}",
-                 self.dealer_pos, self.small_blind_pos, self.big_blind_pos, self.current_turn, self.last_raiser_pos)?;
-        writeln!(f, "{}", "-".repeat(80))?;
-
-        // 显示公共牌
-        write!(f, "Community Cards: ")?;
-        for card in self.community_cards.iter().flatten() {
-            write!(f, "{}  ", card)?;  // 用 {} 而不是 {:?}
-        }
-        writeln!(f)?;
-        writeln!(f, "{}", "-".repeat(80))?;
-        for i in 0..10 {
-            match &self.seats[i] {
-                Some(p) => {
-                    let current_turn_mark = if self.current_turn == i { "*" } else { " " };
-                    let last_raiser_mark = if self.last_raiser_pos == i { "R" } else { " " };
-                    let is_active_mark = if p.is_active { "√" } else { "×" };
-                    let is_all_in_mark = if p.is_all_in { " all-in " } else { "        " };
-                    let dentity_mark = if self.dealer_pos == i {  "D" }
-                    else if self.big_blind_pos == i {  "B" }
-                    else if self.small_blind_pos == i {  "S"  }
-                    else { " " };
-
-                    let hole_cards_str = p.hole_cards
-                        .iter()
-                        .map(|c| match c {
-                            Some(card) => format!("{}", card),
-                            None => "??".to_string(),
-                        })
-                        .collect::<Vec<_>>()
-                        .join("  ");
-
-                    // [*][R][S/B/D][i]  nickname balance Cards
-                    writeln!(f,
-                             " [{}][{}][{}]  [{}]: {} {} [{:>6}]   [{:>6}] [{:>6}]      |     Cards: {}",
-                             current_turn_mark, last_raiser_mark, dentity_mark, i,
-                             p.nickname, is_active_mark, is_all_in_mark, p.balance, p.street_bet, hole_cards_str
-                    )?;
-                }
-                None => {
-                    writeln!(f,
-                             "            [{}]  ( Empty )", i)?;
-                }
-            }
-        }
-        writeln!(f, "{}", "=".repeat(80))?;
-        write!(f, "{}", "command: [1)show; 2)quit; 3)sit <seat> <balance>; 4)start; 5)act <check> <fold> <call> <raise amount>;]")?;
-        Ok(())
     }
 }
