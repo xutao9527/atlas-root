@@ -26,23 +26,44 @@ impl Table {
         })
     }
 
-    // 玩家支付金额
-    pub fn post_amount(&mut self, seat: usize, amount: u64) {
+    /// 玩家支付金额
+    /// 返回 true 表示：此次下注抬高了 table.current_bet（有效 raise）
+    pub fn post_amount(&mut self, seat: usize, amount: u64) -> bool {
+        let prev_bet = self.current_bet;
         let player = self.seats[seat].as_mut().unwrap();
         let actual = amount.min(player.balance);
         player.balance -= actual;
-        player.street_bet += actual; // ★★★ 关键
+        player.street_bet += actual;
         self.pot += actual;
+        player.has_acted = true;
+
+        // all-in 在这里直接处理
+        if player.balance == 0 {
+            player.is_all_in = true;
+        }
+        // ★ 是否形成 raise，只看“结果”
+        if player.street_bet > prev_bet {
+            self.current_bet = player.street_bet;
+            self.last_raiser_pos = seat;
+            return true;
+        }
+        false
     }
 
-    pub(crate) fn handle_raise_to(&mut self, seat: usize, target: u64) -> Result<(), TableError> {
+    // 玩家raise支付金额
+    pub fn handle_raise_to(&mut self, seat: usize, target: u64) -> Result<(), TableError> {
         let need = {
             let p = self.seats[seat].as_ref().unwrap();
             target.saturating_sub(p.street_bet)
         };
         self.post_amount(seat, need);
-        self.current_bet = target;
-        self.last_raiser_pos = seat;
+        let p = self.seats[seat].as_ref().unwrap();
+        // 只有真的超过 current_bet，才算 raise
+        if p.street_bet > self.current_bet {
+            self.current_bet = p.street_bet;
+            self.last_raiser_pos = seat;
+        }
+
         let p = self.seats[seat].as_mut().unwrap();
         p.has_acted = true;
         if p.balance == 0 {

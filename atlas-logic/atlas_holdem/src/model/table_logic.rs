@@ -41,40 +41,37 @@ impl Table {
                     self.current_bet - p.street_bet
                 };
                 self.post_amount(seat, need);
-                let p = self.seats[seat].as_mut().unwrap();
-                if p.balance == 0 {
-                    p.is_all_in = true;
-                }
-                p.has_acted = true;
             }
             PlayerAction::Bet(amount) => {
                 if self.current_bet != 0 || amount == 0 {
                     return Err(TableError::InvalidAction);
                 }
-                self.handle_raise_to(seat, amount)?;
-                reopened_betting = true;
+                reopened_betting = self.post_amount(seat, amount);
             }
             PlayerAction::Raise(amount) => {
                 if self.current_bet == 0 || amount <= self.current_bet {
                     return Err(TableError::InvalidAction);
                 }
-                self.handle_raise_to(seat, amount)?;
-                reopened_betting = true;
+                let need = {
+                    let p = self.seats[seat].as_ref().unwrap();
+                    amount - p.street_bet
+                };
+                reopened_betting = self.post_amount(seat, need);
             }
         }
-
         // bet / raise 后，其他玩家需要重新行动
         if reopened_betting {
             for (i, p) in self.seats.iter_mut().enumerate() {
+                if i == seat {
+                    continue;
+                }
                 if i != seat {
                     if let Some(p) = p {
                         p.has_acted = false;
                     }
                 }
             }
-            self.seats[seat].as_mut().unwrap().has_acted = true;
         }
-
         // ======================================= 推进下注轮 =======================================
         if self.betting_round_complete() {
             self.end_betting_round();
