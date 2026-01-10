@@ -85,6 +85,7 @@ impl Table {
 
     fn end_betting_round(&mut self) {
         println!("betting round finished: {:?}", self.street);
+        self.street_log.push(self.street);
         // 清空 street 状态
         for p in self.seats.iter_mut().flatten() {
             p.street_bet = 0;
@@ -94,12 +95,6 @@ impl Table {
     }
 
     fn advance_street(&mut self){
-        let active_cnt = self.seats.iter().flatten().filter(|p| p.is_active).count();
-        // 只剩一个玩家，直接结束
-        if active_cnt <= 1 {
-            self.state = TableState::Concluding;
-            return;
-        }
         match self.street {
             TableStreet::PreFlop => {
                 // 发 Flop（三张）
@@ -128,21 +123,13 @@ impl Table {
         self.last_raiser_pos = self.dealer_pos;
         self.current_bet = 0;
 
+        if self.betting_round_complete() {
+            self.end_betting_round();
+        }
+
         // 新一轮下注从庄家左手开始
         self.current_turn = self
             .next_occupied_seat(self.dealer_pos)
             .unwrap_or(self.dealer_pos);
-
-        // 如果所有 active 玩家都 all-in，直接快进到结算
-        let need_bet = self
-            .seats
-            .iter()
-            .flatten()
-            .any(|p| p.is_active && !p.is_all_in);
-
-        if !need_bet {
-            // 递归推进，直接发完公共牌
-            self.advance_street();
-        }
     }
 }

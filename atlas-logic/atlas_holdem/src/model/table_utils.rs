@@ -1,4 +1,4 @@
-use crate::model::table::{Table, TableError};
+use crate::model::table::Table;
 
 impl Table {
     // 从某个座位开始，顺时针查找下一个有玩家的座位
@@ -20,10 +20,23 @@ impl Table {
     }
 
     // 判断本轮是否结束
-    pub fn betting_round_complete(&mut self)-> bool{
-        self.seats.iter().flatten().all(|p| {
-            !p.is_active || p.is_all_in || p.has_acted
-        })
+    pub fn betting_round_complete(&self) -> bool {
+        let mut active_cnt = 0;
+        let mut has_pending_actor = false;
+
+        for p in self.seats.iter().flatten() {
+            if !p.is_active {
+                continue;
+            }
+            active_cnt += 1;
+            if !p.is_all_in && !p.has_acted {
+                has_pending_actor = true;
+            }
+        }
+        if active_cnt <= 1 {
+            return true;
+        }
+        !has_pending_actor
     }
 
     /// 玩家支付金额
@@ -50,25 +63,5 @@ impl Table {
         false
     }
 
-    // 玩家raise支付金额
-    pub fn handle_raise_to(&mut self, seat: usize, target: u64) -> Result<(), TableError> {
-        let need = {
-            let p = self.seats[seat].as_ref().unwrap();
-            target.saturating_sub(p.street_bet)
-        };
-        self.post_amount(seat, need);
-        let p = self.seats[seat].as_ref().unwrap();
-        // 只有真的超过 current_bet，才算 raise
-        if p.street_bet > self.current_bet {
-            self.current_bet = p.street_bet;
-            self.last_raiser_pos = seat;
-        }
 
-        let p = self.seats[seat].as_mut().unwrap();
-        p.has_acted = true;
-        if p.balance == 0 {
-            p.is_all_in = true;
-        }
-        Ok(())
-    }
 }

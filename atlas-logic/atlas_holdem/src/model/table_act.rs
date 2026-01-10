@@ -23,6 +23,7 @@ impl Table {
             last_raiser_pos: 0,
             deck: Deck::new(),
             community_cards: Default::default(),
+            street_log: Default::default(),
         }
     }
 
