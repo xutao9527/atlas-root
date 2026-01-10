@@ -95,6 +95,8 @@ impl Table {
                     }
                 }
             }
+            let player = self.seats[seat].as_mut().unwrap();
+            player.has_acted = true;
         }
 
         // ======================================= 推进下注轮 =======================================
@@ -105,7 +107,6 @@ impl Table {
                 .next_occupied_seat(self.current_turn)
                 .ok_or(TableError::InvalidState)?;
         }
-
         Ok(())
     }
 
