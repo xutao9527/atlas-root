@@ -41,13 +41,11 @@ async fn run_cmd(){
     // handle_cmd("sit 8 1200".into()).await;
     // handle_cmd("sit 9 2000".into()).await;
     handle_cmd("start".into()).await;
-    handle_cmd("show".into()).await;
     while let Some(cmd) = cmd_rx.recv().await {
         if !handle_cmd(cmd).await {
             break
         }
     }
-
 }
 
 async fn handle_cmd(cmd: String) -> bool {
