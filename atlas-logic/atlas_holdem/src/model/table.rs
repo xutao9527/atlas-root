@@ -44,34 +44,3 @@ pub struct Table {
     pub deck: Deck,                             // 当前局的牌堆
     pub community_cards: [Option<Card>; 5],     // 公共牌（Community Cards），最多 5 张
 }
-
-impl Table {
-
-
-
-
-
-
-
-    /// 从某个座位开始，顺时针查找下一个有玩家的座位
-    /// - 用于：
-    ///   - 推进庄家按钮
-    ///   - 计算盲注位置
-    ///   - 推进行动顺序
-    pub fn next_occupied_seat(&self, from: usize) -> Option<usize> {
-        let mut i = (from + 1) % self.seats.len();
-        let start = i;
-        loop {
-            if let Some(p) = &self.seats[i] {
-                if p.is_active && !p.is_all_in {
-                    return Some(i);
-                }
-            }
-            i = (i + 1) % self.seats.len();
-            if i == start {
-                break;
-            }
-        }
-        None // ★ 没有人还能 act
-    }
-}

@@ -1,6 +1,24 @@
 use crate::model::table::Table;
 
 impl Table {
+    // 从某个座位开始，顺时针查找下一个有玩家的座位
+    pub fn next_occupied_seat(&self, from: usize) -> Option<usize> {
+        let mut i = (from + 1) % self.seats.len();
+        let start = i;
+        loop {
+            if let Some(p) = &self.seats[i] {
+                if p.is_active && !p.is_all_in {
+                    return Some(i);
+                }
+            }
+            i = (i + 1) % self.seats.len();
+            if i == start {
+                break;
+            }
+        }
+        None // ★ 没有人还能 act
+    }
+    
     // 判断本轮是否结束
     pub fn betting_round_complete(&mut self)-> bool{
         for p in self.seats.iter().flatten() {
