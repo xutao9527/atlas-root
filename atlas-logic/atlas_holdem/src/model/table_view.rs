@@ -41,7 +41,7 @@ impl fmt::Display for Table {
                     let last_raiser_mark = if self.last_raiser_pos == i { "R" } else { " " };
                     let is_active_mark = if p.is_active { "√" } else { "×" };
                     let is_all_in_mark = if p.is_all_in { " all-in " } else { "        " };
-                    let has_acted_mark =if p.has_acted {"√" } else{ " " };
+                    let has_acted_mark =if p.has_acted {"√" } else{ "×" };
                     let dentity_mark = if self.dealer_pos == i {  "D" }
                     else if self.big_blind_pos == i {  "B" }
                     else if self.small_blind_pos == i {  "S"  }
@@ -59,7 +59,7 @@ impl fmt::Display for Table {
                     // [*][R][S/B/D][i]  nickname balance Cards
                     writeln!(
                         f,
-                        " [{turn}][{raiser}][{dealer}]      [{seat}]: {nick} {active} [{all_in:>6}]      [{balance:>6}] {acted} [{street_bet:>6}]      Cards: {cards}",
+                        " [{turn}][{raiser}][{dealer}]      [{seat}]: {nick} {active} [{all_in:>6}]      [{balance:>6}] [{acted}] [{street_bet:>6}]      Cards: {cards}",
                         turn = current_turn_mark,
                         raiser = last_raiser_mark,
                         dealer = dentity_mark,
@@ -75,7 +75,7 @@ impl fmt::Display for Table {
                 }
                 None => {
                     writeln!(f,
-                             "            [{}]  ( Empty )", i)?;
+                             "                [{}]  ( Empty )", i)?;
                 }
             }
         }

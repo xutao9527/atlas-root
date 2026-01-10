@@ -3,20 +3,18 @@ use crate::model::table::Table;
 impl Table {
     // 从某个座位开始，顺时针查找下一个有玩家的座位
     pub fn next_occupied_seat(&self, from: usize) -> Option<usize> {
-        let mut i = (from + 1) % self.seats.len();
-        let start = i;
+        let mut i = from;
         loop {
+            i = (i + 1) % self.seats.len();
+            if i == from {
+                return None; // 转了一整圈，没有人能 act
+            }
             if let Some(p) = &self.seats[i] {
                 if p.is_active && !p.is_all_in {
                     return Some(i);
                 }
             }
-            i = (i + 1) % self.seats.len();
-            if i == start {
-                break;
-            }
         }
-        None // ★ 没有人还能 act
     }
 
     // 判断本轮是否结束
