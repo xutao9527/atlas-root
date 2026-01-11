@@ -80,7 +80,6 @@ impl Table {
                 .collect::<Vec<_>>()
                 .join(" ");
 
-
             let merge_cards = p
                 .hand_cards
                 .iter()
