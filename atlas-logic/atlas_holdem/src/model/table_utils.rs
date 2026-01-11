@@ -1,6 +1,5 @@
-use rs_poker::core::{Card, Rankable, Suit, Value};
-use crate::model::card::{AtlasSuit, AtlasValue};
 use crate::model::table::Table;
+use rs_poker::core::Rankable;
 
 impl Table {
     // 从某个座位开始，顺时针查找下一个有玩家的座位
