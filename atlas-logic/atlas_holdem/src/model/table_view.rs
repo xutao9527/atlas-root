@@ -76,8 +76,7 @@ impl fmt::Display for Table {
                     )?;
                 }
                 None => {
-                    writeln!(f,
-                             "             [{}]  ( Empty )", i)?;
+                    writeln!(f,"             [{}]  ( Empty )", i)?;
                 }
             }
         }
