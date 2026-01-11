@@ -47,7 +47,7 @@ impl fmt::Display for Table {
                     else if self.small_blind_pos == i {  "S"  }
                     else { " " };
 
-                    let hole_cards_str = p.hole_cards
+                    let hole_cards_str = p.hand_cards
                         .iter()
                         .map(|c| match c {
                             Some(card) => format!("{}", card),
@@ -59,7 +59,7 @@ impl fmt::Display for Table {
                     // [*][R][S/B/D][i]  nickname balance Cards
                     writeln!(
                         f,
-                        " [{turn}][{raiser}][{dealer}]      [{seat}]: {nick} {active} [{all_in:>6}]      [{balance:>6}] [{acted}] [{street_bet:>6}]      Cards: {cards}",
+                        " [{turn}][{raiser}][{dealer}]   [{seat}]: {nick} {active} [{all_in:>6}]  [{balance:>6}] [{acted}] [{street_bet:>6}]   hand_cards: {cards}   merge_cards: {merge_cards:>26}   rank_cards:{rank_cards}",
                         turn = current_turn_mark,
                         raiser = last_raiser_mark,
                         dealer = dentity_mark,
@@ -71,11 +71,13 @@ impl fmt::Display for Table {
                         acted = has_acted_mark,
                         street_bet = p.street_bet,
                         cards = hole_cards_str,
+                        merge_cards = p.cards_str,
+                        rank_cards = p.cards_rank_str
                     )?;
                 }
                 None => {
                     writeln!(f,
-                             "                [{}]  ( Empty )", i)?;
+                             "             [{}]  ( Empty )", i)?;
                 }
             }
         }

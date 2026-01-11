@@ -92,8 +92,8 @@ impl Table {
         self.deck.shuffle();                                                            // 洗牌
         // 给每个玩家发两张底牌
         for p in self.seats.iter_mut().flatten() {
-            p.hole_cards[0] = self.deck.deal_one();
-            p.hole_cards[1] = self.deck.deal_one();
+            p.hand_cards[0] = self.deck.deal_one();
+            p.hand_cards[1] = self.deck.deal_one();
         }// 清空公共牌
         self.community_cards = [None; 5];
         // =============================================================================================

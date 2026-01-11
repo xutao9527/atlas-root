@@ -1,3 +1,5 @@
+use rs_poker::core::{Card, Rankable, Suit, Value};
+use crate::model::card::{AtlasSuit, AtlasValue};
 use crate::model::table::Table;
 
 impl Table {
@@ -61,10 +63,60 @@ impl Table {
         false
     }
 
-    pub fn evaluate_hands(&self) -> Vec<u64>{
+    pub fn evaluate_hands(&mut self) -> Vec<u64>{
         let mut _winners = vec![];
+        self.seats.iter_mut().flatten().for_each(|p| {
+            p.cards_str = p.hand_cards
+                .iter()
+                .flatten()
+                .map(|c| format!("{}", c))
+                .chain(std::iter::once("|".to_string()))
+                .chain(
+                    self.community_cards
+                        .iter()
+                        .flatten()
+                        .map(|c| format!("{}", c))
+                )
+                .collect::<Vec<_>>()
+                .join(" ");
 
 
+            let merge_cards = p
+                .hand_cards
+                .iter()
+                .chain(self.community_cards.iter())
+                .flatten()
+                .map(|c| {
+                    Card::new(
+                        match c.value {
+                            AtlasValue::Two => Value::Two,
+                            AtlasValue::Three => Value::Three,
+                            AtlasValue::Four => Value::Four,
+                            AtlasValue::Five => Value::Five,
+                            AtlasValue::Six => Value::Six,
+                            AtlasValue::Seven => Value::Seven,
+                            AtlasValue::Eight => Value::Eight,
+                            AtlasValue::Nine => Value::Nine,
+                            AtlasValue::Ten => Value::Ten,
+                            AtlasValue::Jack => Value::Jack,
+                            AtlasValue::Queen => Value::Queen,
+                            AtlasValue::King => Value::King,
+                            AtlasValue::Ace => Value::Ace,
+                        },
+                        match c.suit {
+                            AtlasSuit::Spade => Suit::Spade,
+                            AtlasSuit::Club => Suit::Club,
+                            AtlasSuit::Heart => Suit::Heart,
+                            AtlasSuit::Diamond => Suit::Diamond,
+                        },
+                    )
+                })
+                .collect::<Vec<_>>();
+
+            let rank = merge_cards.rank();
+            p.cards_rank_str = format!("{:?}", rank);
+
+        });
         _winners
     }
 }

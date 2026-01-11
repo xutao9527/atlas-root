@@ -119,6 +119,7 @@ impl Table {
                 return;
             }
         }
+        self.evaluate_hands();
         // ======================= 新一轮下注初始化 =======================
         self.last_raiser_pos = self.dealer_pos;
         self.current_bet = 0;

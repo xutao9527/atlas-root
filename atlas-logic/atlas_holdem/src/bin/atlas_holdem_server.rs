@@ -78,10 +78,13 @@ async fn handle_cmd(cmd: String) -> bool {
                 nickname: format!("player00{}", seat),
                 balance,
                 street_bet: 0,
+                cards_str: "".to_string(),
+                cards_rank_str: "".to_string(),
                 is_active: false,
                 has_acted: false,
                 is_all_in: false,
-                hole_cards: [None;2],
+                hand_cards: [None;2],
+                
             };
 
             match table.sit(seat, player) {

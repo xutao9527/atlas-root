@@ -17,10 +17,14 @@ pub enum AtlasSuit {
 impl fmt::Display for AtlasSuit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            AtlasSuit::Heart   => "♥️",
-            AtlasSuit::Diamond => "♦️",
-            AtlasSuit::Club    => "♣️",
-            AtlasSuit::Spade   => "♠️",
+            // AtlasSuit::Heart   => "♥️",
+            // AtlasSuit::Diamond => "♦️",
+            // AtlasSuit::Club    => "♣️",
+            // AtlasSuit::Spade   => "♠️",
+            AtlasSuit::Heart   => "♥",
+            AtlasSuit::Diamond => "♦",
+            AtlasSuit::Club    => "♣",
+            AtlasSuit::Spade   => "♠",
         };
         write!(f, "{}", s)
     }
@@ -72,13 +76,15 @@ pub struct AtlasCard {
     /// 牌的花色
     pub suit: AtlasSuit,
     /// 牌的点数
-    pub rank: AtlasValue,
+    pub value: AtlasValue,
 }
+
+
 
 impl fmt::Display for AtlasCard {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 输出例子： "K♣" 或 "10♦"
-        write!(f, "{:>2}{:>2}", self.suit, self.rank)
+        write!(f, "{}{}", self.suit, self.value)
     }
 }
 
@@ -95,7 +101,7 @@ impl AtlasDeck {
     pub fn new() -> Self {
         let mut cards = Vec::with_capacity(52);
         for &suit in &[AtlasSuit::Heart, AtlasSuit::Diamond, AtlasSuit::Club, AtlasSuit::Spade] {
-            for &rank in &[
+            for &value in &[
                 AtlasValue::Two,
                 AtlasValue::Three,
                 AtlasValue::Four,
@@ -110,7 +116,7 @@ impl AtlasDeck {
                 AtlasValue::King,
                 AtlasValue::Ace,
             ] {
-                cards.push(AtlasCard { suit, rank });
+                cards.push(AtlasCard { suit, value });
             }
         }
         AtlasDeck { cards }
