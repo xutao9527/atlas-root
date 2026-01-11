@@ -1,5 +1,5 @@
 use ulid::Ulid;
-use crate::model::card::Deck;
+use crate::model::card::{AtlasDeck};
 use crate::model::player::Player;
 use crate::model::table::{Table, TableError, TableState, TableStreet};
 
@@ -21,7 +21,7 @@ impl Table {
             big_blind_pos: 0,
             current_turn: 0,
             last_raiser_pos: 0,
-            deck: Deck::new(),
+            deck: AtlasDeck::new(),
             community_cards: Default::default(),
             street_log: Default::default(),
         }

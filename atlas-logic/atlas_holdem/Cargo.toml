@@ -9,6 +9,7 @@ tokio = { workspace = true, features = ["full"] }
 
 # common
 ulid = { workspace = true, features = ["serde"] }
-sha2 = "0.10.9"
-hex = "0.4.3"
+#sha2 = "0.10.9"
+#hex = "0.4.3"
 rand = "0.9"
+rs_poker = { version = "4.1.0",default-features = false ,features = ["serde"] }

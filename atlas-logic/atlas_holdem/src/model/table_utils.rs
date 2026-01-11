@@ -61,5 +61,10 @@ impl Table {
         false
     }
 
+    pub fn evaluate_hands(&self) -> Vec<u64>{
+        let mut _winners = vec![];
 
+
+        _winners
+    }
 }

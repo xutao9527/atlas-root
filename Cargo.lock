@@ -398,6 +398,7 @@ version = "0.1.0"
 dependencies = [
  "hex",
  "rand 0.9.2",
+ "rs_poker",
  "sha2",
  "tokio",
  "ulid",
@@ -2633,6 +2634,18 @@ dependencies = [
  "byteorder",
  "rmp",
  "serde",
+]
+
+[[package]]
+name = "rs_poker"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fbb397c0f7178fe5dbc89ab4fa89c8ca31ac19f9099a8f2a270801146fb65bc"
+dependencies = [
+ "rand 0.9.2",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

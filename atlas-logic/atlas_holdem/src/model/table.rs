@@ -1,4 +1,4 @@
-use crate::model::card::{Card, Deck};
+use crate::model::card::{AtlasCard, AtlasDeck};
 use crate::model::player::Player;
 
 #[derive(Debug, PartialEq)]
@@ -41,8 +41,8 @@ pub struct Table {
     pub big_blind_pos: usize,                   // 当前局大盲注所在的座位索引
     pub current_turn: usize,                    // 当前轮到行动的座位索引
     pub last_raiser_pos: usize,                 // 当前下注轮中，最后一次加注的玩家位置
-    pub deck: Deck,                             // 当前局的牌堆
-    pub community_cards: [Option<Card>; 5],     // 公共牌（Community Cards），最多 5 张
+    pub deck: AtlasDeck,                             // 当前局的牌堆
+    pub community_cards: [Option<AtlasCard>; 5],     // 公共牌（Community Cards），最多 5 张
 
     pub street_log: Vec<TableStreet>,
 }
