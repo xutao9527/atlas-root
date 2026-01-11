@@ -76,15 +76,15 @@ impl Table {
         self.dealer_pos = self.next_occupied_seat(self.dealer_pos).unwrap();
         self.small_blind_pos = self.next_occupied_seat(self.dealer_pos).unwrap();
         self.big_blind_pos   = self.next_occupied_seat(self.small_blind_pos).unwrap();
-
+        // 盲位扣钱
         self.post_amount(self.small_blind_pos, self.small_blind_amount);                // 扣小盲注（强制）
         self.seats[self.small_blind_pos].as_mut().unwrap().has_acted = false;
         self.post_amount(self.big_blind_pos, self.big_blind_amount);                    // 扣大盲注（强制）
         self.seats[self.big_blind_pos].as_mut().unwrap().has_acted = false;
 
         self.current_bet = self.big_blind_amount;                                       // 更新当前下注额(大盲)
-        self.last_raiser_pos = self.big_blind_pos;                                      // 更新加注者位置(大盲)
         self.current_turn = self.next_occupied_seat(self.big_blind_pos).unwrap();       // 更新枪口位置(大盲左手)
+        self.last_raiser_pos = self.big_blind_pos;                                      // 更新加注者位置(大盲)
         // <-------------------------------------- reset cards -------------------------------------->
         self.deck.shuffle();                                                            // 洗牌
         // 给每个玩家发两张底牌
@@ -94,6 +94,7 @@ impl Table {
         }// 清空公共牌
         self.community_cards = [None; 5];
         // =============================================================================================
+        self.street_log.clear();                                                        // 清理下注阶段日志
         self.state = TableState::Battling;                                              // 进入对战阶段
         Ok(())
     }
