@@ -65,10 +65,7 @@ impl Table {
         // <-------------------------------------- reset player -------------------------------------->
         // 重置所有玩家的状态
         for p in self.seats.iter_mut().flatten() {
-            p.is_active = true;                                                         // 更新玩家状态
-            p.has_acted = false;                                                        // 更新行动状态
-            p.is_all_in = false;                                                        // 更新all_in状态
-            p.street_bet = 0;                                                           // 更新本轮投注额
+            p.reset();
         }
         // <-------------------------------------- reset table -------------------------------------->
         self.hand_id = Ulid::new().to_string();                                         // 生成hand_id
