@@ -3,5 +3,5 @@ player.rs			// 玩家数据结构
 table.rs			// 桌子数据结构
 table_act.rs		// 桌子动作函数: new_six(6人桌)  new_ten(十人桌)  sit(坐下)   start(开始)
 table_logic.rs		// 桌子逻辑函数: act(玩家动作) → end_betting_round(本轮结束) → advance_street(阶段推进)
-table_utils.rs		// 桌子辅助函数: post_amount(玩家扣钱)  betting_round_complete(判断本轮是否结束)
+table_utils.rs		// 桌子辅助函数: next_occupied_seat(查找下一个行动的座位) betting_round_complete(判断本轮是否结束) post_amount(玩家扣钱) evaluate_hands(计算每个玩家牌力)
 table_view.rs		// 桌子状态展示: Display
