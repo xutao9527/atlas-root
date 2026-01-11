@@ -54,7 +54,7 @@ impl Table {
 
     /// 开始新的一局（**系统行为**） 不是玩家指令
     pub fn start(&mut self) -> Result<(), TableError> {
-        if self.state != TableState::Waiting {
+        if self.state != TableState::Waiting && self.state != TableState::Concluding {
             return Err(TableError::InvalidState);
         }
         if self.seats.iter().filter(|s| s.is_some()).count() < 2 {
