@@ -85,14 +85,15 @@ async fn handle_cmd(cmd: String) -> bool {
                 id: Ulid::new().to_string(),
                 nickname: format!("player00{}", seat),
                 balance,
-                street_bet: 0,
+                hand_cards: [None; 2],
                 cards_str: "".to_string(),
-                cards_rank: None,
                 win: false,
+                cards_rank: None,
                 is_active: false,
                 has_acted: false,
                 is_all_in: false,
-                hand_cards: [None; 2],
+                street_bet: 0,
+                total_bet: 0,
             };
 
             match table.sit(seat, player) {
