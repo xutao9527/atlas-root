@@ -116,6 +116,8 @@ impl Table {
             TableStreet::River => {
                 // River 后进入结算
                 self.state = TableState::Concluding;
+                let pots = self.build_pots();
+                self.settle_pots(pots);
                 return;
             }
         }

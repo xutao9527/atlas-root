@@ -43,9 +43,12 @@ impl Table {
     pub fn post_amount(&mut self, seat: usize, amount: u64) -> bool {
         let prev_bet = self.current_bet;
         let player = self.seats[seat].as_mut().unwrap();
+
         let actual = amount.min(player.balance);
+
         player.balance -= actual;
         player.street_bet += actual;
+        player.total_bet += actual;
         self.pot += actual;
         player.has_acted = true;
 
