@@ -1,11 +1,10 @@
-use atlas_holdem::model::table::{Table};
+use atlas_holdem::model::player::{Player, PlayerAction};
+use atlas_holdem::model::table::Table;
 use std::sync::{Arc, OnceLock};
-use std::time::Duration;
 use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::{mpsc, Mutex};
 use ulid::Ulid;
-use atlas_holdem::model::player::{Player, PlayerAction};
 
 static G_TABLE: OnceLock<Arc<Mutex<Table>>> = OnceLock::new();
 fn get_table() -> &'static Mutex<Table> {
@@ -41,7 +40,7 @@ async fn run_cmd(){
     });
 
     tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(500)).await;
+        //tokio::time::sleep(Duration::from_millis(500)).await;
         let _ = cmd_tx_clone3.send("sit 0 2000".into());
         let _ = cmd_tx_clone3.send("sit 1 2000".into());
         let _ = cmd_tx_clone3.send("sit 2 2000".into());
