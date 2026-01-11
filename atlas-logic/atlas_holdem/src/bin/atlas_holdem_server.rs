@@ -85,11 +85,11 @@ async fn handle_cmd(cmd: String) -> bool {
                 street_bet: 0,
                 cards_str: "".to_string(),
                 cards_rank: None,
+                win: false,
                 is_active: false,
                 has_acted: false,
                 is_all_in: false,
                 hand_cards: [None; 2],
-
             };
 
             match table.sit(seat, player) {

@@ -10,6 +10,7 @@ pub struct Player {
     
     pub cards_str: String,
     pub cards_rank: Option<Rank>,
+    pub win: bool,
     
     pub is_active: bool,                        // 是否仍在牌局中（Fold 后为 false）
     pub has_acted: bool,                        // 本下注轮是否已经行动过

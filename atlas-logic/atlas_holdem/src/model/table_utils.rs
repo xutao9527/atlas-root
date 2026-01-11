@@ -91,6 +91,22 @@ impl Table {
 
             p.cards_rank = Some(merge_cards.rank());
         });
+
+        // 找最大牌力
+        let max_rank = self.seats
+            .iter()
+            .flatten()
+            .map(|p| p.cards_rank.unwrap())
+            .max()
+            .unwrap();
+
+        // 标记赢家（支持平分池）
+        for p in self.seats.iter_mut().flatten() {
+            p.win = false;
+            if p.cards_rank.unwrap() == max_rank {
+                p.win = true;
+            }
+        }
         _winners
     }
 }
