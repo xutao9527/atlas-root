@@ -31,7 +31,7 @@ async fn run_cmd(){
         }
     });
     tokio::spawn(async {
-        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
         handle_cmd("sit 0 2000".into()).await;
         handle_cmd("sit 1 2000".into()).await;
         handle_cmd("sit 2 2000".into()).await;
@@ -39,6 +39,11 @@ async fn run_cmd(){
         handle_cmd("sit 4 2000".into()).await;
         handle_cmd("start".into()).await;
         handle_cmd("show".into()).await;
+        handle_cmd("act raise 2000".into()).await;
+        handle_cmd("act call".into()).await;
+        handle_cmd("act call".into()).await;
+        handle_cmd("act call".into()).await;
+        handle_cmd("act call".into()).await;
     });
     while let Some(cmd) = cmd_rx.recv().await {
         if !handle_cmd(cmd).await {
@@ -79,12 +84,12 @@ async fn handle_cmd(cmd: String) -> bool {
                 balance,
                 street_bet: 0,
                 cards_str: "".to_string(),
-                cards_rank_str: "".to_string(),
+                cards_rank: None,
                 is_active: false,
                 has_acted: false,
                 is_all_in: false,
-                hand_cards: [None;2],
-                
+                hand_cards: [None; 2],
+
             };
 
             match table.sit(seat, player) {

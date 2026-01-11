@@ -1,5 +1,6 @@
 use std::fmt;
 use rand::prelude::*;
+use rs_poker::core::{Card, Suit, Value};
 
 /// 花色（AtlasSuit）枚举
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -77,6 +78,36 @@ pub struct AtlasCard {
     pub suit: AtlasSuit,
     /// 牌的点数
     pub value: AtlasValue,
+}
+
+impl From<&AtlasCard> for Card{
+    fn from(c: &AtlasCard) -> Self {
+        let suit = match c.suit {
+            AtlasSuit::Spade => Suit::Spade,
+            AtlasSuit::Club => Suit::Club,
+            AtlasSuit::Heart => Suit::Heart,
+            AtlasSuit::Diamond => Suit::Diamond,
+        };
+        let value = match c.value {
+            AtlasValue::Two => Value::Two,
+            AtlasValue::Three => Value::Three,
+            AtlasValue::Four => Value::Four,
+            AtlasValue::Five => Value::Five,
+            AtlasValue::Six => Value::Six,
+            AtlasValue::Seven => Value::Seven,
+            AtlasValue::Eight => Value::Eight,
+            AtlasValue::Nine => Value::Nine,
+            AtlasValue::Ten => Value::Ten,
+            AtlasValue::Jack => Value::Jack,
+            AtlasValue::Queen => Value::Queen,
+            AtlasValue::King => Value::King,
+            AtlasValue::Ace => Value::Ace,
+        };
+        Card {
+            suit,
+            value,
+        }
+    }
 }
 
 

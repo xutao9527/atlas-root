@@ -86,35 +86,11 @@ impl Table {
                 .chain(self.community_cards.iter())
                 .flatten()
                 .map(|c| {
-                    Card::new(
-                        match c.value {
-                            AtlasValue::Two => Value::Two,
-                            AtlasValue::Three => Value::Three,
-                            AtlasValue::Four => Value::Four,
-                            AtlasValue::Five => Value::Five,
-                            AtlasValue::Six => Value::Six,
-                            AtlasValue::Seven => Value::Seven,
-                            AtlasValue::Eight => Value::Eight,
-                            AtlasValue::Nine => Value::Nine,
-                            AtlasValue::Ten => Value::Ten,
-                            AtlasValue::Jack => Value::Jack,
-                            AtlasValue::Queen => Value::Queen,
-                            AtlasValue::King => Value::King,
-                            AtlasValue::Ace => Value::Ace,
-                        },
-                        match c.suit {
-                            AtlasSuit::Spade => Suit::Spade,
-                            AtlasSuit::Club => Suit::Club,
-                            AtlasSuit::Heart => Suit::Heart,
-                            AtlasSuit::Diamond => Suit::Diamond,
-                        },
-                    )
+                    c.into()
                 })
                 .collect::<Vec<_>>();
 
-            let rank = merge_cards.rank();
-            p.cards_rank_str = format!("{:?}", rank);
-
+            p.cards_rank = Some(merge_cards.rank());
         });
         _winners
     }

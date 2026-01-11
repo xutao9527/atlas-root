@@ -1,3 +1,4 @@
+use rs_poker::core::Rank;
 use crate::model::card::{AtlasCard};
 
 #[derive(Debug, Clone)]
@@ -8,7 +9,7 @@ pub struct Player {
     pub hand_cards: [Option<AtlasCard>; 2],     // 玩家手牌（底牌），每人 2 张
     
     pub cards_str: String,
-    pub cards_rank_str: String,
+    pub cards_rank: Option<Rank>,
     
     pub is_active: bool,                        // 是否仍在牌局中（Fold 后为 false）
     pub has_acted: bool,                        // 本下注轮是否已经行动过
