@@ -1,5 +1,6 @@
 use atlas_holdem::model::table::{Table};
 use std::sync::{Arc, OnceLock};
+use std::time::Duration;
 use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::{mpsc, Mutex};
@@ -17,33 +18,36 @@ async fn main() {
     run_cmd().await;
 }
 
+static CMD_TX: OnceLock<mpsc::UnboundedSender<String>> = OnceLock::new();
+
 async fn run_cmd(){
     // 发送命令行
     let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<String>();
+
+    let cmd_tx_clone1 = cmd_tx.clone();
+    let cmd_tx_clone2 = cmd_tx.clone();
+    let cmd_tx_clone3 = cmd_tx.clone();
+
+    CMD_TX.set(cmd_tx_clone1).expect("CMD_TX already set");
+
     tokio::spawn(async move {
         let mut stdin = BufReader::new(io::stdin()).lines();
-
         while let Ok(Some(line)) = stdin.next_line().await {
-            let _ = cmd_tx.send(line.clone());
+            let _ = cmd_tx_clone2.send(line.clone());
             if line.trim() == "quit" {
                 break;
             }
         }
     });
-    tokio::spawn(async {
-        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-        handle_cmd("sit 0 2000".into()).await;
-        handle_cmd("sit 1 2000".into()).await;
-        handle_cmd("sit 2 2000".into()).await;
-        handle_cmd("sit 3 2000".into()).await;
-        handle_cmd("sit 4 2000".into()).await;
-        handle_cmd("start".into()).await;
-        handle_cmd("show".into()).await;
-        handle_cmd("act raise 2000".into()).await;
-        handle_cmd("act call".into()).await;
-        handle_cmd("act call".into()).await;
-        handle_cmd("act call".into()).await;
-        handle_cmd("act call".into()).await;
+
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let _ = cmd_tx_clone3.send("sit 0 2000".into());
+        let _ = cmd_tx_clone3.send("sit 1 2000".into());
+        let _ = cmd_tx_clone3.send("sit 2 2000".into());
+        let _ = cmd_tx_clone3.send("sit 3 2000".into());
+        let _ = cmd_tx_clone3.send("sit 4 2000".into());
+        let _ = cmd_tx_clone3.send("sit 5 2000".into());
     });
     while let Some(cmd) = cmd_rx.recv().await {
         if !handle_cmd(cmd).await {
@@ -111,6 +115,10 @@ async fn handle_cmd(cmd: String) -> bool {
                 }
             }
         }
+        ["quick"] => {
+            quick_battling().await;
+            println!("{}", *table);
+        }
         ["act", "fold"] => {
             act_and_show(&mut table, PlayerAction::Fold);
         }
@@ -152,5 +160,40 @@ fn act_and_show(table: &mut Table, action: PlayerAction) {
     match table.act(seat, action) {
         Ok(_) => println!("{}", *table),
         Err(e) => println!("act failed: {:?}", e),
+    }
+}
+
+
+async fn quick_battling() {
+    if let Some(cmd_tx )= CMD_TX.get(){
+        let _ = cmd_tx.send("start".into());
+        // PreFlop
+        let _ = cmd_tx.send("act call".into());
+        let _ = cmd_tx.send("act call".into());
+        let _ = cmd_tx.send("act call".into());
+        let _ = cmd_tx.send("act call".into());
+        let _ = cmd_tx.send("act call".into());
+        let _ = cmd_tx.send("act call".into());
+        // Flop
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        // turn
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        // River
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
+        let _ = cmd_tx.send("act check".into());
     }
 }
