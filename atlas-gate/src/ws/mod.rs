@@ -6,7 +6,6 @@ use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
-use bytes::Bytes;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -36,7 +35,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
     // ws socket
     let (mut ws_tx, mut ws_rx) = socket.split();
     // === 有界响应队列===
-    let (resp_tx, mut resp_rx) = channel::<Bytes>(RESP_QUEUE);
+    let (resp_tx, mut resp_rx) = channel::<Message>(RESP_QUEUE);
     // === inflight ===
     let inflight = Arc::new(tokio::sync::Semaphore::new(MAX_INFLIGHT));
     // ===== writer：唯一 socket IO =====
@@ -45,7 +44,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
 
     let writer = tokio::spawn(async move {
         while let Some(resp) = resp_rx.recv().await {
-            if ws_tx.send(Message::Binary(resp)).await.is_err() {
+            if ws_tx.send(resp).await.is_err() {
                 break;
             }
         }
@@ -69,6 +68,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
                             }
                             Ok(Message::Text(txt)) => {
                                 info!("WS received text message: {}", txt);
+                                let _ = resp_tx.send(Message::Text(txt)).await;
                             }
                             Ok(Message::Ping(_)) => {
                                 info!("WS received ping message: {:?}", msg);

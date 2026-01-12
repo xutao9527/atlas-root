@@ -107,7 +107,7 @@ impl Table {
 
 
 
-fn mock_player(
+fn _mock_player(
     name:&str,
     total_bet: u64,
     rank: Rank,

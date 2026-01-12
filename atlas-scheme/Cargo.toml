@@ -8,4 +8,7 @@ edition = "2024"
 atlas-core = { workspace = true }
 
 sea-orm = { workspace = true }
-serde = { workspace = true, features = ["derive","rc"] }
+serde = { workspace = true, features = ["derive", "rc"] }
+
+[build-dependencies]
+syn = "2.0.114"

@@ -7,12 +7,13 @@ use atlas_scheme::dto::auth_model::AuthResp;
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
 use bytes::Bytes;
 use std::sync::Arc;
+use axum::extract::ws::Message;
 
 pub async fn handle_binary_message(
     bin: Bytes,
     ws_session: Arc<tokio::sync::RwLock<WsSession>>,
     auth_client: Arc<AtlasRpcClient>,
-    resp_tx: tokio::sync::mpsc::Sender<Bytes>,
+    resp_tx: tokio::sync::mpsc::Sender<Message>,
     inflight: Arc<tokio::sync::Semaphore>,
 ) {
     let header = match AtlasWireHeader::read_wire_header(&bin) {
@@ -44,7 +45,7 @@ pub async fn handle_binary_message(
                 if is_auth_rpc {
                     process_auth_resp(resp.clone(), ws_session).await;
                 }
-                let _ = resp_tx.send(resp).await;
+                let _ = resp_tx.send(Message::Binary(resp)).await;
                 drop(permit); // 释放 inflight
             }
         })
