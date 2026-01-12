@@ -5,6 +5,10 @@ use crate::build_codegen::{collect_rpcs_from_file, generate_ts_from_structs, vis
 use std::path::{Path, PathBuf};
 
 fn main() {
+    // 只有 src 或 build.rs 改动才 rerun
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=src/");
+
     let src_dir = Path::new("src");
 
     let crate_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
@@ -12,7 +16,7 @@ fn main() {
     let profile = std::env::var("PROFILE").unwrap();
     let ts_out_dir = workspace_root.join("target").join(&profile).join("ts_generated");
     create_dir_all(&ts_out_dir).unwrap();
-    println!("cargo:warning=TS output dir: {}", ts_out_dir.display());
+    //println!("cargo:warning=TS output dir: {}", ts_out_dir.display());
 
     let mut rs_files = Vec::new();
     visit_rs_files(src_dir, &mut rs_files);

@@ -172,7 +172,7 @@ pub fn generate_ts_from_structs(rs_files: &[std::path::PathBuf], all_rpcs: &[Rpc
                 code.push_str("}\n");
 
                 ts_file.write_all(code.as_bytes()).unwrap();
-                println!("cargo:warning=Generated TS: {}", struct_name);
+                //println!("cargo:warning=Generated TS: {}", struct_name);
             }
         }
     }
