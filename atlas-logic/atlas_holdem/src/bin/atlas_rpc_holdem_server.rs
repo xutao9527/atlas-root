@@ -1,0 +1,15 @@
+use tracing_subscriber::fmt::time::LocalTime;
+use atlas_holdem::serve_holdem;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_timer(LocalTime::rfc_3339())
+        .with_max_level(tracing::Level::DEBUG)
+        .with_target(false)
+        .init();
+
+    serve_holdem("0.0.0.0".into(),"6677".into()).await?;
+    Ok(())
+}

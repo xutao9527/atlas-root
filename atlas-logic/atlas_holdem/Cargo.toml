@@ -17,3 +17,7 @@ ulid = { workspace = true, features = ["serde"] }
 #hex = "0.4.3"
 rand = "0.9"
 rs_poker = { version = "4.1.0",default-features = false ,features = ["serde"] }
+bytes = { workspace = true ,features = ["serde"] }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
+anyhow = { workspace = true }

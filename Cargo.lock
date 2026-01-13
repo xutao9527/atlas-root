@@ -397,11 +397,15 @@ dependencies = [
 name = "atlas_holdem"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "atlas-core",
  "atlas-scheme",
+ "bytes",
  "rand 0.9.2",
  "rs_poker",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "ulid",
 ]
 
