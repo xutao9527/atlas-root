@@ -47,8 +47,8 @@ async fn main() -> anyhow::Result<()> {
             uid: [0; 16],
         },
         payload: BasicAuthReq {
-            account: "val1".into(),
-            password: "val2".into(),
+            account: "111".into(),
+            password: "123123".into(),
         },
     };
 
