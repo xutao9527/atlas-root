@@ -33,13 +33,13 @@ fn main() {
         all_rpcs.extend(rpcs);
     }
 
-    // println!("cargo:warning=Collected RPCs:");
-    // for rpc in &all_rpcs {
-    //     println!(
-    //         "cargo:warning=module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
-    //         rpc.module_id, rpc.method_id, rpc.rpc_name, rpc.request, rpc.response
-    //     );
-    // }
+    println!("cargo:warning=Collected RPCs:");
+    for rpc in &all_rpcs {
+        println!(
+            "cargo:warning=module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
+            rpc.module_id, rpc.method_id, rpc._rpc_name, rpc.request, rpc.response
+        );
+    }
 
     // 正式生成 TS
     generate_ts_from_structs(&rs_files, &all_rpcs, &ts_out_dir);

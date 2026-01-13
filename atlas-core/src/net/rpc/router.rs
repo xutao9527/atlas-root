@@ -9,6 +9,7 @@ use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 pub enum AtlasModuleId {
     Auth = 1,
     Chat = 2,
+    Holdem = 3,
 }
 
 impl AtlasModuleId {

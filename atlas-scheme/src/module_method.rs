@@ -1,5 +1,6 @@
 use atlas_core::atlas_rpc_module;
 use crate::dto::auth_model::*;
+use crate::dto::holdem_model::*;
 
 atlas_rpc_module! {
     module auth_method {
@@ -10,3 +11,9 @@ atlas_rpc_module! {
     }
 }
 
+atlas_rpc_module! {
+    module holdem_method {
+        ModuleId = AtlasModuleId::Holdem;
+        GetTableRpc = (1, GetTableReq, GetTableResp),
+    }
+}

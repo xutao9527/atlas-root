@@ -17,6 +17,7 @@ pub fn module_id_to_u16(s: &str) -> u16 {
     match s {
         "AtlasModuleId::Auth" => 1,
         "AtlasModuleId::Chat" => 2,
+        "AtlasModuleId::Holdem" => 3,
         _ => 0,
     }
 }
@@ -36,61 +37,82 @@ pub fn visit_rs_files(dir: &Path, files: &mut Vec<std::path::PathBuf>) {
     }
 }
 
-// 扫描一个文件，收集 atlas_rpc_module! 宏中的 RPC 信息
 pub fn collect_rpcs_from_file(path: &Path) -> Vec<RpcInfo> {
     let mut rpcs = Vec::new();
+
     let content = match fs::read_to_string(path) {
         Ok(c) => c,
         Err(_) => return rpcs,
     };
 
-    // 找 atlas_rpc_module! { ... } 块
-    if let Some(start) = content.find("atlas_rpc_module!") {
-        if let Some(open_brace) = content[start..].find('{') {
-            if let Some(close_brace) = content[start + open_brace..].find('}') {
-                let body = &content[start + open_brace + 1..start + open_brace + close_brace];
+    let mut offset = 0;
 
-                // 默认 module_id，如果宏里没有 ModuleId 定义
-                let mut module_id_val: u16 = 0;
+    // 🔁 不断查找 atlas_rpc_module!
+    while let Some(start) = content[offset..].find("atlas_rpc_module!") {
+        let start = offset + start;
 
-                for line in body.lines().map(|l| l.trim()) {
-                    // 解析 ModuleId = AtlasModuleId::Auth;
-                    if line.starts_with("ModuleId") {
-                        if let Some(eq_idx) = line.find('=') {
-                            let val = line[eq_idx + 1..].trim().trim_end_matches(';');
-                            module_id_val = module_id_to_u16(val);
-                        }
-                        continue;
-                    }
+        // 找 '{'
+        let open_brace = match content[start..].find('{') {
+            Some(v) => start + v,
+            None => break,
+        };
 
-                    // 匹配 RPC 定义行，例如：RegisterRpc = (1, RegisterReq, RegisterResp),
-                    if line.contains('=') && line.contains('(') && line.contains(')') {
-                        let parts: Vec<&str> = line.split('=').collect();
-                        if parts.len() != 2 { continue; }
-                        let rpc_name = parts[0].trim();
+        // ⚠️ 这里简单版只找第一个 '}'（你的宏结构目前是安全的）
+        let close_brace = match content[open_brace..].find('}') {
+            Some(v) => open_brace + v,
+            None => break,
+        };
 
-                        let tuple = parts[1].trim().trim_end_matches(',').trim();
-                        if tuple.starts_with('(') && tuple.ends_with(')') {
-                            let tuple = &tuple[1..tuple.len() - 1]; // 去掉括号
-                            let elems: Vec<&str> = tuple.split(',').map(|s| s.trim()).collect();
-                            if elems.len() == 3 {
-                                let method_id: u16 = elems[0].parse().unwrap_or(0);
-                                let request = elems[1].to_string();
-                                let response = elems[2].to_string();
-                                rpcs.push(RpcInfo {
-                                    module_id: module_id_val,
-                                    _rpc_name: rpc_name.to_string(),
-                                    method_id,
-                                    request,
-                                    response,
-                                });
-                            }
-                        }
+        let body = &content[open_brace + 1..close_brace];
+
+        // ===== 解析当前 module =====
+        let mut module_id_val: u16 = 0;
+
+        for line in body.lines().map(|l| l.trim()) {
+            // ModuleId = AtlasModuleId::Auth;
+            if line.starts_with("ModuleId") {
+                if let Some(eq_idx) = line.find('=') {
+                    let val = line[eq_idx + 1..].trim().trim_end_matches(';');
+                    module_id_val = module_id_to_u16(val);
+                }
+                continue;
+            }
+
+            // RegisterRpc = (1, RegisterReq, RegisterResp),
+            if line.contains('=') && line.contains('(') && line.contains(')') {
+                let parts: Vec<&str> = line.split('=').collect();
+                if parts.len() != 2 {
+                    continue;
+                }
+
+                let rpc_name = parts[0].trim();
+                let tuple = parts[1].trim().trim_end_matches(',');
+
+                if tuple.starts_with('(') && tuple.ends_with(')') {
+                    let inner = &tuple[1..tuple.len() - 1];
+                    let elems: Vec<&str> = inner.split(',').map(|s| s.trim()).collect();
+
+                    if elems.len() == 3 {
+                        let method_id: u16 = elems[0].parse().unwrap_or(0);
+                        let request = elems[1].to_string();
+                        let response = elems[2].to_string();
+
+                        rpcs.push(RpcInfo {
+                            module_id: module_id_val,
+                            _rpc_name: rpc_name.to_string(),
+                            method_id,
+                            request,
+                            response,
+                        });
                     }
                 }
             }
         }
+
+        // ⏭️ 移动 offset，继续找下一个宏
+        offset = close_brace + 1;
     }
+
     rpcs
 }
 
