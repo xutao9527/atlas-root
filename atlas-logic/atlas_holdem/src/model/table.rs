@@ -1,7 +1,8 @@
+use serde::{Deserialize, Serialize};
 use crate::model::card::{AtlasCard, AtlasDeck};
 use crate::model::player::Player;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum TableState {
     Waiting,                                    // 空闲状态：
     Preparing,                                  // 准备阶段：

@@ -21,3 +21,5 @@ bytes = { workspace = true ,features = ["serde"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "local-time"] }
 anyhow = { workspace = true }
+dashmap = { workspace = true }
+serde = { workspace = true, features = ["derive", "rc"] }

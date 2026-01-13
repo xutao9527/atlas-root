@@ -18,6 +18,7 @@ impl AtlasModuleId {
         match (wire >> 16) as u16 {
             1 => Some(Self::Auth),
             2 => Some(Self::Chat),
+            3 => Some(Self::Holdem),
             _ => None,
         }
     }

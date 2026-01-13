@@ -1,10 +1,11 @@
-use atlas_core::net::rpc::server::AtlasRpcServer;
 use crate::rpc::module_dispatch::holdem_bind::dispatch;
+use atlas_core::net::rpc::server::AtlasRpcServer;
 
-mod logic;
+pub mod logic;
 pub mod model;
 mod rpc;
-
+pub mod context;
+mod utils;
 
 pub async fn serve_holdem(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 初始化数据库

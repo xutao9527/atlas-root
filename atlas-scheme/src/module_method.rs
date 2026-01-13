@@ -1,6 +1,6 @@
 use atlas_core::atlas_rpc_module;
-use crate::dto::auth_model::*;
-use crate::dto::holdem_model::*;
+use crate::proto::auth::auth_model::*;
+use crate::proto::holdem::holdem_model::*;
 
 atlas_rpc_module! {
     module auth_method {

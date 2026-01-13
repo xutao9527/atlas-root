@@ -1,7 +1,7 @@
 use crate::context::get_db;
 use atlas_core::net::rpc::packet_header::AtlasWireKind::{ResponseErr, ResponseOk};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use atlas_scheme::dto::auth_model::{AuthResp, BasicAuthReq, RegisterReq, RegisterResp, TokenAuthReq};
+use atlas_scheme::proto::auth::auth_model::{AuthResp, BasicAuthReq, RegisterReq, RegisterResp, TokenAuthReq};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};

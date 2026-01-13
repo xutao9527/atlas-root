@@ -1,6 +1,6 @@
 use crate::ws_client::WsClient;
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::dto::auth_model::{BasicAuthReq, RegisterReq, TokenAuthReq};
+use atlas_scheme::proto::auth::auth_model::{BasicAuthReq, RegisterReq, TokenAuthReq};
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc, RegisterRpc, TokenAuthRpc};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;

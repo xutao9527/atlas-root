@@ -15,7 +15,7 @@ use tokio::sync::mpsc::channel;
 use tracing::{info};
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
-use atlas_scheme::dto::auth_model::{TokenAuthReq};
+use atlas_scheme::proto::auth::auth_model::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 
 pub async fn ws_handler(
@@ -98,8 +98,6 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
 
                     if expire_at_unix.saturating_sub(now_unix) < 3600 {
                         let token = token.clone();
-                        let client = client_registry.clone();
-
                         if let Some(client) = client_registry.get(AtlasModuleId::Auth).await {
                             let session = ws_session.clone();
                             tokio::spawn(async move {
