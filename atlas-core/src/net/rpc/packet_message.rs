@@ -49,7 +49,7 @@ where
     }
 
     pub fn into_raw(self) -> Result<AtlasRawMessage, String> {
-        let payload = rmp_serde::to_vec(&self.payload).map_err(|e| e.to_string())?;
+        let payload = rmp_serde::to_vec_named(&self.payload).map_err(|e| e.to_string())?;
         Ok(AtlasRawMessage {
             header: self.header,
             payload: Bytes::from(payload),
