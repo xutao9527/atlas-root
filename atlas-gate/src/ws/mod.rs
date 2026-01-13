@@ -13,22 +13,23 @@ use tokio::select;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::channel;
 use tracing::{info};
-use atlas_core::net::rpc::router::AtlasRpcSpec;
+use atlas_core::net::rpc::client_registry::RpcClientRegistry;
+use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::dto::auth_model::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
-    auth_client: Arc<AtlasRpcClient>,
+    client_registry: Arc<RpcClientRegistry>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_ws(socket, auth_client.clone()))
+    ws.on_upgrade(move |socket| handle_ws(socket, client_registry.clone()))
 }
 
 const MAX_INFLIGHT: usize = 8192; // 每 WS 连接最大 RPC 并发
 const RESP_QUEUE: usize = 8192; // 回包队列
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(10);//心跳定时器
 
-async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
+async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
     info!("WS connected");
     // 独立会话
     let ws_session = Arc::new(RwLock::new(WsSession::new()));
@@ -60,7 +61,7 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
                                 handle_binary_message(
                                     bin,
                                     ws_session.clone(),
-                                    auth_client.clone(),
+                                    client_registry.clone(),
                                     resp_tx.clone(),
                                     inflight.clone(),
                                 )
@@ -97,11 +98,16 @@ async fn handle_ws(socket: WebSocket, auth_client: Arc<AtlasRpcClient>) {
 
                     if expire_at_unix.saturating_sub(now_unix) < 3600 {
                         let token = token.clone();
-                        let client = auth_client.clone();
-                        let session = ws_session.clone();
-                        tokio::spawn(async move {
-                             refresh_token_if_needed(token.as_str(), client, session).await;
-                        });
+                        let client = client_registry.clone();
+
+                        if let Some(client) = client_registry.get(AtlasModuleId::Auth).await {
+                            let session = ws_session.clone();
+                            tokio::spawn(async move {
+                                 refresh_token_if_needed(token.as_str(), client, session).await;
+                            });
+                        }
+
+
                     }
                     // info!("now_unix => expire_at_unix: {:?} - {:?} = {:?}s", expire_at_unix ,now_unix ,expire_at_unix - now_unix);
                 }

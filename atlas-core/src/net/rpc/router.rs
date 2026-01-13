@@ -5,7 +5,7 @@ use crate::net::rpc::packet_header::AtlasWireHeader;
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 
 #[repr(u16)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum AtlasModuleId {
     Auth = 1,
     Chat = 2,

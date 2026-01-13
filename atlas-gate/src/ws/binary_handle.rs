@@ -1,18 +1,18 @@
 use crate::ws::ws_session::WsSession;
-use atlas_core::net::rpc::client::client::AtlasRpcClient;
+use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::dto::auth_model::AuthResp;
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
+use axum::extract::ws::Message;
 use bytes::Bytes;
 use std::sync::Arc;
-use axum::extract::ws::Message;
 
 pub async fn handle_binary_message(
     bin: Bytes,
     ws_session: Arc<tokio::sync::RwLock<WsSession>>,
-    auth_client: Arc<AtlasRpcClient>,
+    client_registry: Arc<RpcClientRegistry>,
     resp_tx: tokio::sync::mpsc::Sender<Message>,
     inflight: Arc<tokio::sync::Semaphore>,
 ) {
@@ -38,18 +38,21 @@ pub async fn handle_binary_message(
     };
 
     let is_auth_rpc = header.method == BasicAuthRpc::WIRE || header.method == TokenAuthRpc::WIRE;
-    let _ = auth_client
-        .call_cb(bin, move |resp| {
-            async move {
-                // 回包进入有界队列（不丢）
-                if is_auth_rpc {
-                    process_auth_resp(resp.clone(), ws_session).await;
+
+    if let Some(client) = client_registry.get(module).await {
+        let _ = client
+            .call_cb(bin, move |resp| {
+                async move {
+                    // 回包进入有界队列（不丢）
+                    if is_auth_rpc {
+                        process_auth_resp(resp.clone(), ws_session).await;
+                    }
+                    let _ = resp_tx.send(Message::Binary(resp)).await;
+                    drop(permit); // 释放 inflight
                 }
-                let _ = resp_tx.send(Message::Binary(resp)).await;
-                drop(permit); // 释放 inflight
-            }
-        })
-        .await;
+            })
+            .await;
+    }
 }
 
 pub async fn process_auth_resp(resp: Bytes, ws_session: Arc<tokio::sync::RwLock<WsSession>>) {
