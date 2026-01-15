@@ -45,7 +45,7 @@ pub trait AtlasRpcSpec: Copy + 'static {
 
 pub async fn handle<M, Fut>(
     raw: AtlasRawMessage,
-    f: fn(M::Request) -> Fut,
+    f: fn(AtlasWireMessage<M::Request>) -> Fut,
 ) -> AtlasRawMessage
 where
     M: AtlasRpcSpec,
@@ -63,7 +63,9 @@ where
         }
     };
 
-    let payload = f(req_msg.payload).await;
+    let header = req_msg.header.clone();
+
+    let payload = f(req_msg).await;
 
     let kind = match payload {
         AtlasRpcPayload::Ok(_) => AtlasWireKind::ResponseOk,
@@ -71,7 +73,7 @@ where
     };
 
     AtlasWireMessage {
-        header: req_msg.header.with_kind(kind),
+        header: header.with_kind(kind),
         payload,
     }.into_raw().unwrap_or_else(|_| AtlasRawMessage {
         header: raw.header,

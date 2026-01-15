@@ -1,10 +1,11 @@
 use ulid::Ulid;
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use crate::context::table_manager;
 use crate::model::player::Player;
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::proto::holdem::holdem_model::*;
 
-pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
+pub async fn get_table(_req: AtlasWireMessage<GetTableReq>) -> AtlasRpcPayload<GetTableResp> {
     let mut table_views = Vec::new();
     for table in table_manager().all() {
         let table = table.read().await;
@@ -22,9 +23,9 @@ pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
     })
 }
 
-pub async fn sit_table(req: SitTableReq) -> AtlasRpcPayload<SitTableResp> {
+pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<SitTableResp> {
     // ===== 1. 获取桌子 =====
-    let table = match table_manager().get(&req.table_id) {
+    let table = match table_manager().get(&req.payload.table_id) {
         Some(table) => {
             table
         }
@@ -36,13 +37,13 @@ pub async fn sit_table(req: SitTableReq) -> AtlasRpcPayload<SitTableResp> {
             });
         }
     };
-    let seat_index = req.seat_index as usize;
+    let seat_index = req.payload.seat_index as usize;
     // ===== 3. 写锁：真正修改桌子 =====
     let mut table = table.write().await;
     let player = Player {
         id: Ulid::new().to_string(),                // 之后用 uid
         nickname: Ulid::new().to_string(),          // 之后从用户表来
-        balance: req.buy_in,
+        balance: req.payload.buy_in,
         hand_cards: [None, None],
         cards_str: String::new(),
         sit_out: false,
@@ -68,9 +69,9 @@ pub async fn sit_table(req: SitTableReq) -> AtlasRpcPayload<SitTableResp> {
     }
 }
 
-pub async fn leave_table(req: LeaveTableReq) -> AtlasRpcPayload<LeaveTableResp> {
+pub async fn leave_table(req: AtlasWireMessage<LeaveTableReq>) -> AtlasRpcPayload<LeaveTableResp> {
     // ===== 1. 获取桌子 =====
-    let table = match table_manager().get(&req.table_id) {
+    let table = match table_manager().get(&req.payload.table_id) {
         Some(t) => t,
         None => {
             return AtlasRpcPayload::Err(AtlasWireError {
@@ -80,7 +81,7 @@ pub async fn leave_table(req: LeaveTableReq) -> AtlasRpcPayload<LeaveTableResp> 
             });
         }
     };
-    let seat_index = req.seat_index as usize;
+    let seat_index = req.payload.seat_index as usize;
 
     // ===== 2. 写锁：执行离桌逻辑 =====
     let mut table = table.write().await;
@@ -94,7 +95,7 @@ pub async fn leave_table(req: LeaveTableReq) -> AtlasRpcPayload<LeaveTableResp> 
     }
 }
 
-pub async fn game_act(_req: GameActReq) -> AtlasRpcPayload<GameActResp> {
+pub async fn game_act(_req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<GameActResp> {
     AtlasRpcPayload::Ok(GameActResp {
         ok: false,
         message: None,

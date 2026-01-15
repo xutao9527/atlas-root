@@ -1,5 +1,6 @@
 use crate::context::get_db;
 use crate::context::token_manager::{store_token, validate_token};
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
@@ -11,13 +12,13 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
 
-pub async fn register(req: RegisterReq) -> AtlasRpcPayload<RegisterResp> {
+pub async fn register(req: AtlasWireMessage<RegisterReq>) -> AtlasRpcPayload<RegisterResp> {
     let model = atlas_user::Model {
         id: Ulid::new().to_string(),
         user_type: Some(UserType::Normal),
-        account: req.account,
-        password: req.password,
-        name: req.nickname,
+        account: req.payload.account,
+        password: req.payload.password,
+        name: req.payload.nickname,
         balance: Default::default(),
         avatar: None,
         created_at: chrono::Utc::now(),
@@ -41,15 +42,15 @@ pub async fn register(req: RegisterReq) -> AtlasRpcPayload<RegisterResp> {
     }
 }
 
-pub async fn basic_auth(req: BasicAuthReq) -> AtlasRpcPayload<AuthResp> {
+pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<AuthResp> {
     let result = atlas_user::Entity::find()
-        .filter(atlas_user::Column::Account.eq(req.account))
+        .filter(atlas_user::Column::Account.eq(req.payload.account))
         .one(get_db())
         .await;
 
     match result {
         Ok(Some(user)) => {
-            if user.password != req.password {
+            if user.password != req.payload.password {
                 return AtlasRpcPayload::Err(AtlasWireError {
                     code: 401,
                     message: "Invalid password".into(),
@@ -84,12 +85,12 @@ pub async fn basic_auth(req: BasicAuthReq) -> AtlasRpcPayload<AuthResp> {
     }
 }
 
-pub async fn token_auth(req: TokenAuthReq) -> AtlasRpcPayload<AuthResp> {
-    match validate_token(req.token.as_str()).await {
+pub async fn token_auth(req: AtlasWireMessage<TokenAuthReq>) -> AtlasRpcPayload<AuthResp> {
+    match validate_token(req.payload.token.as_str()).await {
         Ok((uid, expire_at)) => AtlasRpcPayload::Ok(AuthResp {
             ok: true,
             uid: Some(uid),
-            token: Some(req.token),
+            token: Some(req.payload.token),
             expire_at: Some(expire_at),
         }),
         Err(err) => AtlasRpcPayload::Err(AtlasWireError {
