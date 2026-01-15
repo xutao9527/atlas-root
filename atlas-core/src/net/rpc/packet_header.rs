@@ -1,7 +1,8 @@
 use bytes::{Buf, Bytes, BytesMut};
+use serde::{Deserialize, Serialize};
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AtlasWireKind {
     Request = 0b0000_0001,
     ResponseOk = 0b0000_0010,
@@ -9,7 +10,7 @@ pub enum AtlasWireKind {
     Notify = 0b0000_1000,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AtlasWireHeader {
     pub id: u64,
     pub slot_index: u32,

@@ -1,11 +1,15 @@
 use crate::net::rpc::packet_header::AtlasWireHeader;
 use bytes::{BufMut, Bytes, BytesMut};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 
 pub type AtlasRawMessage = AtlasWireMessage<Bytes>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(bound(
+    serialize = "T: Serialize",
+    deserialize = "T: Deserialize<'de>"
+))]
 pub struct AtlasWireMessage<T> {
     pub header: AtlasWireHeader,
     pub payload: T,

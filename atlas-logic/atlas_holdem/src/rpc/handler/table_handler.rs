@@ -1,9 +1,8 @@
 use crate::context::table_manager;
-use atlas_core::net::rpc::packet_header::AtlasWireKind::ResponseOk;
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
+use atlas_core::net::rpc::packet_payload::AtlasRpcPayload;
 use atlas_scheme::proto::holdem::holdem_model::{GetTableReq, GetTableResp, TableView};
 
-pub async fn get_table(request: AtlasWireMessage<GetTableReq>) -> AtlasWireMessage<GetTableResp> {
+pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
     let table = table_manager();
     let mut table_views = Vec::new();
     for table in table.all() {
@@ -17,10 +16,7 @@ pub async fn get_table(request: AtlasWireMessage<GetTableReq>) -> AtlasWireMessa
         table_views.push(table_view);
     }
 
-    AtlasWireMessage {
-        header: request.header.with_kind(ResponseOk),
-        payload: GetTableResp {
-            tables: table_views,
-        },
-    }
+    AtlasRpcPayload::Ok(GetTableResp {
+        tables: table_views,
+    })
 }

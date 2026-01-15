@@ -1,8 +1,9 @@
-use bytes::Bytes;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use crate::net::rpc::packet_header::AtlasWireHeader;
+use crate::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
+use crate::net::rpc::packet_payload::{AtlasRpcPayload, AtlasRpcResult};
+use bytes::Bytes;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -44,25 +45,36 @@ pub trait AtlasRpcSpec: Copy + 'static {
 
 pub async fn handle<M, Fut>(
     raw: AtlasRawMessage,
-    f: fn(AtlasWireMessage<M::Request>) -> Fut,
+    f: fn(M::Request) -> Fut,
 ) -> AtlasRawMessage
 where
     M: AtlasRpcSpec,
-    Fut: Future<Output=AtlasWireMessage<M::Response>>,
+    AtlasRpcResult<M::Response>: Serialize + DeserializeOwned,
+    M::Response: Serialize + DeserializeOwned,
+    Fut: Future<Output=AtlasRpcPayload<M::Response>>,
 {
     let req_msg = match AtlasWireMessage::<M::Request>::from_raw(raw.clone()) {
         Ok(r) => r,
-        Err(_e) => return AtlasRawMessage {
-            header: raw.header,
-            payload: Bytes::new(),
-        },
+        Err(_e) => {
+            return AtlasRawMessage {
+                header: raw.header,
+                payload: Bytes::new(),
+            };
+        }
     };
-    let resp_msg = f(req_msg).await;
-    match resp_msg.into_raw() {
-        Ok(resp_msg) => resp_msg,
-        Err(_) => AtlasRawMessage {
-            header: raw.header,
-            payload: Bytes::new(),
-        },
-    }
+
+    let payload = f(req_msg.payload).await;
+
+    let kind = match payload {
+        AtlasRpcPayload::Ok(_) => AtlasWireKind::ResponseOk,
+        AtlasRpcPayload::Err(_) => AtlasWireKind::ResponseErr,
+    };
+
+    AtlasWireMessage {
+        header: req_msg.header.with_kind(kind),
+        payload,
+    }.into_raw().unwrap_or_else(|_| AtlasRawMessage {
+        header: raw.header,
+        payload: Bytes::new(),
+    })
 }
