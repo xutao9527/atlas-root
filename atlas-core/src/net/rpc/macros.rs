@@ -14,12 +14,11 @@ macro_rules! atlas_rpc_module {
 
             // ===== 编译期校验：method_id 不能重复 =====
             #[allow(non_camel_case_types)]
-            enum __AtlasRpcMethodIdCheck {
+            enum AtlasRpcMethodIdCheck {
                 $(
                     $method_ty = $method_id,
                 )*
             }
-
 
             $(
                 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
