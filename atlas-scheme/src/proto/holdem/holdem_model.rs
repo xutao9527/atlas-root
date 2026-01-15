@@ -1,16 +1,13 @@
 use serde::{Deserialize, Serialize};
 
+// ================================================== GetTable ==================================================
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GetTableReq {
-
-}
-
+pub struct GetTableReq {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTableResp {
     pub tables: Vec<TableView>,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableView {
@@ -19,3 +16,55 @@ pub struct TableView {
     pub small_blind_amount: u64,
     pub big_blind_amount: u64,
 }
+
+// ================================================== SitTable ==================================================
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct  SitTableReq{
+    pub table_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct  SitTableResp{
+    pub ok: bool,
+    pub message: Option<String>,
+}
+
+
+// ================================================== LeaveTable ==================================================
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct  LeaveTableReq{
+    pub table_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct  LeaveTableResp{
+    pub ok: bool,
+    pub message: Option<String>,
+}
+
+
+// ================================================== GameAct ==================================================
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum GameAction {
+    Fold,
+    Call,
+    Check,
+    Bet(u64),
+    Raise(u64),
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GameActReq {
+    pub table_id: String,
+    pub act :GameAction,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GameActResp {
+    pub ok: bool,
+    pub message: Option<String>,
+}
+

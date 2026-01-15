@@ -1,6 +1,6 @@
 use crate::context::table_manager;
 use atlas_core::net::rpc::packet_payload::AtlasRpcPayload;
-use atlas_scheme::proto::holdem::holdem_model::{GetTableReq, GetTableResp, TableView};
+use atlas_scheme::proto::holdem::holdem_model::{*};
 
 pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
     let table = table_manager();
@@ -18,5 +18,26 @@ pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
 
     AtlasRpcPayload::Ok(GetTableResp {
         tables: table_views,
+    })
+}
+
+pub async fn sit_table(_req: SitTableReq) -> AtlasRpcPayload<SitTableResp> {
+    AtlasRpcPayload::Ok(SitTableResp {
+        ok: false,
+        message: None,
+    })
+}
+
+pub async fn leave_table(_req: LeaveTableReq) -> AtlasRpcPayload<LeaveTableResp> {
+    AtlasRpcPayload::Ok(LeaveTableResp {
+        ok: false,
+        message: None,
+    })
+}
+
+pub async fn game_act(_req: GameActReq) -> AtlasRpcPayload<GameActResp> {
+    AtlasRpcPayload::Ok(GameActResp {
+        ok: false,
+        message: None,
     })
 }
