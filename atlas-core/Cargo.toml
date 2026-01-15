@@ -14,8 +14,8 @@ futures = { workspace = true }
 # common
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-serde-value = "0.7.0"
 rmp-serde = { workspace = true }
+serde-value = "0.7.0"
 bytes = { workspace = true ,features = ["serde"] }
 slab = { workspace = true }
 parking_lot = { workspace = true }

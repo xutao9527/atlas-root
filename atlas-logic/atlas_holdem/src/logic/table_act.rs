@@ -1,7 +1,8 @@
 use ulid::Ulid;
 use crate::model::card::{AtlasDeck};
 use crate::model::player::Player;
-use crate::model::table::{Table, TableError, TableState, TableStreet};
+use crate::model::table::{Table, TableState, TableStreet};
+use crate::model::table_err::TableError;
 
 impl Table {
     ///  新建桌(私有函数)
@@ -38,17 +39,60 @@ impl Table {
     }
 
     /// 玩家坐下
-    pub fn sit(&mut self,  seat: usize, player: Player) -> Result<(), TableError> {
+    pub fn sit(&mut self,  seat: usize, mut player: Player) -> Result<(), TableError> {
+        // ===== 1. seat 索引校验 =====
         if seat >= self.seats.len() {
             return Err(TableError::InvalidSeat);
         }
-        if self.state != TableState::Waiting {
-            return Err(TableError::InvalidState);
-        }
+        // ===== 2. seat 是否已被占 =====
         if self.seats[seat].is_some() {
             return Err(TableError::SeatOccupied);
         }
+        // ===== 3. buy-in 校验（桌子规则）=====
+        let min_buy_in = self.big_blind_amount * 20;
+        let max_buy_in = self.big_blind_amount * 100;
+        if player.balance < min_buy_in || player.balance > max_buy_in {
+            return Err(TableError::InvalidBuyIn {
+                min: min_buy_in,
+                max: max_buy_in,
+                actual: player.balance,
+            });
+        }
+        // ===== 4. 规范化玩家初始状态 =====
+        player.hand_cards = [None, None];
+        player.sit_out = false;
+        player.win = false;
+        player.cards_rank = None;
+        player.is_active = false;        // 坐下 ≠ 参与当前 hand
+        player.has_acted = false;
+        player.is_all_in = false;
+        player.street_bet = 0;
+        player.total_bet = 0;
+        // ===== 6. 放入座位 =====
+
         self.seats[seat] = Some(player);
+        Ok(())
+    }
+
+    pub fn leave(&mut self, seat: usize) -> Result<(), TableError> {
+        if seat >= self.seats.len() {
+            return Err(TableError::InvalidSeat);
+        }
+
+        let player = match self.seats[seat].as_mut() {
+            Some(p) => p,
+            None => return Err(TableError::InvalidAction), // 座位没人
+        };
+
+        if player.is_active {
+            // 正在当前局中：标记下局不玩
+            player.sit_out = true;
+        } else {
+            // 不在当前局中：可以直接离桌
+            self.seats[seat] = None;
+        }
+
+        self.seats[seat] = None;
         Ok(())
     }
 

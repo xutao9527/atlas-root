@@ -120,6 +120,7 @@ fn _mock_player(
         balance: 0,
         hand_cards: [None, None],
         cards_str: String::new(),
+        sit_out: false,
         win: false,
         cards_rank: Some(rank),
         is_active,

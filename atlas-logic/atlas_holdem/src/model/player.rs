@@ -11,6 +11,7 @@ pub struct Player {
     
     pub cards_str: String,
 
+    pub sit_out: bool,                          // 是否下局不玩（离桌）
     pub win: bool,                              // 是不是赢家
     pub cards_rank: Option<Rank>,               // 牌力值
     pub is_active: bool,                        // 是否仍在牌局中（Fold 后为 false）

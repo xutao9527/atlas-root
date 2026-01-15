@@ -1,11 +1,13 @@
+use ulid::Ulid;
 use crate::context::table_manager;
-use atlas_core::net::rpc::packet_payload::AtlasRpcPayload;
-use atlas_scheme::proto::holdem::holdem_model::{*};
+use crate::model::player::Player;
+use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
+use atlas_scheme::proto::holdem::holdem_model::*;
 
 pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
-    let table = table_manager();
     let mut table_views = Vec::new();
-    for table in table.all() {
+    for table in table_manager().all() {
+        let table = table.read().await;
         let players = table.seats.iter().map(|seat| seat.is_some()).collect();
         let table_view = TableView {
             id: table.id.clone(),
@@ -15,24 +17,81 @@ pub async fn get_table(_req: GetTableReq) -> AtlasRpcPayload<GetTableResp> {
         };
         table_views.push(table_view);
     }
-
     AtlasRpcPayload::Ok(GetTableResp {
         tables: table_views,
     })
 }
 
-pub async fn sit_table(_req: SitTableReq) -> AtlasRpcPayload<SitTableResp> {
-    AtlasRpcPayload::Ok(SitTableResp {
-        ok: false,
-        message: None,
-    })
+pub async fn sit_table(req: SitTableReq) -> AtlasRpcPayload<SitTableResp> {
+    // ===== 1. 获取桌子 =====
+    let table = match table_manager().get(&req.table_id) {
+        Some(table) => {
+            table
+        }
+        None => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 404,
+                message: "table not found".into(),
+                data: None,
+            });
+        }
+    };
+    let seat_index = req.seat_index as usize;
+    // ===== 3. 写锁：真正修改桌子 =====
+    let mut table = table.write().await;
+    let player = Player {
+        id: Ulid::new().to_string(),                // 之后用 uid
+        nickname: Ulid::new().to_string(),          // 之后从用户表来
+        balance: req.buy_in,
+        hand_cards: [None, None],
+        cards_str: String::new(),
+        sit_out: false,
+        win: false,
+        cards_rank: None,
+        is_active: false,
+        has_acted: false,
+        is_all_in: false,
+        street_bet: 0,
+        total_bet: 0,
+    };
+    // ===== 7. 放入桌子 =====
+    match table.sit(seat_index, player) {
+        Ok(_) => {
+            AtlasRpcPayload::Ok(SitTableResp {
+                ok: true,
+                message: Some("sit table success".into()),
+            })
+        }
+        Err(e) => {
+            AtlasRpcPayload::Err(e.into())
+        }
+    }
 }
 
-pub async fn leave_table(_req: LeaveTableReq) -> AtlasRpcPayload<LeaveTableResp> {
-    AtlasRpcPayload::Ok(LeaveTableResp {
-        ok: false,
-        message: None,
-    })
+pub async fn leave_table(req: LeaveTableReq) -> AtlasRpcPayload<LeaveTableResp> {
+    // ===== 1. 获取桌子 =====
+    let table = match table_manager().get(&req.table_id) {
+        Some(t) => t,
+        None => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 404,
+                message: "table not found".into(),
+                data: None,
+            });
+        }
+    };
+    let seat_index = req.seat_index as usize;
+
+    // ===== 2. 写锁：执行离桌逻辑 =====
+    let mut table = table.write().await;
+
+    match table.leave(seat_index) {
+        Ok(_) => AtlasRpcPayload::Ok(LeaveTableResp {
+            ok: true,
+            message: Some("leave table success".into()),
+        }),
+        Err(e) => AtlasRpcPayload::Err(e.into()),
+    }
 }
 
 pub async fn game_act(_req: GameActReq) -> AtlasRpcPayload<GameActResp> {

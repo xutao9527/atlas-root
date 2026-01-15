@@ -1,5 +1,6 @@
 use crate::model::player::PlayerAction;
-use crate::model::table::{Table, TableError, TableState, TableStreet};
+use crate::model::table::{Table, TableState, TableStreet};
+use crate::model::table_err::TableError;
 
 impl Table {
     pub fn act(&mut self, seat: usize, action: PlayerAction) -> Result<(), TableError> {

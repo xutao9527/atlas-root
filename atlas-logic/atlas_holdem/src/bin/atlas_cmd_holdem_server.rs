@@ -87,6 +87,7 @@ async fn handle_cmd(cmd: String) -> bool {
                 balance,
                 hand_cards: [None; 2],
                 cards_str: "".to_string(),
+                sit_out: false,
                 win: false,
                 cards_rank: None,
                 is_active: false,
