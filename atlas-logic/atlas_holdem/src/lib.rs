@@ -1,5 +1,6 @@
 use crate::rpc::module_dispatch::holdem_bind::dispatch;
 use atlas_core::net::rpc::server::AtlasRpcServer;
+use crate::context::init_db;
 
 pub mod logic;
 pub mod model;
@@ -9,7 +10,7 @@ mod utils;
 
 pub async fn serve_holdem(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 初始化数据库
-    //init_db("mysql://root:root@localhost:3306/atlas").await;
+    init_db("mysql://root:root@localhost:3306/atlas").await;
     // 令牌管理
     //token_manager::start_token_cleaner();
     // 运行Rpc服务

@@ -8,9 +8,10 @@ use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
 use axum::extract::ws::Message;
 use bytes::Bytes;
 use std::sync::Arc;
+use ulid::Ulid;
 
 pub async fn handle_binary_message(
-    bin: Bytes,
+    mut bin: Bytes,
     ws_session: Arc<tokio::sync::RwLock<WsSession>>,
     client_registry: Arc<RpcClientRegistry>,
     resp_tx: tokio::sync::mpsc::Sender<Message>,
@@ -26,9 +27,17 @@ pub async fn handle_binary_message(
     };
     // 非 Auth 必须已认证
     if module != AtlasModuleId::Auth {
-        let authed = ws_session.read().await.is_authed();
+        let session_guard = ws_session.read().await;
+        let authed = session_guard.is_authed();
+
+
         if !authed {
             return;
+        }
+        if let Some(uid) = session_guard.uid.as_ref(){
+            if let Ok(ulid) = Ulid::from_string(uid) {
+                bin = AtlasWireHeader::overwrite_uid(bin,ulid.to_bytes());
+            }
         }
     }
     // === 获取 inflight permit（背压在这里）===

@@ -1,9 +1,13 @@
-use ulid::Ulid;
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use crate::context::table_manager;
+use crate::context::{get_db, table_manager};
 use crate::model::player::Player;
+use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
+use atlas_scheme::model::atlas_user;
 use atlas_scheme::proto::holdem::holdem_model::*;
+use sea_orm::ColumnTrait;
+use sea_orm::EntityTrait;
+use sea_orm::QueryFilter;
+use ulid::Ulid;
 
 pub async fn get_table(_req: AtlasWireMessage<GetTableReq>) -> AtlasRpcPayload<GetTableResp> {
     let mut table_views = Vec::new();
@@ -26,6 +30,22 @@ pub async fn get_table(_req: AtlasWireMessage<GetTableReq>) -> AtlasRpcPayload<G
 }
 
 pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<SitTableResp> {
+    //  ===== 0. 获得自己 =====
+    let user = match atlas_user::Entity::find()
+        .filter(atlas_user::Column::Id.eq(Ulid::from_bytes(req.header.uid).to_string()))
+        .one(get_db())
+        .await {
+        Ok(Some(u)) => { u }
+        _ => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 404,
+                message: "user not found".into(),
+                data: None,
+            });
+        }
+    };
+
+
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.payload.table_id) {
         Some(table) => {
@@ -43,8 +63,8 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
     // ===== 3. 写锁：真正修改桌子 =====
     let mut table = table.write().await;
     let player = Player {
-        id: Ulid::new().to_string(),                // 之后用 uid
-        nickname: Ulid::new().to_string(),          // 之后从用户表来
+        id: user.id,                // 之后用 uid
+        nickname: user.name,          // 之后从用户表来
         balance: req.payload.buy_in,
         hand_cards: [None, None],
         cards_str: String::new(),

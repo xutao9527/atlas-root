@@ -11,6 +11,11 @@ atlas-scheme = { workspace = true }
 # runtime
 tokio = { workspace = true, features = ["full"] }
 
+
+# db
+sea-orm = { workspace = true, features = ["sqlx-mysql", "runtime-tokio-rustls"] }
+
+
 # common
 ulid = { workspace = true, features = ["serde"] }
 #sha2 = "0.10.9"
