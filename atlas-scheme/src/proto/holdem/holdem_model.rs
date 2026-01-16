@@ -39,7 +39,6 @@ pub struct  SitTableResp{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct  LeaveTableReq{
     pub table_id: String,
-    pub seat_index: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

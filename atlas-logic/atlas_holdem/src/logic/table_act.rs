@@ -80,15 +80,14 @@ impl Table {
         Ok(())
     }
 
-    pub fn leave(&mut self, seat: usize) -> Result<(), TableError> {
-        if seat >= self.seats.len() {
-            return Err(TableError::InvalidSeat);
-        }
+    pub fn leave(&mut self, player_id: &str) -> Result<(), TableError> {
+        let seat = self
+            .find_seat_by_player_id(player_id)
+            .ok_or(TableError::PlayerNotAtTable)?;
 
-        let player = match self.seats[seat].as_mut() {
-            Some(p) => p,
-            None => return Err(TableError::InvalidAction), // 座位没人
-        };
+        let player = self.seats[seat]
+            .as_mut()
+            .ok_or(TableError::PlayerNotAtTable)?;
 
         if player.is_active {
             // 正在当前局中：标记下局不玩
@@ -97,7 +96,6 @@ impl Table {
             // 不在当前局中：可以直接离桌
             self.seats[seat] = None;
         }
-
         self.seats[seat] = None;
         Ok(())
     }

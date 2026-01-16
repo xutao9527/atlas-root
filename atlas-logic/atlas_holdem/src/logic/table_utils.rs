@@ -2,6 +2,13 @@ use crate::model::table::Table;
 use rs_poker::core::Rankable;
 
 impl Table {
+
+    pub fn find_seat_by_player_id(&self, player_id: &str) -> Option<usize> {
+        self.seats.iter().position(|s| {
+            s.as_ref().map_or(false, |p| p.id == player_id)
+        })
+    }
+
     // 从某个座位开始，顺时针查找下一个有玩家的座位
     pub fn next_occupied_seat(&self, from: usize) -> Option<usize> {
         let mut i = from;

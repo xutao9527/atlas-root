@@ -91,6 +91,9 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
 }
 
 pub async fn leave_table(req: AtlasWireMessage<LeaveTableReq>) -> AtlasRpcPayload<LeaveTableResp> {
+    //  ===== 0. 获得自己ID =====
+    let user_id = Ulid::from_bytes(req.header.uid).to_string();
+
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.payload.table_id) {
         Some(t) => t,
@@ -102,12 +105,11 @@ pub async fn leave_table(req: AtlasWireMessage<LeaveTableReq>) -> AtlasRpcPayloa
             });
         }
     };
-    let seat_index = req.payload.seat_index as usize;
 
     // ===== 2. 写锁：执行离桌逻辑 =====
     let mut table = table.write().await;
 
-    match table.leave(seat_index) {
+    match table.leave(&user_id) {
         Ok(_) => AtlasRpcPayload::Ok(LeaveTableResp {
             ok: true,
             message: Some("leave table success".into()),
