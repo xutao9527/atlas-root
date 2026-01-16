@@ -9,10 +9,12 @@ pub async fn get_table(_req: AtlasWireMessage<GetTableReq>) -> AtlasRpcPayload<G
     let mut table_views = Vec::new();
     for table in table_manager().all() {
         let table = table.read().await;
-        let players = table.seats.iter().map(|seat| seat.is_some()).collect();
+        let seats = table.seats.iter()
+            .map(|seat| seat.as_ref().map(|p| p.nickname.clone()))
+            .collect();
         let table_view = TableView {
             id: table.id.clone(),
-            seats: players,
+            seats,
             small_blind_amount: table.small_blind_amount,
             big_blind_amount: table.big_blind_amount,
         };

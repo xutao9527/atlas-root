@@ -108,8 +108,18 @@ impl Table {
         // ======================================= init new hand =======================================
         // <-------------------------------------- reset player -------------------------------------->
         // 重置所有玩家的状态
-        for p in self.seats.iter_mut().flatten() {
-            p.reset();
+        for seat  in self.seats.iter_mut() {
+            match seat {
+                Some(p) if p.sit_out => {
+                    // 下局不玩，直接离桌
+                    *seat = None;
+                }
+                Some(p) => {
+                    // 继续玩的玩家，重置局内状态
+                    p.reset();
+                }
+                None => {}
+            }
         }
         // <-------------------------------------- reset table -------------------------------------->
         self.hand_id = Ulid::new().to_string();                                         // 生成hand_id

@@ -12,7 +12,7 @@ pub struct GetTableResp {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableView {
     pub id: String,
-    pub seats: Vec<bool>,
+    pub seats: Vec<Option<String>>, // Some(nickname) / None
     pub small_blind_amount: u64,
     pub big_blind_amount: u64,
 }

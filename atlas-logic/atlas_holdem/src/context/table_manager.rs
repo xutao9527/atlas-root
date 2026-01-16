@@ -18,10 +18,9 @@ impl TableManager {
 
     /// 初始化 N 张桌子（服务启动时调用）
     pub fn init_tables(&self, count: usize) {
-        for i in 0..count {
-            let table_id = format!("table-{}", i + 1);
-            let table = Arc::new(RwLock::new(Table::new_six(10, 20)));
-            self.tables.insert(table_id, table);
+        for _i in 0..count {
+            let table = Table::new_six(10, 20);
+            self.tables.insert(table.id.clone(), Arc::new(RwLock::new(table)));
         }
     }
 
