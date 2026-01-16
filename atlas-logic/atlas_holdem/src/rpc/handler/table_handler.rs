@@ -44,8 +44,6 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
             });
         }
     };
-
-
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.payload.table_id) {
         Some(table) => {
