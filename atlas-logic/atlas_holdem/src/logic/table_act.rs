@@ -48,7 +48,13 @@ impl Table {
         if self.seats[seat].is_some() {
             return Err(TableError::SeatOccupied);
         }
-        // ===== 3. buy-in 校验（桌子规则）=====
+        // ===== 3. 是否已经在其他座位坐下 =====
+        if self.seats.iter().any(|s| {
+            s.as_ref().map(|p| p.id == player.id).unwrap_or(false)
+        }) {
+            return Err(TableError::AlreadySeated);
+        }
+        // ===== 4. buy-in 校验（桌子规则）=====
         let min_buy_in = self.big_blind_amount * 20;
         let max_buy_in = self.big_blind_amount * 100;
         if player.balance < min_buy_in || player.balance > max_buy_in {
@@ -58,7 +64,7 @@ impl Table {
                 actual: player.balance,
             });
         }
-        // ===== 4. 规范化玩家初始状态 =====
+        // ===== 5. 规范化玩家初始状态 =====
         player.hand_cards = [None, None];
         player.sit_out = false;
         player.win = false;
