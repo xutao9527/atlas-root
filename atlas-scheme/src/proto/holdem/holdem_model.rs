@@ -29,6 +29,7 @@ pub struct SitTableReq {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct  SitTableResp{
     pub ok: bool,
+    pub table_id: String,
     pub message: Option<String>,
 }
 

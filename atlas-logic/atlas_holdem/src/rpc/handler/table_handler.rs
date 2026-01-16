@@ -80,6 +80,7 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
         Ok(_) => {
             AtlasRpcPayload::Ok(SitTableResp {
                 ok: true,
+                table_id: table.id.clone(),
                 message: Some("sit table success".into()),
             })
         }
