@@ -34,7 +34,7 @@ pub async fn get_table_info(req: AtlasWireMessage<GetTableInfoReq>) -> AtlasRpcP
         Some(table) => {
             let table_data = table.read().await;
             AtlasRpcPayload::Ok(GetTableInfoResp {
-                table_id: table_data.id.clone(),
+                table_id: table_data.id.to_string(),
             })
         }
         None => {
