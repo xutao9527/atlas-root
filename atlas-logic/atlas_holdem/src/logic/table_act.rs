@@ -44,15 +44,18 @@ impl Table {
         if seat >= self.seats.len() {
             return Err(TableError::InvalidSeat);
         }
-        // ===== 2. seat 是否已被占 =====
+        // ===== 2. 是否已经在桌上（自己）=====
+        if let Some(existing_seat) = self.find_seat_by_player_id(&player.id) {
+            if existing_seat == seat {
+                return Ok(());
+            } else {
+                // 已经在其他 seat（重连 / 重复请求）
+                return Ok(()); // 或 Err(AlreadySeated { seat: existing_seat })
+            }
+        }
+        // ===== 3. seat 是否被“别人”占 =====
         if self.seats[seat].is_some() {
             return Err(TableError::SeatOccupied);
-        }
-        // ===== 3. 是否已经在其他座位坐下 =====
-        if self.seats.iter().any(|s| {
-            s.as_ref().map(|p| p.id == player.id).unwrap_or(false)
-        }) {
-            return Err(TableError::AlreadySeated);
         }
         // ===== 4. buy-in 校验（桌子规则）=====
         let min_buy_in = self.big_blind_amount * 20;
