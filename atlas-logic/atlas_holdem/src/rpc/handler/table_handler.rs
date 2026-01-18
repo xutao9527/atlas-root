@@ -3,11 +3,12 @@ use crate::model::player::Player;
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::model::atlas_user;
-use atlas_scheme::proto::holdem::holdem_model::*;
+use atlas_scheme::proto::holdem::rpc::*;
 use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
 use ulid::Ulid;
+use atlas_scheme::proto::holdem::types::TableView;
 
 pub async fn get_table_list(_req: AtlasWireMessage<GetTableListReq>) -> AtlasRpcPayload<GetTableListResp> {
     let mut table_views = Vec::new();
@@ -16,7 +17,7 @@ pub async fn get_table_list(_req: AtlasWireMessage<GetTableListReq>) -> AtlasRpc
         let seats = table.seats.iter()
             .map(|seat| seat.as_ref().map(|p| p.nickname.clone()))
             .collect();
-        let table_view = TableListView {
+        let table_view = TableView {
             id: table.id.clone(),
             seats,
             small_blind_amount: table.small_blind_amount,

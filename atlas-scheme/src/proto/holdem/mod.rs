@@ -1,1 +1,3 @@
-pub mod holdem_model;
+pub mod rpc;
+pub mod types;
+

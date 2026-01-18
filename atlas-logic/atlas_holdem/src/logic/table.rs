@@ -1,8 +1,10 @@
 use ulid::Ulid;
-use crate::model::card::{AtlasDeck};
+use crate::model::deck::AtlasDeck;
 use crate::model::player::Player;
-use crate::model::table::{Table, TableState, TableStreet};
+use crate::model::table::{Table};
 use crate::model::table_err::TableError;
+use crate::model::table_state::TableState;
+use crate::model::table_street::TableStreet;
 
 impl Table {
     ///  新建桌(私有函数)
