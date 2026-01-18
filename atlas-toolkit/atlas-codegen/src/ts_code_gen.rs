@@ -90,6 +90,8 @@ pub fn generate_ts_from_structs(rs_files: &[std::path::PathBuf], all_rpcs: &[Rpc
                 let mut ts_file = fs::File::create(ts_file_path).unwrap();
 
                 let mut code = String::new();
+                code.push_str("// @ts-ignore\n");
+
                 code.push_str("import {WirePayload} from \"db://assets/scripts/wire/base/Message\";\n\n");
 
                 // interface

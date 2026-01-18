@@ -82,6 +82,7 @@ pub async fn get_table_info(req: AtlasWireMessage<GetTableInfoReq>) -> AtlasRpcP
                 hand_cards: player.hand_cards.map(|opt| {
                     opt.as_ref().map(Into::into)
                 }),
+                seat_index
             })
         }
         None => {
@@ -214,6 +215,33 @@ pub async fn game_act(req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<Game
         Ok(_) => AtlasRpcPayload::Ok(GameActResp {
             ok: true,
             message: Some("leave table success".into()),
+        }),
+        Err(e) => AtlasRpcPayload::Err(e.into()),
+    }
+
+}
+
+
+pub async fn game_start(req: AtlasWireMessage<GameStartReq>) -> AtlasRpcPayload<GameStartResp> {
+    // ===== 1. 获取桌子 =====
+    let table = match table_manager().get(&req.payload.table_id) {
+        Some(t) => t,
+        None => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 404,
+                message: "table not found".into(),
+                data: None,
+            });
+        }
+    };
+    // ===== 2. 写锁：执行离桌逻辑 =====
+    let mut table = table.write().await;
+
+    // ===== 3. 调用 =====
+    match table.start() {
+        Ok(_) => AtlasRpcPayload::Ok(GameStartResp {
+            ok: true,
+            message: Some("start game success".into()),
         }),
         Err(e) => AtlasRpcPayload::Err(e.into()),
     }

@@ -20,5 +20,6 @@ atlas_rpc_module! {
         SitTableRpc = (3, SitTableReq, SitTableResp),
         LeaveTableRpc = (4, LeaveTableReq, LeaveTableResp),
         GameActRpc = (5, GameActReq, GameActResp),
+        GameStartRpc = (6, GameStartReq, GameStartResp),
     }
 }

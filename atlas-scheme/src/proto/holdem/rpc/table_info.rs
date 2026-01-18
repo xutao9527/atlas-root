@@ -25,4 +25,5 @@ pub struct GetTableInfoResp {
     pub community_cards: [Option<AtlasCardView>; 5],    // 公共牌（Community Cards），最多 5 张
 
     pub hand_cards: [Option<AtlasCardView>; 2],         // 玩家手牌（底牌）
+    pub seat_index:usize,
 }

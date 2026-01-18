@@ -9,5 +9,6 @@ atlas_rpc_dispatch! {
         holdem_method::LeaveTableRpc => table_handler::leave_table,
         holdem_method::GetTableInfoRpc => table_handler::get_table_info,
         holdem_method::GameActRpc => table_handler::game_act,
+        holdem_method::GameStartRpc => table_handler::game_start,
     }
 }
