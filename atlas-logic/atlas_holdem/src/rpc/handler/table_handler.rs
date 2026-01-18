@@ -4,11 +4,11 @@ use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::proto::holdem::rpc::*;
+use atlas_scheme::proto::holdem::types::TableView;
 use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
 use ulid::Ulid;
-use atlas_scheme::proto::holdem::types::TableView;
 
 pub async fn get_table_list(_req: AtlasWireMessage<GetTableListReq>) -> AtlasRpcPayload<GetTableListResp> {
     let mut table_views = Vec::new();
@@ -31,11 +31,57 @@ pub async fn get_table_list(_req: AtlasWireMessage<GetTableListReq>) -> AtlasRpc
 }
 
 pub async fn get_table_info(req: AtlasWireMessage<GetTableInfoReq>) -> AtlasRpcPayload<GetTableInfoResp> {
+    let uid = Ulid::from_bytes(req.header.uid).to_string();
+
     let resp = match table_manager().get(&req.payload.table_id) {
         Some(table) => {
-            let table_data = table.read().await;
+            let table = table.read().await;
+            // 1️⃣ 找到自己的 seat
+            let seat_index = match table.find_seat_by_player_id(&uid) {
+                Some(i) => i,
+                None => {
+                    return AtlasRpcPayload::Err(AtlasWireError {
+                        code: 403,
+                        message: "player not seated at this table".into(),
+                        data: None,
+                    });
+                }
+            };
+            // 2️⃣ 拿到 Player（引用）
+            let player = match table.seats.get(seat_index).and_then(|s| s.as_ref()) {
+                Some(player) => player,
+                None => {
+                    return AtlasRpcPayload::Err(AtlasWireError {
+                        code: 500,
+                        message: "seat exists but player missing".into(),
+                        data: None,
+                    });
+                }
+            };
+            // 3️⃣ 构造响应
             AtlasRpcPayload::Ok(GetTableInfoResp {
-                table_id: table_data.id.to_string(),
+                id: table.id.clone(),
+                seats: table.seats.iter().map(|p|p.as_ref().map(Into::into)).collect(),
+                state: table.state.into(),
+                hand_id: table.hand_id.clone(),
+                street: table.street.into(),
+                small_blind_amount: table.small_blind_amount,
+                big_blind_amount: table.big_blind_amount,
+                pot: table.pot,
+                current_bet: table.current_bet,
+                dealer_pos: table.dealer_pos,
+                small_blind_pos: table.small_blind_pos,
+                big_blind_pos: table.big_blind_pos,
+                current_turn: table.current_turn,
+                last_raiser_pos: table.last_raiser_pos,
+                // 公共牌
+                community_cards: table.community_cards.map(|opt| {
+                    opt.as_ref().map(Into::into)
+                }),
+                // ✅ 手牌（关键点）
+                hand_cards: player.hand_cards.map(|opt| {
+                    opt.as_ref().map(Into::into)
+                }),
             })
         }
         None => {
@@ -95,7 +141,7 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
         street_bet: 0,
         total_bet: 0,
     };
-    // ===== 7. 放入桌子 =====
+    // ===== 4. 放入桌子 =====
     match table.sit(seat_index, player) {
         Ok(_) => {
             AtlasRpcPayload::Ok(SitTableResp {
