@@ -4,7 +4,7 @@ use atlas_scheme::module_method::holdem_method;
 
 atlas_rpc_dispatch! {
     module holdem_bind {
-        holdem_method::GetTableRpc => table_handler::get_table,
+        holdem_method::GetTableListRpc => table_handler::get_table_list,
         holdem_method::SitTableRpc => table_handler::sit_table,
         holdem_method::LeaveTableRpc => table_handler::leave_table,
         holdem_method::GameActRpc => table_handler::game_act,

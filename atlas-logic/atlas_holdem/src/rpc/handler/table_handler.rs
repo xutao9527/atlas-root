@@ -9,14 +9,14 @@ use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
 use ulid::Ulid;
 
-pub async fn get_table(_req: AtlasWireMessage<GetTableReq>) -> AtlasRpcPayload<GetTableResp> {
+pub async fn get_table_list(_req: AtlasWireMessage<GetTableListReq>) -> AtlasRpcPayload<GetTableListResp> {
     let mut table_views = Vec::new();
     for table in table_manager().all() {
         let table = table.read().await;
         let seats = table.seats.iter()
             .map(|seat| seat.as_ref().map(|p| p.nickname.clone()))
             .collect();
-        let table_view = TableView {
+        let table_view = TableListView {
             id: table.id.clone(),
             seats,
             small_blind_amount: table.small_blind_amount,
@@ -24,7 +24,7 @@ pub async fn get_table(_req: AtlasWireMessage<GetTableReq>) -> AtlasRpcPayload<G
         };
         table_views.push(table_view);
     }
-    AtlasRpcPayload::Ok(GetTableResp {
+    AtlasRpcPayload::Ok(GetTableListResp {
         tables: table_views,
     })
 }

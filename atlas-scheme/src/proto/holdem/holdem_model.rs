@@ -2,15 +2,15 @@ use serde::{Deserialize, Serialize};
 
 // ================================================== GetTable ==================================================
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GetTableReq {}
+pub struct GetTableListReq {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GetTableResp {
-    pub tables: Vec<TableView>,
+pub struct GetTableListResp {
+    pub tables: Vec<TableListView>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TableView {
+pub struct TableListView {
     pub id: String,
     pub seats: Vec<Option<String>>, // Some(nickname) / None
     pub small_blind_amount: u64,

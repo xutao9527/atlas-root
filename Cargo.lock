@@ -339,6 +339,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "atlas-codegen"
+version = "0.1.0"
+dependencies = [
+ "syn 2.0.114",
+]
+
+[[package]]
 name = "atlas-core"
 version = "0.1.0"
 dependencies = [
