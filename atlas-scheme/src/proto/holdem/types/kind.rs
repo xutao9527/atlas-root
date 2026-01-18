@@ -17,7 +17,7 @@ pub enum TableStreetKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum GameActKind {
+pub enum PlayerActionKind {
     Fold,
     Call,
     Check,

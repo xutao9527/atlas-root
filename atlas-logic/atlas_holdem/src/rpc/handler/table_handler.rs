@@ -159,7 +159,6 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
 pub async fn leave_table(req: AtlasWireMessage<LeaveTableReq>) -> AtlasRpcPayload<LeaveTableResp> {
     //  ===== 0. 获得自己ID =====
     let user_id = Ulid::from_bytes(req.header.uid).to_string();
-
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.payload.table_id) {
         Some(t) => t,
@@ -171,7 +170,6 @@ pub async fn leave_table(req: AtlasWireMessage<LeaveTableReq>) -> AtlasRpcPayloa
             });
         }
     };
-
     // ===== 2. 写锁：执行离桌逻辑 =====
     let mut table = table.write().await;
 
@@ -184,9 +182,40 @@ pub async fn leave_table(req: AtlasWireMessage<LeaveTableReq>) -> AtlasRpcPayloa
     }
 }
 
-pub async fn game_act(_req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<GameActResp> {
-    AtlasRpcPayload::Ok(GameActResp {
-        ok: false,
-        message: None,
-    })
+pub async fn game_act(req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<GameActResp> {
+    //  ===== 0. 获得自己ID =====
+    let uid = Ulid::from_bytes(req.header.uid).to_string();
+    // ===== 1. 获取桌子 =====
+    let table = match table_manager().get(&req.payload.table_id) {
+        Some(t) => t,
+        None => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 404,
+                message: "table not found".into(),
+                data: None,
+            });
+        }
+    };
+    // ===== 2. 写锁：执行离桌逻辑 =====
+    let mut table = table.write().await;
+    // 找到自己的 seat
+    let seat_index = match table.find_seat_by_player_id(&uid) {
+        Some(i) => i,
+        None => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 403,
+                message: "player not seated at this table".into(),
+                data: None,
+            });
+        }
+    };
+    // ===== 3. 调用 =====
+    match table.act(seat_index, req.payload.act.into()) {
+        Ok(_) => AtlasRpcPayload::Ok(GameActResp {
+            ok: true,
+            message: Some("leave table success".into()),
+        }),
+        Err(e) => AtlasRpcPayload::Err(e.into()),
+    }
+
 }
