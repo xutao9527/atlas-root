@@ -29,6 +29,25 @@ pub async fn get_table_list(_req: AtlasWireMessage<GetTableListReq>) -> AtlasRpc
     })
 }
 
+pub async fn get_table_info(req: AtlasWireMessage<GetTableInfoReq>) -> AtlasRpcPayload<GetTableInfoResp> {
+    let resp = match table_manager().get(&req.payload.table_id) {
+        Some(table) => {
+            let table_data = table.read().await;
+            AtlasRpcPayload::Ok(GetTableInfoResp {
+                table_id: table_data.id.clone(),
+            })
+        }
+        None => {
+            return AtlasRpcPayload::Err(AtlasWireError {
+                code: 404,
+                message: "table not found".into(),
+                data: None,
+            });
+        }
+    };
+    resp
+}
+
 pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<SitTableResp> {
     //  ===== 0. 获得自己 =====
     let user = match atlas_user::Entity::find()

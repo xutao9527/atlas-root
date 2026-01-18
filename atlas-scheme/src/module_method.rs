@@ -15,8 +15,9 @@ atlas_rpc_module! {
     module holdem_method {
         ModuleId = AtlasModuleId::Holdem;
         GetTableListRpc = (1, GetTableListReq, GetTableListResp),
-        SitTableRpc = (2, SitTableReq, SitTableResp),
-        LeaveTableRpc = (3, LeaveTableReq, LeaveTableResp),
-        GameActRpc = (4, GameActReq, GameActResp),
+        GetTableInfoRpc = (2, GetTableInfoReq, GetTableInfoResp),
+        SitTableRpc = (3, SitTableReq, SitTableResp),
+        LeaveTableRpc = (4, LeaveTableReq, LeaveTableResp),
+        GameActRpc = (5, GameActReq, GameActResp),
     }
 }
