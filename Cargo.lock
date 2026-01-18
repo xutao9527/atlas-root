@@ -399,7 +399,6 @@ dependencies = [
  "atlas-core",
  "sea-orm",
  "serde",
- "syn 2.0.114",
 ]
 
 [[package]]
