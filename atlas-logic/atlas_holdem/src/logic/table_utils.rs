@@ -130,4 +130,27 @@ impl Table {
         }
         _winners
     }
+
+    // 写入台桌日志
+    pub fn write_table_log(&mut self,content: &str) {
+        self.table_log.push(content.to_string());
+    }
+
+    // 写入行动日志
+    pub fn write_act_log(&mut self,content: &str) {
+        self.act_log.push(content.to_string());
+    }
+
+    // 写入阶段日志
+    pub fn write_street_log(&mut self) {
+        self.street_log.push(self.street);
+    }
+
+    pub fn clear_log(&mut self) {
+        self.table_log.clear();
+        self.act_log.clear();
+        self.street_log.clear();
+    }
+
+
 }

@@ -101,7 +101,7 @@ impl Table {
     /// 阶段结束函数
     fn end_betting_round(&mut self) {
         println!("betting round finished: {:?}", self.street);
-        self.street_log.push(self.street);
+        self.write_street_log();
         // 清空 street 状态
         for p in self.seats.iter_mut().flatten() {
             p.street_bet = 0;

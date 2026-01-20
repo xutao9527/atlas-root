@@ -82,6 +82,16 @@ impl Table {
         player.street_bet = 0;
         player.total_bet = 0;
         // ===== 6. 放入座位 =====
+        self.write_table_log(&format!(
+            "HAND {} | game started ",
+            self.hand_id,
+        ));
+        self.write_table_log(&format!(
+            "HAND {} | player[{}-{}] joined",
+            self.hand_id,
+            player.id,
+            player.nickname
+        ));
         self.seats[seat] = Some(player);
         Ok(())
     }
@@ -91,18 +101,37 @@ impl Table {
             .find_seat_index_by_player_id(player_id)
             .ok_or(TableError::PlayerNotAtTable)?;
 
-        let player = self.seats[seat]
-            .as_mut()
-            .ok_or(TableError::PlayerNotAtTable)?;
+        // 先收集需要的信息 & 决策
+        let (is_active, nickname) = {
+            let player = self.seats[seat]
+                .as_mut()
+                .ok_or(TableError::PlayerNotAtTable)?;
 
-        if player.is_active {
-            // 正在当前局中：标记下局不玩
-            player.sit_out = true;
+            if player.is_active {
+                // 正在对战：标记下局不玩
+                player.sit_out = true;
+            }
+
+            (player.is_active, player.nickname.clone())
+        }; // 👈 player 的 &mut 借用在这里结束
+
+        // 再做 table 级别的修改 / 日志
+        if is_active {
+            self.write_table_log(&format!(
+                "HAND {} | player[{}-{}] leaving",
+                self.hand_id,
+                player_id,
+                nickname
+            ));
         } else {
-            // 不在当前局中：可以直接离桌
             self.seats[seat] = None;
+            self.write_table_log(&format!(
+                "HAND {} | player[{}-{}] left",
+                self.hand_id,
+                player_id,
+                nickname
+            ));
         }
-        self.seats[seat] = None;
         Ok(())
     }
 
@@ -161,7 +190,11 @@ impl Table {
         // self.community_cards[1] = self.deck.deal_one();
         // self.community_cards[2] = self.deck.deal_one();
         // =============================================================================================
-        self.street_log.clear();                                                        // 清理下注阶段日志
+        self.clear_log();                                                               // 清理日志
+        self.write_table_log(&format!(
+            "HAND {} | game started ",
+            self.hand_id,
+        ));
         self.state = TableState::Battling;                                              // 进入对战阶段
         Ok(())
     }
