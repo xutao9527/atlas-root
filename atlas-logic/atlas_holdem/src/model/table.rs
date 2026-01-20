@@ -22,7 +22,7 @@ pub struct Table {
     pub deck: AtlasDeck,                         // 当前局的牌堆
     pub community_cards: [Option<AtlasCard>; 5], // 公共牌（Community Cards），最多 5 张
 
-    pub table_log: Vec<String>,           // 玩家动作日志
-    pub act_log: Vec<String>,           // 玩家动作日志
-    pub street_log: Vec<TableStreet>,   // 下注阶段日志
+    pub table_log: Vec<String>,       // 房间动作日志
+    pub act_log: Vec<String>,         // 玩家动作日志
+    pub street_log: Vec<TableStreet>, // 下注阶段日志
 }
