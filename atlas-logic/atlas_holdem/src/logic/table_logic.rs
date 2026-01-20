@@ -28,7 +28,7 @@ impl Table {
                 let p = self.seats[seat].as_mut().unwrap();
                 p.is_active = false;
                 p.has_acted = true;
-                p.acted_str = "fold".to_string();
+                p.acted_view = "fold".to_string();
             }
             PlayerAction::Check => {
                 if self.current_bet != 0 {
@@ -36,7 +36,7 @@ impl Table {
                 }
                 let p = self.seats[seat].as_mut().unwrap();
                 p.has_acted = true;
-                p.acted_str = "check".to_string();
+                p.acted_view = "check".to_string();
             }
             PlayerAction::Call => {
                 if self.current_bet == 0 {
@@ -44,7 +44,7 @@ impl Table {
                 }
                 let need = {
                     let p = self.seats[seat].as_mut().unwrap();
-                    p.acted_str = "fold".to_string();
+                    p.acted_view = "fold".to_string();
                     self.current_bet - p.street_bet
                 };
                 self.post_amount(seat, need);
@@ -54,7 +54,7 @@ impl Table {
                     return Err(TableError::InvalidAction);
                 }
                 let p = self.seats[seat].as_mut().unwrap();
-                p.acted_str = "bet".to_string();
+                p.acted_view = "bet".to_string();
                 reopened_betting = self.post_amount(seat, amount);
 
             }
@@ -64,7 +64,7 @@ impl Table {
                 }
                 let need = {
                     let p = self.seats[seat].as_mut().unwrap();
-                    p.acted_str = "raise".to_string();
+                    p.acted_view = "raise".to_string();
                     amount - p.street_bet
                 };
 
