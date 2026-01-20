@@ -141,7 +141,7 @@ async fn handle_cmd(cmd: String) -> bool {
             quick_battling().await;
             println!("{}", *table);
         }
-        ["act", "fold"] => {
+        ["act",  "fold"] => {
             act_and_show(&mut table, PlayerAct::Fold);
         }
         ["act", "call"] => {
