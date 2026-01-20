@@ -11,10 +11,11 @@ impl Table {
     }
 
     // 根据座位序号查找玩家ID
-    pub fn find_player_id_by_seat_index(&self, player_id: &str) -> Option<usize> {
-        self.seats.iter().position(|s| {
-            s.as_ref().map_or(false, |p| p.id == player_id)
-        })
+    pub fn find_player_id_by_seat_index(&self, seat_index: usize) -> Option<String> {
+        self.seats
+            .get(seat_index)?
+            .as_ref()
+            .map(|p| p.id.clone())
     }
 
     /// 指定座位索引,顺时针查找下一个有玩家的座位
