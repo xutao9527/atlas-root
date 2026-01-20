@@ -179,10 +179,13 @@ async fn handle_cmd(cmd: String) -> bool {
 
 fn act_and_show(table: &mut Table, action: PlayerAct) {
     let seat = table.current_turn;
-    match table.act(seat, action) {
-        Ok(_) => println!("{}", *table),
-        Err(e) => println!("act failed: {:?}", e),
+    if let Some(player_id) = table.find_player_id_by_seat_index(seat) {
+        match table.act(player_id, action) {
+            Ok(_) => println!("{}", *table),
+            Err(e) => println!("act failed: {:?}", e),
+        }
     }
+    
 }
 
 async fn quick_battling() {

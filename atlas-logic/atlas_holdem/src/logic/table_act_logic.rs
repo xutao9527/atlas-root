@@ -7,11 +7,14 @@ use crate::model::table_street::TableStreet;
 impl Table {
 
     /// 玩家行动
-    pub fn act(&mut self, seat: usize, action: PlayerAct) -> Result<(), TableError> {
+    pub fn act(&mut self, player_id: String, action: PlayerAct) -> Result<(), TableError> {
         // ======================================= 基础校验 =======================================
         if self.state != TableState::Battling {
             return Err(TableError::InvalidState);
         }
+        let seat = self
+            .find_seat_index_by_player_id(&player_id)
+            .ok_or(TableError::PlayerNotAtTable)?;
         if seat != self.current_turn {
             return Err(TableError::InvalidSeat);
         }
