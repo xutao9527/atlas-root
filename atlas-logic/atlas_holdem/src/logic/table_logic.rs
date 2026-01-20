@@ -44,7 +44,7 @@ impl Table {
                 }
                 let need = {
                     let p = self.seats[seat].as_mut().unwrap();
-                    p.acted_view = "fold".to_string();
+                    p.acted_view = "call".to_string();
                     self.current_bet - p.street_bet
                 };
                 self.post_amount(seat, need);
@@ -102,6 +102,7 @@ impl Table {
         for p in self.seats.iter_mut().flatten() {
             p.street_bet = 0;
             p.has_acted = false;
+            p.acted_view = "".to_string();
         }
         self.advance_street();
     }

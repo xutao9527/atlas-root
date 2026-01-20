@@ -18,7 +18,6 @@ pub struct Player {
     pub is_active: bool, // 是否仍在牌局中（Fold 后为 false）
     pub has_acted: bool, // 本下注轮是否已经行动过
     pub acted_view: String, // 行动结果展示
-
     pub is_all_in: bool, // 是否已all_in
     pub street_bet: u64, // 本下注轮（当前 street）中已投入的筹码
     pub total_bet: u64,  // 总投入筹码
@@ -36,6 +35,7 @@ impl From<&Player> for PlayerView {
             win: player.win,
             is_active: player.is_active,
             has_acted: player.has_acted,
+            acted_view: player.acted_view.to_string(),
             is_all_in: player.is_all_in,
             street_bet: player.street_bet,
             total_bet: player.total_bet,
