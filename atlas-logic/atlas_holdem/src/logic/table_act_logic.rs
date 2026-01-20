@@ -5,7 +5,6 @@ use crate::model::table_state::TableState;
 use crate::model::table_street::TableStreet;
 
 impl Table {
-
     /// 玩家行动
     pub fn act(&mut self, player_id: String, action: PlayerAct) -> Result<(), TableError> {
         // ======================================= 基础校验 =======================================

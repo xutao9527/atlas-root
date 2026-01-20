@@ -44,8 +44,8 @@ async fn run_cmd(){
         //tokio::time::sleep(Duration::from_millis(500)).await;
         let _ = cmd_tx_clone3.send("sit 0 2000".into());
         let _ = cmd_tx_clone3.send("sit 1 2000".into());
-        // let _ = cmd_tx_clone3.send("sit 2 2000".into());
-        // let _ = cmd_tx_clone3.send("sit 3 2000".into());
+        let _ = cmd_tx_clone3.send("sit 2 2000".into());
+        let _ = cmd_tx_clone3.send("sit 3 2000".into());
         // let _ = cmd_tx_clone3.send("sit 4 2000".into());
         // let _ = cmd_tx_clone3.send("sit 5 2000".into());
     });
@@ -185,7 +185,7 @@ fn act_and_show(table: &mut Table, action: PlayerAct) {
             Err(e) => println!("act failed: {:?}", e),
         }
     }
-    
+
 }
 
 async fn quick_battling() {
