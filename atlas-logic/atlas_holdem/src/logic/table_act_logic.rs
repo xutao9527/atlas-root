@@ -60,7 +60,7 @@ impl Table {
                 let p = self.seats[seat].as_mut().unwrap();
                 p.acted_view = "bet".to_string();
                 reopened_betting = self.post_amount(seat, amount);
-
+                //self.write_act_log(&format!("{}",p.acted_view))
             }
             PlayerAct::Raise(amount) => {
                 if self.current_bet == 0 || amount <= self.current_bet {
@@ -74,6 +74,16 @@ impl Table {
                 reopened_betting = self.post_amount(seat, need);
             }
         }
+        // 记录 act 日志
+        let p = self.seats[seat].as_ref().unwrap();
+        self.write_act_log(&format!(
+            "HAND {} | [{}] act {} ",
+            self.hand_id, p.nickname, p.acted_view)
+        );
+
+
+
+
         // bet / raise 后，其他玩家需要重新行动
         if reopened_betting {
             for (i, p) in self.seats.iter_mut().enumerate() {
