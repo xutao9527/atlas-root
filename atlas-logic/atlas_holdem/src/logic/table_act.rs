@@ -83,13 +83,7 @@ impl Table {
         player.total_bet = 0;
         // ===== 6. 放入座位 =====
         self.write_table_log(&format!(
-            "HAND {} | game started ",
-            self.hand_id,
-        ));
-        self.write_table_log(&format!(
-            "HAND {} | player[{}-{}] joined",
-            self.hand_id,
-            player.id,
+            "player[{}] joined",
             player.nickname
         ));
         self.seats[seat] = Some(player);
@@ -118,17 +112,13 @@ impl Table {
         // 再做 table 级别的修改 / 日志
         if is_active {
             self.write_table_log(&format!(
-                "HAND {} | player[{}-{}] leaving",
-                self.hand_id,
-                player_id,
+                "player[{}] leaving",
                 nickname
             ));
         } else {
             self.seats[seat] = None;
             self.write_table_log(&format!(
-                "HAND {} | player[{}-{}] left",
-                self.hand_id,
-                player_id,
+                "player[{}] leaved",
                 nickname
             ));
         }
