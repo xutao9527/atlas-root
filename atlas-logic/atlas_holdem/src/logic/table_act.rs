@@ -82,10 +82,6 @@ impl Table {
         player.street_bet = 0;
         player.total_bet = 0;
         // ===== 6. 放入座位 =====
-        self.write_table_log(&format!(
-            "player[{}] joined",
-            player.nickname
-        ));
         self.seats[seat] = Some(player);
         Ok(())
     }
@@ -95,32 +91,16 @@ impl Table {
             .find_seat_index_by_player_id(player_id)
             .ok_or(TableError::PlayerNotAtTable)?;
 
-        // 先收集需要的信息 & 决策
-        let (is_active, nickname) = {
-            let player = self.seats[seat]
-                .as_mut()
-                .ok_or(TableError::PlayerNotAtTable)?;
+        let player = self.seats[seat]
+            .as_mut()
+            .ok_or(TableError::PlayerNotAtTable)?;
 
-            if player.is_active {
-                // 正在对战：标记下局不玩
-                player.sit_out = true;
-            }
-
-            (player.is_active, player.nickname.clone())
-        }; // 👈 player 的 &mut 借用在这里结束
-
-        // 再做 table 级别的修改 / 日志
-        if is_active {
-            self.write_table_log(&format!(
-                "player[{}] leaving",
-                nickname
-            ));
+        if player.is_active {
+            // 正在当前局中：标记下局不玩
+            player.sit_out = true;
         } else {
+            // 不在当前局中：可以直接离桌
             self.seats[seat] = None;
-            self.write_table_log(&format!(
-                "player[{}] leaved",
-                nickname
-            ));
         }
         Ok(())
     }
