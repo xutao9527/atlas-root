@@ -125,6 +125,7 @@ fn _mock_player(
         cards_rank: Some(rank),
         is_active,
         has_acted: true,
+        acted_str: "".to_string(),
         is_all_in: false,
         street_bet: 0,
         total_bet,

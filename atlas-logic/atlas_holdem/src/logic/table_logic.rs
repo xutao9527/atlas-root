@@ -28,19 +28,23 @@ impl Table {
                 let p = self.seats[seat].as_mut().unwrap();
                 p.is_active = false;
                 p.has_acted = true;
+                p.acted_str = "fold".to_string();
             }
             PlayerAction::Check => {
                 if self.current_bet != 0 {
                     return Err(TableError::InvalidAction);
                 }
-                self.seats[seat].as_mut().unwrap().has_acted = true;
+                let p = self.seats[seat].as_mut().unwrap();
+                p.has_acted = true;
+                p.acted_str = "check".to_string();
             }
             PlayerAction::Call => {
                 if self.current_bet == 0 {
                     return Err(TableError::InvalidAction);
                 }
                 let need = {
-                    let p = self.seats[seat].as_ref().unwrap();
+                    let p = self.seats[seat].as_mut().unwrap();
+                    p.acted_str = "fold".to_string();
                     self.current_bet - p.street_bet
                 };
                 self.post_amount(seat, need);
@@ -49,16 +53,21 @@ impl Table {
                 if self.current_bet != 0 || amount == 0 {
                     return Err(TableError::InvalidAction);
                 }
+                let p = self.seats[seat].as_mut().unwrap();
+                p.acted_str = "bet".to_string();
                 reopened_betting = self.post_amount(seat, amount);
+
             }
             PlayerAction::Raise(amount) => {
                 if self.current_bet == 0 || amount <= self.current_bet {
                     return Err(TableError::InvalidAction);
                 }
                 let need = {
-                    let p = self.seats[seat].as_ref().unwrap();
+                    let p = self.seats[seat].as_mut().unwrap();
+                    p.acted_str = "raise".to_string();
                     amount - p.street_bet
                 };
+
                 reopened_betting = self.post_amount(seat, need);
             }
         }

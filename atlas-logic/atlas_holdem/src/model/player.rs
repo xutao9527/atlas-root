@@ -17,6 +17,8 @@ pub struct Player {
 
     pub is_active: bool, // 是否仍在牌局中（Fold 后为 false）
     pub has_acted: bool, // 本下注轮是否已经行动过
+    pub acted_str: String, // 行动结果展示
+
     pub is_all_in: bool, // 是否已all_in
     pub street_bet: u64, // 本下注轮（当前 street）中已投入的筹码
     pub total_bet: u64,  // 总投入筹码

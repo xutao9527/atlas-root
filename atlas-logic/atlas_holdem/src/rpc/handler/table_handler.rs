@@ -138,6 +138,7 @@ pub async fn sit_table(req: AtlasWireMessage<SitTableReq>) -> AtlasRpcPayload<Si
         cards_rank: None,
         is_active: false,
         has_acted: false,
+        acted_str: "".to_string(),
         is_all_in: false,
         street_bet: 0,
         total_bet: 0,

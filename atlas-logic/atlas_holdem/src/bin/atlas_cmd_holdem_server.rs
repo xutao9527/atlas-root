@@ -93,6 +93,7 @@ async fn handle_cmd(cmd: String) -> bool {
                 cards_rank: None,
                 is_active: false,
                 has_acted: false,
+                acted_str: "".to_string(),
                 is_all_in: false,
                 street_bet: 0,
                 total_bet: 0,
