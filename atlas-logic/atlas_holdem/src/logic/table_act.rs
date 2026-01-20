@@ -49,7 +49,7 @@ impl Table {
             return Err(TableError::InvalidSeat);
         }
         // ===== 2. 是否已经在桌上（自己）=====
-        if let Some(existing_seat) = self.find_seat_by_player_id(&player.id) {
+        if let Some(existing_seat) = self.find_seat_index_by_player_id(&player.id) {
             if existing_seat == seat {
                 return Ok(());
             } else {
@@ -89,7 +89,7 @@ impl Table {
 
     pub fn leave(&mut self, player_id: &str) -> Result<(), TableError> {
         let seat = self
-            .find_seat_by_player_id(player_id)
+            .find_seat_index_by_player_id(player_id)
             .ok_or(TableError::PlayerNotAtTable)?;
 
         let player = self.seats[seat]

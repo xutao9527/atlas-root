@@ -4,7 +4,14 @@ use rs_poker::core::Rankable;
 impl Table {
 
     // 根据玩家ID查找座位序号
-    pub fn find_seat_by_player_id(&self, player_id: &str) -> Option<usize> {
+    pub fn find_seat_index_by_player_id(&self, player_id: &str) -> Option<usize> {
+        self.seats.iter().position(|s| {
+            s.as_ref().map_or(false, |p| p.id == player_id)
+        })
+    }
+
+    // 根据座位序号查找玩家ID
+    pub fn find_player_id_by_seat_index(&self, player_id: &str) -> Option<usize> {
         self.seats.iter().position(|s| {
             s.as_ref().map_or(false, |p| p.id == player_id)
         })

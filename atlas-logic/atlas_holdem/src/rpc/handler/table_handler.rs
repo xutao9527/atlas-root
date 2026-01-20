@@ -37,7 +37,7 @@ pub async fn get_table_info(req: AtlasWireMessage<GetTableInfoReq>) -> AtlasRpcP
         Some(table) => {
             let table = table.read().await;
             // 1️⃣ 找到自己的 seat
-            let seat_index = match table.find_seat_by_player_id(&uid) {
+            let seat_index = match table.find_seat_index_by_player_id(&uid) {
                 Some(i) => i,
                 None => {
                     return AtlasRpcPayload::Err(AtlasWireError {
@@ -201,7 +201,7 @@ pub async fn game_act(req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<Game
     // ===== 2. 写锁：执行离桌逻辑 =====
     let mut table = table.write().await;
     // 找到自己的 seat
-    let seat_index = match table.find_seat_by_player_id(&uid) {
+    let seat_index = match table.find_seat_index_by_player_id(&uid) {
         Some(i) => i,
         None => {
             return AtlasRpcPayload::Err(AtlasWireError {
@@ -221,7 +221,6 @@ pub async fn game_act(req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<Game
     }
 
 }
-
 
 pub async fn game_start(req: AtlasWireMessage<GameStartReq>) -> AtlasRpcPayload<GameStartResp> {
     // ===== 1. 获取桌子 =====
