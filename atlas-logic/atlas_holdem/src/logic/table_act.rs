@@ -82,7 +82,6 @@ impl Table {
         player.street_bet = 0;
         player.total_bet = 0;
         // ===== 6. 放入座位 =====
-
         self.seats[seat] = Some(player);
         Ok(())
     }

@@ -44,10 +44,10 @@ async fn run_cmd(){
         //tokio::time::sleep(Duration::from_millis(500)).await;
         let _ = cmd_tx_clone3.send("sit 0 2000".into());
         let _ = cmd_tx_clone3.send("sit 1 2000".into());
-        let _ = cmd_tx_clone3.send("sit 2 2000".into());
-        let _ = cmd_tx_clone3.send("sit 3 2000".into());
-        let _ = cmd_tx_clone3.send("sit 4 2000".into());
-        let _ = cmd_tx_clone3.send("sit 5 2000".into());
+        // let _ = cmd_tx_clone3.send("sit 2 2000".into());
+        // let _ = cmd_tx_clone3.send("sit 3 2000".into());
+        // let _ = cmd_tx_clone3.send("sit 4 2000".into());
+        // let _ = cmd_tx_clone3.send("sit 5 2000".into());
     });
     while let Some(cmd) = cmd_rx.recv().await {
         if !handle_cmd(cmd).await {
@@ -105,6 +105,25 @@ async fn handle_cmd(cmd: String) -> bool {
                 }
                 Err(e) => {
                     println!("sit failed: {:?}", e);
+                }
+            }
+        }
+        ["leave", seat] => {
+            let seat: usize = match seat.parse() {
+                Ok(v) => v,
+                Err(_) => {
+                    println!("invalid seat");
+                    return true;
+                }
+            };
+            if let Some(player_id) = table.find_player_id_by_seat_index(seat) {
+                match table.leave(&player_id) {
+                    Ok(_) => {
+                        println!("{}", *table);
+                    }
+                    Err(e) => {
+                        println!("sit failed: {:?}", e);
+                    }
                 }
             }
         }

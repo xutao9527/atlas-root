@@ -85,7 +85,7 @@ impl fmt::Display for Table {
         writeln!(f, "{}", "=".repeat(80))?;
         println!("street log: {:?}", self.street_log);
         writeln!(f, "{}", "command: ")?;
-        writeln!(f, "{}", "         [ 1)show; 2)quit; 3)sit <seat> <balance>; 4)start; 4)quick; ]")?;
+        writeln!(f, "{}", "         [ 1)show; 2)quit; 3)sit <seat> <balance> 4)leave <seat>; 5)start; 6)quick; ]")?;
         writeln!(f, "{}", "         [ 5)act <check> <fold> <call> <bet amount> <raise amount>;]")?;
         Ok(())
     }
