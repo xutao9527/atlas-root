@@ -80,10 +80,6 @@ impl Table {
             "HAND {} | [{}] act {} ",
             self.hand_id, p.nickname, p.acted_view)
         );
-
-
-
-
         // bet / raise 后，其他玩家需要重新行动
         if reopened_betting {
             for (i, p) in self.seats.iter_mut().enumerate() {
