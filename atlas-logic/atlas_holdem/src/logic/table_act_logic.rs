@@ -71,7 +71,6 @@ impl Table {
                     p.acted_view = "raise".to_string();
                     amount - p.street_bet
                 };
-
                 reopened_betting = self.post_amount(seat, need);
             }
         }

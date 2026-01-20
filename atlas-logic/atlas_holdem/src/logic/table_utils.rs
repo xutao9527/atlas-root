@@ -71,6 +71,7 @@ impl Table {
         // all-in 在这里直接处理
         if player.balance == 0 {
             player.is_all_in = true;
+            player.acted_view = "all in".to_string();
         }
         // ★ 是否形成 raise，只看“结果”
         if player.street_bet > prev_bet {
