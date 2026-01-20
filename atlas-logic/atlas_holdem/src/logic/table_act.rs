@@ -26,6 +26,7 @@ impl Table {
             last_raiser_pos: 0,
             deck: AtlasDeck::new(),
             community_cards: Default::default(),
+            act_log: Default::default(),
             street_log: Default::default(),
         }
     }
