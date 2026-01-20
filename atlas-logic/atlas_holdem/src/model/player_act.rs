@@ -1,7 +1,7 @@
 use atlas_scheme::proto::holdem::types::PlayerActionKind;
 
 #[derive(Debug)]
-pub enum PlayerAction {
+pub enum PlayerAct {
     Fold,
     Call,
     Check,
@@ -9,14 +9,14 @@ pub enum PlayerAction {
     Raise(u64),
 }
 
-impl From<PlayerActionKind> for PlayerAction {
+impl From<PlayerActionKind> for PlayerAct {
     fn from(action: PlayerActionKind) -> Self {
         match action {
-            PlayerActionKind::Fold => PlayerAction::Fold,
-            PlayerActionKind::Call => PlayerAction::Call,
-            PlayerActionKind::Check => PlayerAction::Check,
-            PlayerActionKind::Bet(amount) => PlayerAction::Bet(amount),
-            PlayerActionKind::Raise(amount) => PlayerAction::Raise(amount),
+            PlayerActionKind::Fold => PlayerAct::Fold,
+            PlayerActionKind::Call => PlayerAct::Call,
+            PlayerActionKind::Check => PlayerAct::Check,
+            PlayerActionKind::Bet(amount) => PlayerAct::Bet(amount),
+            PlayerActionKind::Raise(amount) => PlayerAct::Raise(amount),
         }
     }
 }

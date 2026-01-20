@@ -5,7 +5,7 @@ use tokio::io;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::{mpsc, Mutex};
 use ulid::Ulid;
-use atlas_holdem::model::player_act::PlayerAction;
+use atlas_holdem::model::player_act::PlayerAct;
 
 static G_TABLE: OnceLock<Arc<Mutex<Table>>> = OnceLock::new();
 fn get_table() -> &'static Mutex<Table> {
@@ -123,13 +123,13 @@ async fn handle_cmd(cmd: String) -> bool {
             println!("{}", *table);
         }
         ["act", "fold"] => {
-            act_and_show(&mut table, PlayerAction::Fold);
+            act_and_show(&mut table, PlayerAct::Fold);
         }
         ["act", "call"] => {
-            act_and_show(&mut table, PlayerAction::Call);
+            act_and_show(&mut table, PlayerAct::Call);
         }
         ["act", "check"] => {
-            act_and_show(&mut table, PlayerAction::Check);
+            act_and_show(&mut table, PlayerAct::Check);
         }
         ["act", "bet", amount] => {
             let amount: u64 = match amount.parse() {
@@ -139,7 +139,7 @@ async fn handle_cmd(cmd: String) -> bool {
                     return true;
                 }
             };
-            act_and_show(&mut table, PlayerAction::Bet(amount));
+            act_and_show(&mut table, PlayerAct::Bet(amount));
         }
         ["act", "raise", amount] => {
             let amount: u64 = match amount.parse() {
@@ -149,7 +149,7 @@ async fn handle_cmd(cmd: String) -> bool {
                     return true;
                 }
             };
-            act_and_show(&mut table, PlayerAction::Raise(amount));
+            act_and_show(&mut table, PlayerAct::Raise(amount));
         }
         _ => {
             println!("unknown command: {:?}", command);
@@ -158,14 +158,13 @@ async fn handle_cmd(cmd: String) -> bool {
     true
 }
 
-fn act_and_show(table: &mut Table, action: PlayerAction) {
+fn act_and_show(table: &mut Table, action: PlayerAct) {
     let seat = table.current_turn;
     match table.act(seat, action) {
         Ok(_) => println!("{}", *table),
         Err(e) => println!("act failed: {:?}", e),
     }
 }
-
 
 async fn quick_battling() {
     if let Some(cmd_tx )= CMD_TX.get(){

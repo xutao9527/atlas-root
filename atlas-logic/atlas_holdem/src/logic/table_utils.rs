@@ -3,18 +3,19 @@ use rs_poker::core::Rankable;
 
 impl Table {
 
+    // 根据玩家ID查找座位序号
     pub fn find_seat_by_player_id(&self, player_id: &str) -> Option<usize> {
         self.seats.iter().position(|s| {
             s.as_ref().map_or(false, |p| p.id == player_id)
         })
     }
 
-    // 从某个座位开始，顺时针查找下一个有玩家的座位
-    pub fn next_occupied_seat(&self, from: usize) -> Option<usize> {
-        let mut i = from;
+    /// 指定座位索引,顺时针查找下一个有玩家的座位
+    pub fn next_occupied_seat(&self, seat_index: usize) -> Option<usize> {
+        let mut i = seat_index;
         loop {
             i = (i + 1) % self.seats.len();
-            if i == from {
+            if i == seat_index {
                 return None; // 转了一整圈，没有人能 act
             }
             if let Some(p) = &self.seats[i] {
@@ -25,7 +26,7 @@ impl Table {
         }
     }
 
-    // 判断本轮是否结束
+    /// 判断本轮是否结束
     pub fn betting_round_complete(&self) -> bool {
         let mut active_cnt = 0;
         let mut has_pending_actor = false;
@@ -72,6 +73,7 @@ impl Table {
         false
     }
 
+    /// 计算玩家牌力值
     pub fn evaluate_hands(&mut self) -> Vec<u64>{
         let mut _winners = vec![];
         self.seats.iter_mut().flatten().for_each(|p| {

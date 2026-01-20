@@ -1,11 +1,13 @@
-use crate::model::player_act::PlayerAction;
+use crate::model::player_act::{PlayerAct};
 use crate::model::table::{Table, };
 use crate::model::table_err::TableError;
 use crate::model::table_state::TableState;
 use crate::model::table_street::TableStreet;
 
 impl Table {
-    pub fn act(&mut self, seat: usize, action: PlayerAction) -> Result<(), TableError> {
+
+    /// 玩家行动
+    pub fn act(&mut self, seat: usize, action: PlayerAct) -> Result<(), TableError> {
         // ======================================= 基础校验 =======================================
         if self.state != TableState::Battling {
             return Err(TableError::InvalidState);
@@ -24,13 +26,13 @@ impl Table {
         // 标记是否发生了 bet / raise
         let mut reopened_betting = false;
         match action {
-            PlayerAction::Fold => {
+            PlayerAct::Fold => {
                 let p = self.seats[seat].as_mut().unwrap();
                 p.is_active = false;
                 p.has_acted = true;
                 p.acted_view = "fold".to_string();
             }
-            PlayerAction::Check => {
+            PlayerAct::Check => {
                 if self.current_bet != 0 {
                     return Err(TableError::InvalidAction);
                 }
@@ -38,7 +40,7 @@ impl Table {
                 p.has_acted = true;
                 p.acted_view = "check".to_string();
             }
-            PlayerAction::Call => {
+            PlayerAct::Call => {
                 if self.current_bet == 0 {
                     return Err(TableError::InvalidAction);
                 }
@@ -49,7 +51,7 @@ impl Table {
                 };
                 self.post_amount(seat, need);
             }
-            PlayerAction::Bet(amount) => {
+            PlayerAct::Bet(amount) => {
                 if self.current_bet != 0 || amount == 0 {
                     return Err(TableError::InvalidAction);
                 }
@@ -58,7 +60,7 @@ impl Table {
                 reopened_betting = self.post_amount(seat, amount);
 
             }
-            PlayerAction::Raise(amount) => {
+            PlayerAct::Raise(amount) => {
                 if self.current_bet == 0 || amount <= self.current_bet {
                     return Err(TableError::InvalidAction);
                 }
@@ -95,6 +97,7 @@ impl Table {
         Ok(())
     }
 
+    /// 阶段结束函数
     fn end_betting_round(&mut self) {
         println!("betting round finished: {:?}", self.street);
         self.street_log.push(self.street);
@@ -107,6 +110,7 @@ impl Table {
         self.advance_street();
     }
 
+    /// 阶段跨越函数
     fn advance_street(&mut self){
         match self.street {
             TableStreet::PreFlop => {
