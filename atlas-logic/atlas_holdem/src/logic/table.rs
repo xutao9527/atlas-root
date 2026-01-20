@@ -156,9 +156,9 @@ impl Table {
             p.hand_cards[1] = self.deck.deal_one();
         }// 清空公共牌
         self.community_cards = [None; 5];
-        self.community_cards[0] = self.deck.deal_one();
-        self.community_cards[1] = self.deck.deal_one();
-        self.community_cards[2] = self.deck.deal_one();
+        // self.community_cards[0] = self.deck.deal_one();
+        // self.community_cards[1] = self.deck.deal_one();
+        // self.community_cards[2] = self.deck.deal_one();
         // =============================================================================================
         self.street_log.clear();                                                        // 清理下注阶段日志
         self.state = TableState::Battling;                                              // 进入对战阶段
