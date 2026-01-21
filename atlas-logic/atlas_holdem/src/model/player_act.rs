@@ -21,7 +21,6 @@ impl From<PlayerActionKind> for PlayerAct {
     }
 }
 
-
 #[derive(Debug, Clone, Default)]
 pub struct PlayerAvailableAct {
     pub fold: bool,
@@ -48,7 +47,6 @@ impl PlayerAvailableAct {
         }
     }
 }
-
 
 impl From<&PlayerAvailableAct> for PlayerAvailableActView {
     fn from(act: &PlayerAvailableAct) -> Self {
