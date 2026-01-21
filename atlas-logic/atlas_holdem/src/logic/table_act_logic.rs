@@ -102,9 +102,9 @@ impl Table {
             self.current_turn = self
                 .next_occupied_seat(self.current_turn)
                 .ok_or(TableError::InvalidState)?;
-            // 设置可用动作标识
-            self.current_turn_act.set_available(self.current_bet);
         }
+        // 设置可用动作标识
+        self.current_turn_act.set_available(self.current_bet);
         Ok(())
     }
 
