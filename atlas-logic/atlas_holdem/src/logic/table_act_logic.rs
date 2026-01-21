@@ -98,22 +98,12 @@ impl Table {
         if self.betting_round_complete() {
             self.end_betting_round();
         } else {
+            // 更新行动者标记
             self.current_turn = self
                 .next_occupied_seat(self.current_turn)
                 .ok_or(TableError::InvalidState)?;
-            if self.current_bet == 0 {
-                self.current_turn_act.fold = true;
-                self.current_turn_act.call = false;
-                self.current_turn_act.check = true;
-                self.current_turn_act.bet = true;
-                self.current_turn_act.raise = false;
-            } else{
-                self.current_turn_act.fold = true;
-                self.current_turn_act.call = true;
-                self.current_turn_act.check = false;
-                self.current_turn_act.bet = false;
-                self.current_turn_act.raise = true;
-            }
+            // 设置可用动作标识
+            self.current_turn_act.set_available(self.current_bet);
         }
         Ok(())
     }

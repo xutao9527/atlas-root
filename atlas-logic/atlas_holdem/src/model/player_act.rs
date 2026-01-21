@@ -31,6 +31,24 @@ pub struct PlayerAvailableAct {
     pub raise: bool,
 }
 
+impl PlayerAvailableAct {
+    pub fn set_available(&mut self, current_bet: u64) {
+        if current_bet == 0 {
+            self.fold = true;
+            self.call = false;
+            self.check = true;
+            self.bet = true;
+            self.raise = false;
+        } else {
+            self.fold = true;
+            self.call = true;
+            self.check = false;
+            self.bet = false;
+            self.raise = true;
+        }
+    }
+}
+
 
 impl From<&PlayerAvailableAct> for PlayerAvailableActView {
     fn from(act: &PlayerAvailableAct) -> Self {

@@ -149,20 +149,20 @@ impl Table {
         self.current_bet = self.big_blind_amount;                                       // 更新当前下注额(大盲)
         self.current_turn = self.next_occupied_seat(self.big_blind_pos).unwrap();       // 更新枪口位置(大盲左手)
         self.last_raiser_pos = self.big_blind_pos;                                      // 更新加注者位置(大盲)
+        self.current_turn_act.set_available(self.current_bet);                          // 设置可用动作标识
         // <-------------------------------------- reset cards -------------------------------------->
         self.deck.shuffle();                                                            // 洗牌
         // 给每个玩家发两张底牌
         for p in self.seats.iter_mut().flatten() {
             p.hand_cards[0] = self.deck.deal_one();
             p.hand_cards[1] = self.deck.deal_one();
-        }// 清空公共牌
+        }
+        // 清空公共牌
         self.community_cards = [None; 5];
-        // self.community_cards[0] = self.deck.deal_one();
-        // self.community_cards[1] = self.deck.deal_one();
-        // self.community_cards[2] = self.deck.deal_one();
+
         // =============================================================================================
         self.clear_log();                                                               // 清理日志
-        self.write_table_log(&format!(
+        self.write_table_log(&format!(                                          // 记录台桌日志
             "HAND {} | game started ",
             self.hand_id,
         ));
