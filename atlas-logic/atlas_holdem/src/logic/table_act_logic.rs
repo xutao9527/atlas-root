@@ -64,7 +64,11 @@ impl Table {
                 //self.write_act_log(&format!("{}",p.acted_view))
             }
             PlayerAct::Raise(amount) => {
-                if self.current_bet == 0 || amount <= self.current_bet {
+                if self.current_bet == 0  {
+                    return Err(TableError::InvalidAction);
+                }
+                let player = self.seats[seat].as_ref().unwrap();
+                if amount < self.current_bet - player.street_bet {
                     return Err(TableError::InvalidAction);
                 }
                 let need = {
