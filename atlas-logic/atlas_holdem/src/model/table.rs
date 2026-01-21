@@ -1,6 +1,7 @@
 use crate::model::card::AtlasCard;
 use crate::model::deck::AtlasDeck;
 use crate::model::player::Player;
+use crate::model::player_act::PlayerAvailableAct;
 use crate::model::table_state::TableState;
 use crate::model::table_street::TableStreet;
 
@@ -17,7 +18,8 @@ pub struct Table {
     pub dealer_pos: usize,                       // 当前局庄家按钮所在的座位索引
     pub small_blind_pos: usize,                  // 当前局小盲注所在的座位索引
     pub big_blind_pos: usize,                    // 当前局大盲注所在的座位索引
-    pub current_turn: usize,                     // 当前轮到行动的座位索引
+    pub current_turn: usize,                     // 当前轮到行动座位索引
+    pub current_turn_act: PlayerAvailableAct,    // 当前轮到行动座位可用动作
     pub last_raiser_pos: usize,                  // 当前下注轮中，最后一次加注的玩家位置
     pub deck: AtlasDeck,                         // 当前局的牌堆
     pub community_cards: [Option<AtlasCard>; 5], // 公共牌（Community Cards），最多 5 张

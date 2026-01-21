@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::proto::holdem::types::{AtlasCardView, PlayerView, TableStateKind, TableStreetKind};
+use crate::proto::holdem::types::{AtlasCardView, PlayerAvailableActView, PlayerView, TableStateKind, TableStreetKind};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTableInfoReq{
@@ -17,10 +17,12 @@ pub struct GetTableInfoResp {
     pub big_blind_amount: u64,                          // 大盲注金额（桌子级别的固定规则）
     pub pot: u64,                                       // 当前局已经进入底池的总金额
     pub current_bet: u64,                               // 当前下注轮中需要跟注的最大下注额
+
     pub dealer_pos: usize,                              // 当前局庄家按钮所在的座位索引
     pub small_blind_pos: usize,                         // 当前局小盲注所在的座位索引
     pub big_blind_pos: usize,                           // 当前局大盲注所在的座位索引
     pub current_turn: usize,                            // 当前轮到行动的座位索引
+    pub current_turn_act: PlayerAvailableActView,       // 当前轮到行动座位可用动作
     pub last_raiser_pos: usize,                         // 当前下注轮中，最后一次加注的玩家位置
     pub community_cards: [Option<AtlasCardView>; 5],    // 公共牌（Community Cards），最多 5 张
 

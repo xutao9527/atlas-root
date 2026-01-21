@@ -100,6 +100,19 @@ impl Table {
             self.current_turn = self
                 .next_occupied_seat(self.current_turn)
                 .ok_or(TableError::InvalidState)?;
+            if self.current_bet == 0 {
+                self.current_turn_act.fold = true;
+                self.current_turn_act.call = false;
+                self.current_turn_act.check = true;
+                self.current_turn_act.bet = true;
+                self.current_turn_act.raise = false;
+            } else{
+                self.current_turn_act.fold = true;
+                self.current_turn_act.call = true;
+                self.current_turn_act.check = false;
+                self.current_turn_act.bet = false;
+                self.current_turn_act.raise = true;
+            }
         }
         Ok(())
     }

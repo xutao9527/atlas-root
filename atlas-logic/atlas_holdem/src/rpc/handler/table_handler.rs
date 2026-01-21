@@ -73,6 +73,7 @@ pub async fn get_table_info(req: AtlasWireMessage<GetTableInfoReq>) -> AtlasRpcP
                 small_blind_pos: table.small_blind_pos,
                 big_blind_pos: table.big_blind_pos,
                 current_turn: table.current_turn,
+                current_turn_act: table.current_turn_act.clone().into(),
                 last_raiser_pos: table.last_raiser_pos,
                 // 公共牌
                 community_cards: table.community_cards.map(|opt| {

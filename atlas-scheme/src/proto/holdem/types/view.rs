@@ -33,3 +33,12 @@ pub struct AtlasCardView {
     /// 牌的点数
     pub value: AtlasValueKind,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlayerAvailableActView {
+    pub fold: bool,
+    pub call: bool,
+    pub check: bool,
+    pub bet: bool,
+    pub raise: bool,
+}

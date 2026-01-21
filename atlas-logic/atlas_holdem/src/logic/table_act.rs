@@ -23,6 +23,7 @@ impl Table {
             small_blind_pos: 0,
             big_blind_pos: 0,
             current_turn: 0,
+            current_turn_act: Default::default(),
             last_raiser_pos: 0,
             deck: AtlasDeck::new(),
             community_cards: Default::default(),
