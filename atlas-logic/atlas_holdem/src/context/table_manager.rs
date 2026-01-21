@@ -2,6 +2,7 @@ use crate::model::table::Table;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::debug;
 
 pub struct TableManager {
     tables: DashMap<String, Arc<RwLock<Table>>>,
@@ -20,6 +21,7 @@ impl TableManager {
     pub fn init_tables(&self, count: usize) {
         for _i in 0..count {
             let table = Table::new_six(10, 20);
+            debug!("init table {}",table.id);
             self.tables.insert(table.id.clone(), Arc::new(RwLock::new(table)));
         }
     }

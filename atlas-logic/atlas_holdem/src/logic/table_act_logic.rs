@@ -1,3 +1,4 @@
+use tracing::debug;
 use crate::model::player_act::{PlayerAct};
 use crate::model::table::{Table, };
 use crate::model::table_err::TableError;
@@ -119,7 +120,7 @@ impl Table {
 
     /// 阶段结束函数
     fn end_betting_round(&mut self) {
-        println!("betting round finished: {:?}", self.street);
+        debug!("betting round finished: {:?}", self.street);
         self.write_street_log();
         // 清空 street 状态
         for p in self.seats.iter_mut().flatten() {
