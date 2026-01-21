@@ -205,7 +205,7 @@ pub async fn game_act(req: AtlasWireMessage<GameActReq>) -> AtlasRpcPayload<Game
     match table.act(uid, req.payload.act.into()) {
         Ok(_) => AtlasRpcPayload::Ok(GameActResp {
             ok: true,
-            message: Some("leave table success".into()),
+            message: Some("player act success".into()),
         }),
         Err(e) => AtlasRpcPayload::Err(e.into()),
     }
