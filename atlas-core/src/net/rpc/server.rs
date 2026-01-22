@@ -150,9 +150,9 @@ where
     DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,
 {
-    fn notify(&self, reg_node_id: &AtlasRegNodeId, msg: AtlasWireMessage<AtlasNotifyRaw>) -> bool {
+    fn notify(&self, reg_node_id: &AtlasRegNodeId, notify_msg: AtlasRawMessage) -> bool {
         if let Some(notify_tx) = self.registry_node.get(reg_node_id) {
-            match msg.into_raw() {
+            match notify_msg.into_raw() {
                 Ok(notify) => {
                     notify_tx.send(notify).is_ok()
                 }

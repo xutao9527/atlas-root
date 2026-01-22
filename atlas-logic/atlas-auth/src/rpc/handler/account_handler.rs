@@ -12,9 +12,10 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
-use atlas_core::net::rpc::notifier::{AtlasNotify, AtlasNotifyTarget, AtlasRegNodeId};
+use atlas_core::net::rpc::notifier::{AtlasNotify, AtlasNotifySpec, AtlasNotifySpecExt, AtlasNotifyTarget, AtlasRegNodeId};
 use atlas_core::net::rpc::packet_header::AtlasWireHeader;
 use atlas_core::net::rpc::server::{global_notifier};
+use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 
 pub async fn register(req: AtlasWireMessage<RegisterReq>) -> AtlasRpcPayload<RegisterResp> {
     let model = atlas_user::Model {
@@ -65,21 +66,21 @@ pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<
             match store_token(token.as_str(), user.id.as_str()).await {
                 Ok(expire_at) => {
                     if let Some(notifier) = global_notifier() {
-                        let notify = AtlasNotify {
-                            targets: vec![
-                                AtlasNotifyTarget::Broadcast,
-                            ],
-                            notify_type_id: 1001, // scheme 定义的通知类型
-                            data: Bytes::from("login success"),
+                        let notify  = UserUpdateNotify {
+                            id: "".to_string(),
+                            account: "".to_string(),
+                            name: "".to_string(),
+                            balance: Default::default(),
+                            avatar: None,
                         };
-                        let notify_msg = AtlasWireMessage {
-                            header: AtlasWireHeader::build_notify(),
-                            payload: notify,
-                        };
-                        notifier.notify(
-                            &AtlasRegNodeId::GateNode(1),
-                            notify_msg,
-                        );
+                        if let Ok(notify_msg) = notify.build_notify(vec![
+                            AtlasNotifyTarget::Broadcast,
+                        ]) {
+                            notifier.notify(
+                                &AtlasRegNodeId::GateNode(1),
+                                notify_msg,
+                            );
+                        }
                     }
                     AtlasRpcPayload::Ok(AuthResp {
                         ok: true,
