@@ -18,6 +18,7 @@ pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()
 
 pub struct AtlasConnection {
     addr: String,
+    logical_id: String,
     pending: Arc<PendingTable<AsyncCallback>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
     notify_connected: Arc<Notify>,
@@ -26,11 +27,12 @@ pub struct AtlasConnection {
 }
 
 impl AtlasConnection {
-    pub fn new(addr: String) -> Self {
+    pub fn new(addr: String, logical_id: String) -> Self {
         let pending = Arc::new(PendingTable::new(100 * 1024));
         let (channel_writer, _) = mpsc::channel::<Bytes>(100 * 1024);
         Self {
             addr,
+            logical_id,
             pending,
             channel_writer: Mutex::new(channel_writer),
             notify_connected: Arc::new(Notify::new()),
@@ -96,6 +98,17 @@ impl AtlasConnection {
 
         self.connected.store(true, Ordering::SeqCst); // 标记为已连接
         self.notify_connected.notify_waiters(); // 通知连接成功
+
+        // ===== 发送 RegistryNode =====
+        let registry_node_msg = AtlasWireMessage {
+            header: AtlasWireHeader::build_request(0).with_kind(AtlasWireKind::RegistryNode),
+            payload: self.logical_id.clone(),
+        }.into_raw().unwrap().into_wire_bytes();
+        let writer = {
+            let guard = self.channel_writer.lock().await;
+            guard.clone()
+        };
+        let _ = writer.send(registry_node_msg).await;
 
         // ===== 写入 socket 数据 =====
         tokio::spawn(async move {

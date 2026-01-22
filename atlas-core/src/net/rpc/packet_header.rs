@@ -65,6 +65,7 @@ impl AtlasWireHeader {
             x if x == AtlasWireKind::ResponseOk as u8 => AtlasWireKind::ResponseOk,
             x if x == AtlasWireKind::ResponseErr as u8 => AtlasWireKind::ResponseErr,
             x if x == AtlasWireKind::Notify as u8 => AtlasWireKind::Notify,
+            x if x == AtlasWireKind::RegistryNode as u8 => AtlasWireKind::RegistryNode,
             other => {
                 return Err(format!(
                     "invalid AtlasWireKind: {:#010b}",

@@ -8,7 +8,7 @@ use tokio_util::codec::Framed;
 use tracing::{debug, warn};
 use crate::net::rpc::codec::FrameWireCodec;
 use crate::net::rpc::packet_header::AtlasWireKind;
-use crate::net::rpc::packet_message::AtlasRawMessage;
+use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 
 type NotifyTx = mpsc::UnboundedSender<AtlasRawMessage>;
 
@@ -48,6 +48,7 @@ where
             let dispatch_fn = self.dispatch_fn;
             let registry_node = self.registry_node.clone();
             let mut logical_id: Option<String> = None;
+            let mut is_owner = false;
 
             tokio::spawn(async move {
                 let mut framed = Framed::new(stream, FrameWireCodec::default());
@@ -56,18 +57,20 @@ where
                 loop {
                     select! {
                         // ===== 客户端 RPC 请求 =====
-                        Some(result) = framed.next() => {
+                        result = framed.next() => {
                             match result {
-                                Ok(req) => {
+                                Some(Ok(req)) => {
                                     if let Ok(msg) = AtlasRawMessage::from_wire_bytes(req) {
                                          // ===== RegistryNode =====
                                         if msg.header.kind == AtlasWireKind::RegistryNode {
-                                            if let Ok(id) = std::str::from_utf8(&msg.payload) {
+                                            let msg = AtlasWireMessage::<String>::from_raw(msg);
+                                            if let Ok(id) = std::str::from_utf8(msg.unwrap().payload.as_ref()) {
                                                 let id = id.to_string();
                                                 match registry_node.entry(id.clone()) {
                                                     Entry::Vacant(e) => {
                                                         e.insert(notify_tx.clone());
                                                         logical_id = Some(id.clone());
+                                                        is_owner = true; // ⭐ 关键
                                                         debug!("registry_node registered: {}", id);
                                                     }
                                                     Entry::Occupied(_) => {
@@ -87,8 +90,13 @@ where
 
                                     }
                                 }
-                                Err(e) => {
+                                Some(Err(e)) => {
                                     warn!("decode error: {:?}", e);
+                                    break;
+                                }
+                                None => {
+                                    // ⭐ 这里就是 TCP 断开
+                                    debug!("AtlasNetServer connection closed");
                                     break;
                                 }
                             }
@@ -101,17 +109,14 @@ where
                         }
                     }
                 }
+
                 // ===== 连接断开：只有 owner 才能 remove =====
-                if let Some(id) = logical_id {
-                    if let Some(entry) = registry_node.get(&id) {
-                        // 只有当前连接仍是 owner，才有权删除
-                        if std::ptr::eq(entry.value(), &notify_tx) {
-                            registry_node.remove(&id);
-                            debug!("registry_node removed: {}", id);
-                        }
+                if is_owner {
+                    if let Some(id) = logical_id {
+                        registry_node.remove(&id);
+                        debug!("registry_node removed: {}", id);
                     }
                 }
-
             });
         }
     }

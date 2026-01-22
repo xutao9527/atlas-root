@@ -5,14 +5,16 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 pub struct AtlasRpcClient {
     addr: String,
+    logical_id: String,
     next_req_id: AtomicU64,
     connections: Vec<Arc<AtlasConnection>>,
 }
 
 impl AtlasRpcClient {
-    pub fn new(addr: String, con_num: usize) -> Self {
+    pub fn new(addr: String, logical_id: String, con_num: usize) -> Self {
         Self {
             addr,
+            logical_id,
             next_req_id: AtomicU64::new(1),
             connections: Vec::with_capacity(con_num),
         }
@@ -20,7 +22,7 @@ impl AtlasRpcClient {
 
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         for _ in 0..self.connections.capacity() {
-            let connection = Arc::new(AtlasConnection::new(self.addr.clone()));
+            let connection = Arc::new(AtlasConnection::new(self.addr.clone(),self.logical_id.clone()));
             connection.clone().connect().await;
             self.connections.push(connection);
         }

@@ -56,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
 
     let total_requests = 10_0000_0000; // 总共发多少次
 
-    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), 4);
+    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), "test_node".to_string(),4);
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
             let success = success_counter.clone();
