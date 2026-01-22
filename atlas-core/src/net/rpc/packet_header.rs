@@ -8,6 +8,7 @@ pub enum AtlasWireKind {
     ResponseOk = 0b0000_0010,
     ResponseErr = 0b0000_0100,
     Notify = 0b0000_1000,
+    RegistryNode = 0b0001_0000,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
