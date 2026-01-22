@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use crate::context::get_db;
 use crate::context::token_manager::{store_token, validate_token};
 use atlas_core::net::rpc::packet_message::{AtlasWireMessage};
@@ -12,8 +11,7 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
-use atlas_core::net::rpc::notifier::{AtlasNotify, AtlasNotifySpec, AtlasNotifySpecExt, AtlasNotifyTarget, AtlasRegNodeId};
-use atlas_core::net::rpc::packet_header::AtlasWireHeader;
+use atlas_core::net::rpc::notifier::{AtlasNotifyBuildExt, AtlasNotifyTarget, AtlasRegNodeId, NotifierExt};
 use atlas_core::net::rpc::server::{global_notifier};
 use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 
@@ -73,14 +71,14 @@ pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<
                             balance: Default::default(),
                             avatar: None,
                         };
-                        if let Ok(notify_msg) = notify.build_notify(vec![
+                        let notify_msg = notify.build_notify(vec![
                             AtlasNotifyTarget::Broadcast,
-                        ]) {
-                            notifier.notify(
-                                &AtlasRegNodeId::GateNode(1),
-                                notify_msg,
-                            );
-                        }
+                        ]);
+                        notifier.notify(
+                            &AtlasRegNodeId::GateNode(1),
+                            notify_msg,
+                        );
+
                     }
                     AtlasRpcPayload::Ok(AuthResp {
                         ok: true,

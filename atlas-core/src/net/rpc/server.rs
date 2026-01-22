@@ -7,7 +7,7 @@ use tokio::sync::mpsc;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
 use crate::net::rpc::codec::FrameWireCodec;
-use crate::net::rpc::notifier::{AtlasNotifyRaw, AtlasRegNodeId, Notifier};
+use crate::net::rpc::notifier::{AtlasRegNodeId, Notifier};
 use crate::net::rpc::packet_header::AtlasWireKind;
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 
@@ -150,19 +150,16 @@ where
     DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,
 {
-    fn notify(&self, reg_node_id: &AtlasRegNodeId, notify_msg: AtlasRawMessage) -> bool {
-        if let Some(notify_tx) = self.registry_node.get(reg_node_id) {
-            match notify_msg.into_raw() {
-                Ok(notify) => {
-                    notify_tx.send(notify).is_ok()
-                }
-                Err(_) => {
-                    false
-                }
-            }
 
-        } else {
-            false
-        }
+    fn notify_raw(
+        &self,
+        reg_node_id: &AtlasRegNodeId,
+        msg: AtlasRawMessage,
+    ) -> bool {
+        let Some(tx) = self.registry_node.get(reg_node_id) else {
+            return false;
+        };
+
+        tx.send(msg).is_ok()
     }
 }

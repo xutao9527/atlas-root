@@ -1,9 +1,9 @@
+use crate::net::rpc::packet_header::AtlasWireHeader;
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
+use crate::net::rpc::router::AtlasModuleId;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
-use crate::net::rpc::packet_header::AtlasWireHeader;
-use crate::net::rpc::router::AtlasModuleId;
 
 /// ================== 注册节点 ==================
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -41,9 +41,36 @@ pub struct AtlasNotify<T> {
     pub data: T,
 }
 
+/// ================== 核心 Notifier（对象安全） ==================
 pub trait Notifier: Send + Sync {
-    fn notify(&self, reg_node_id: &AtlasRegNodeId, msg: AtlasRawMessage) -> bool;
+    fn notify_raw(
+        &self,
+        reg_node_id: &AtlasRegNodeId,
+        msg: AtlasRawMessage,
+    ) -> bool;
 }
+
+/// ================== 泛型扩展（你真正用的） ==================
+pub trait NotifierExt: Notifier {
+    fn notify<T>(
+        &self,
+        reg_node_id: &AtlasRegNodeId,
+        msg: AtlasWireMessage<AtlasNotify<T>>,
+    ) -> bool
+    where
+        T: Serialize + DeserializeOwned + Send + 'static,
+    {
+        let raw = match msg.into_raw() {
+            Ok(r) => r,
+            Err(_) => return false,
+        };
+
+        self.notify_raw(reg_node_id, raw)
+    }
+}
+
+// ⭐ 所有 Notifier 自动获得 notify<T>
+impl<T: Notifier + ?Sized> NotifierExt for T {}
 
 
 /// ================== Notify Spec（scheme 用） ==================
@@ -54,30 +81,23 @@ pub trait AtlasNotifySpec: 'static {
 }
 
 /// ================== Notify Builder（真正的 glue） ==================
-pub trait AtlasNotifySpecExt: AtlasNotifySpec + Serialize + DeserializeOwned + Send + 'static
-{
+pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
     fn build_notify(
         self,
         targets: Vec<AtlasNotifyTarget>,
-    ) -> Result<AtlasRawMessage, String> {
-        let notify = AtlasNotify {
-            targets,
-            notify_type_id: Self::WIRE,
-            data: self,
-        };
-
+    ) -> AtlasWireMessage<AtlasNotify<Self>> {
         AtlasWireMessage {
             header: AtlasWireHeader::build_notify(),
-            payload: notify,
+            payload: AtlasNotify {
+                targets,
+                notify_type_id: Self::WIRE,
+                data: self,
+            },
         }
-            .into_raw()
-            .map_err(|_| "build notify wire failed".to_string())
     }
 }
-
 /// 自动给所有满足条件的类型实现
-impl<T> AtlasNotifySpecExt for T
+impl<T> AtlasNotifyBuildExt for T
 where
-    T: AtlasNotifySpec + Serialize + DeserializeOwned + Send + 'static,
-{
-}
+    T: AtlasNotifySpec,
+{}
