@@ -109,7 +109,6 @@ where
                         }
                     }
                 }
-
                 // ===== 连接断开：只有 owner 才能 remove =====
                 if is_owner {
                     if let Some(id) = logical_id {
