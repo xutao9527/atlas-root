@@ -381,6 +381,7 @@ dependencies = [
  "atlas-scheme",
  "axum",
  "bytes",
+ "dashmap",
  "futures-util",
  "tokio",
  "tracing",

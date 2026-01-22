@@ -17,6 +17,7 @@ use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::proto::auth::rpc::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
+use crate::context::session_map;
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
@@ -109,6 +110,13 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
             }
         }
 
+    }
+    // === 断线清理 session_map ===
+    {
+        let guard = ws_session.read().await;
+        if let Some(uid) = guard.uid.as_ref() {
+            session_map().remove(uid);
+        }
     }
     drop(ws_session);
     let _ = writer.await;

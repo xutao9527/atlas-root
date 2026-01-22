@@ -1,5 +1,6 @@
 mod http;
 mod ws;
+mod context;
 
 use crate::http::http_index;
 use crate::ws::ws_handler;

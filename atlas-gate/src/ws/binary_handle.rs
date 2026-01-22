@@ -1,11 +1,11 @@
+use crate::context::session_map;
 use crate::ws::ws_session::WsSession;
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
-use atlas_scheme::proto::auth::rpc::AuthResp;
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
-use axum::extract::ws::Message;
+use atlas_scheme::proto::auth::rpc::AuthResp;
 use bytes::Bytes;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -76,12 +76,25 @@ pub async fn process_auth_resp(resp: Bytes, ws_session: Arc<RwLock<WsSession>>) 
     if header.kind != AtlasWireKind::ResponseOk {
         return;
     }
-    if let Ok(data) = AtlasWireMessage::from_wire_bytes(resp) {
-        if let Ok(auth_resp) = AtlasWireMessage::<AuthResp>::from_raw(data) {
+
+    let Ok(data) = AtlasWireMessage::from_wire_bytes(resp) else {
+        return;
+    };
+
+    let Ok(auth_msg) = AtlasWireMessage::<AuthResp>::from_raw(data) else {
+        return;
+    };
+
+    if let Some(uid) = auth_msg.payload.uid.clone() {
+        // === 1️⃣ 更新 ws_session 自身 ===
+        {
             let mut guard = ws_session.write().await;
-            guard.uid = auth_resp.payload.uid;
-            guard.token = auth_resp.payload.token;
-            guard.expire_at = auth_resp.payload.expire_at;
+            guard.uid = auth_msg.payload.uid;
+            guard.token = auth_msg.payload.token;
+            guard.expire_at = auth_msg.payload.expire_at;
+
         }
+        // === 2️⃣ 注册到全局 session_map ===
+        session_map().insert(uid, ws_session);
     }
 }
