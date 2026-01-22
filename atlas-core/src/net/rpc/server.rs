@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use dashmap::{DashMap, Entry};
 use futures::{SinkExt, StreamExt};
 use tokio::net::TcpListener;
@@ -7,10 +7,14 @@ use tokio::sync::mpsc;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
 use crate::net::rpc::codec::FrameWireCodec;
+use crate::net::rpc::notifier::Notifier;
 use crate::net::rpc::packet_header::AtlasWireKind;
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 
 type NotifyTx = mpsc::UnboundedSender<AtlasRawMessage>;
+
+/// ⭐ 模块级 notifier（关键）
+static GLOBAL_NOTIFIER: OnceLock<Arc<dyn Notifier>> = OnceLock::new();
 
 pub struct AtlasRpcServer<DispatchFn, Fut>
 where
@@ -29,13 +33,24 @@ where
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,
 
 {
-    pub fn new(addr: String, dispatch_fn: DispatchFn) -> Self {
-        Self {
+    pub fn new(addr: String, dispatch_fn: DispatchFn) -> Arc<Self> {
+        let server = Arc::new(Self {
             addr,
             dispatch_fn,
-            registry_node:
-            Arc::new(DashMap::new()),
-        }
+            registry_node: Arc::new(DashMap::new()),
+        });
+
+        GLOBAL_NOTIFIER.set(server.clone() as Arc<dyn Notifier>)
+            .unwrap_or_else(|_| {
+                panic!("ATLAS_NOTIFIER already initialized");
+            });
+
+        server
+    }
+
+    /// ⭐ 外部获取 notifier 的唯一入口
+    pub fn global_notifier() -> &'static OnceLock<Arc<dyn Notifier>> {
+        &GLOBAL_NOTIFIER
     }
 
     pub async fn run(&self) -> anyhow::Result<()> {
@@ -117,6 +132,20 @@ where
                     }
                 }
             });
+        }
+    }
+}
+
+impl<DispatchFn, Fut> Notifier for AtlasRpcServer<DispatchFn, Fut>
+where
+    DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
+    Fut: Future<Output = AtlasRawMessage> + Send + 'static,
+{
+    fn notify(&self, logical_id: &str, msg: AtlasRawMessage) -> bool {
+        if let Some(tx) = self.registry_node.get(logical_id) {
+            tx.send(msg).is_ok()
+        } else {
+            false
         }
     }
 }

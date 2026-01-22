@@ -2,6 +2,7 @@ pub mod token_manager;
 
 use sea_orm::{Database, DatabaseConnection};
 use std::sync::{Arc, OnceLock};
+use atlas_core::net::rpc::notifier::Notifier;
 
 static DB: OnceLock<Arc<DatabaseConnection>> = OnceLock::new();
 
