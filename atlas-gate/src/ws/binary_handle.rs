@@ -3,7 +3,7 @@ use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
-use atlas_scheme::proto::auth::auth_model::AuthResp;
+use atlas_scheme::proto::auth::rpc::AuthResp;
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
 use axum::extract::ws::Message;
 use bytes::Bytes;

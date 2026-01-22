@@ -1,7 +1,7 @@
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::router::{AtlasRpcSpec};
-use atlas_scheme::proto::auth::auth_model::{BasicAuthReq};
+use atlas_scheme::proto::auth::rpc::{BasicAuthReq};
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc};
 use futures_util::{SinkExt, StreamExt};
 use std::sync::{

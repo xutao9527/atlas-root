@@ -4,7 +4,7 @@ use atlas_core::net::rpc::packet_message::AtlasWireMessage;
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
-use atlas_scheme::proto::auth::auth_model::{
+use atlas_scheme::proto::auth::rpc::{
     AuthResp, BasicAuthReq, RegisterReq, RegisterResp, TokenAuthReq,
 };
 use sea_orm::QueryFilter;

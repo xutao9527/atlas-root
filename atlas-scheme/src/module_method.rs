@@ -1,5 +1,5 @@
 use atlas_core::atlas_rpc_module;
-use crate::proto::auth::auth_model::*;
+use crate::proto::auth::rpc::*;
 use crate::proto::holdem::rpc::*;
 
 

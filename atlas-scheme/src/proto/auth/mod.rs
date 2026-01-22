@@ -1,1 +1,2 @@
-pub mod auth_model;
+pub mod rpc;
+pub mod types;

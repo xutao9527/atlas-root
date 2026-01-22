@@ -2,7 +2,7 @@ use atlas_core::net::rpc::codec::FrameWireCodec;
 use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use atlas_core::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use atlas_core::net::rpc::router::AtlasRpcSpec;
-use atlas_scheme::proto::auth::auth_model::{AuthResp, BasicAuthReq};
+use atlas_scheme::proto::auth::rpc::{AuthResp, BasicAuthReq};
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::net::TcpStream;

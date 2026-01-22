@@ -15,7 +15,7 @@ use tokio::sync::mpsc::channel;
 use tracing::{info};
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
-use atlas_scheme::proto::auth::auth_model::{TokenAuthReq};
+use atlas_scheme::proto::auth::rpc::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 
 pub async fn ws_handler(

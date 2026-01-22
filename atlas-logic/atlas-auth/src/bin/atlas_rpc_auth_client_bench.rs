@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
-use atlas_scheme::proto::auth::auth_model::BasicAuthReq;
+use atlas_scheme::proto::auth::rpc::BasicAuthReq;
 use atlas_scheme::module_method::auth_method::BasicAuthRpc;
 
 #[tokio::main]

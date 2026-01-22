@@ -7,7 +7,7 @@ use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
-use atlas_scheme::proto::auth::auth_model::AuthResp;
+use atlas_scheme::proto::auth::rpc::AuthResp;
 
 pub struct WsClient{
     ws_write: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
