@@ -1,5 +1,4 @@
 use axum::extract::ws::{Message, Utf8Bytes};
-use std::sync::Arc;
 use bytes::Bytes;
 use tokio::sync::mpsc::Sender;
 
@@ -38,7 +37,7 @@ impl WsSession {
             .await;
     }
 
-    pub async fn send_text<S: Into<String>>(&self, text: S) {
+    pub async fn _send_text<S: Into<String>>(&self, text: S) {
         let _ = self
             .msg_tx
             .send(Message::Text(Utf8Bytes::from(text.into())))
