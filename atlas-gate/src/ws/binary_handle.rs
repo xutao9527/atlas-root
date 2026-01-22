@@ -8,13 +8,14 @@ use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
 use axum::extract::ws::Message;
 use bytes::Bytes;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 use ulid::Ulid;
 
 pub async fn handle_binary_message(
     mut bin: Bytes,
-    ws_session: Arc<tokio::sync::RwLock<WsSession>>,
+    ws_session: Arc<RwLock<WsSession>>,
     client_registry: Arc<RpcClientRegistry>,
-    resp_tx: tokio::sync::mpsc::Sender<Message>,
+    // resp_tx: tokio::sync::mpsc::Sender<Message>,
     inflight: Arc<tokio::sync::Semaphore>,
 ) {
     let header = match AtlasWireHeader::read_wire_header(&bin) {
@@ -54,9 +55,11 @@ pub async fn handle_binary_message(
                 async move {
                     // 回包进入有界队列（不丢）
                     if is_auth_rpc {
-                        process_auth_resp(resp.clone(), ws_session).await;
+                        process_auth_resp(resp.clone(), ws_session.clone()).await;
                     }
-                    let _ = resp_tx.send(Message::Binary(resp)).await;
+                    let guard = ws_session.read().await;
+                    guard.send_binary(resp).await;
+                    // let _ = resp_tx.send(Message::Binary(resp)).await;
                     drop(permit); // 释放 inflight
                 }
             })
@@ -64,7 +67,7 @@ pub async fn handle_binary_message(
     }
 }
 
-pub async fn process_auth_resp(resp: Bytes, ws_session: Arc<tokio::sync::RwLock<WsSession>>) {
+pub async fn process_auth_resp(resp: Bytes, ws_session: Arc<RwLock<WsSession>>) {
     let header = match AtlasWireHeader::read_wire_header(&resp) {
         Ok(h) => h,
         Err(_) => return,

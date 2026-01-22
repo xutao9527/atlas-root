@@ -31,18 +31,17 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(10);//心跳定时器
 
 async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
     info!("WS connected");
-    // 独立会话
-    let ws_session = Arc::new(RwLock::new(WsSession::new()));
     // ws socket
     let (mut ws_tx, mut ws_rx) = socket.split();
     // === 有界响应队列===
     let (resp_tx, mut resp_rx) = channel::<Message>(RESP_QUEUE);
     // === inflight ===
     let inflight = Arc::new(tokio::sync::Semaphore::new(MAX_INFLIGHT));
-    // ===== writer：唯一 socket IO =====
-
+    // 独立会话
+    let ws_session = Arc::new(RwLock::new(WsSession::new(resp_tx)));
+    // 心跳
     let mut heartbeat = tokio::time::interval(HEARTBEAT_INTERVAL);
-
+    // ===== writer：唯一 socket IO =====
     let writer = tokio::spawn(async move {
         while let Some(resp) = resp_rx.recv().await {
             if ws_tx.send(resp).await.is_err() {
@@ -62,14 +61,15 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
                                     bin,
                                     ws_session.clone(),
                                     client_registry.clone(),
-                                    resp_tx.clone(),
                                     inflight.clone(),
                                 )
                                 .await;
                             }
                             Ok(Message::Text(txt)) => {
                                 info!("WS received text message: {}", txt);
-                                let _ = resp_tx.send(Message::Text(txt)).await;
+                                // let _ = resp_tx.send(Message::Text(txt)).await;
+                                let guard = ws_session.read().await;
+                                guard.send_text_bytes(txt).await;
                             }
                             Ok(Message::Ping(_)) => {
                                 info!("WS received ping message: {:?}", msg);
@@ -89,7 +89,6 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
             }
             _ = heartbeat.tick() => {
                 let  guard = ws_session.read().await;
-
                 if let (Some(token), Some(expire_at_unix)) = (&guard.token, guard.expire_at) {
                     let now_unix = SystemTime::now()
                         .duration_since(SystemTime::UNIX_EPOCH)
@@ -104,8 +103,6 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
                                  refresh_token_if_needed(token.as_str(), client, session).await;
                             });
                         }
-
-
                     }
                     // info!("now_unix => expire_at_unix: {:?} - {:?} = {:?}s", expire_at_unix ,now_unix ,expire_at_unix - now_unix);
                 }
@@ -113,7 +110,7 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
         }
 
     }
-    drop(resp_tx);
+    drop(ws_session);
     let _ = writer.await;
     info!("WS disconnected");
 }
