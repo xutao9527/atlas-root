@@ -1,19 +1,18 @@
 use crate::net::rpc::client::connection::AtlasConnection;
-use bytes::Bytes;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
-use tokio::sync::Mutex;
 use crate::net::rpc::notifier::AtlasRegNodeId;
-use crate::net::rpc::packet_header::AtlasWireHeader;
+use bytes::Bytes;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-pub type NotifyHandler = Arc<dyn Fn(AtlasWireHeader, Bytes) + Send + Sync + 'static>;
+pub type NotifyHandler = Arc<dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 
 pub struct AtlasRpcClient {
     addr: String,
     logical_id: AtlasRegNodeId,
     next_req_id: AtomicU64,
     connections: Vec<Arc<AtlasConnection>>,
-
     notify_handler: Arc<Mutex<Option<NotifyHandler>>>,
 }
 
@@ -55,11 +54,14 @@ impl AtlasRpcClient {
             .await;
     }
 
-    pub async fn set_notify_handler<F>(&self, f: F)
+    pub async fn set_notify_handler<F, Fut>(&self, f: F)
     where
-        F: Fn(AtlasWireHeader, Bytes) + Send + Sync + 'static,
+        F: Fn(Bytes) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = ()> + Send + 'static,
     {
         let mut guard = self.notify_handler.lock().await;
-        *guard = Some(Arc::new(f));
+        *guard = Some(Arc::new(move |msg: Bytes| {
+            Box::pin(f(msg))
+        }));
     }
 }

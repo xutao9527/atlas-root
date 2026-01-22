@@ -139,8 +139,15 @@ impl AtlasConnection {
                         if let Ok(header) = AtlasWireHeader::read_wire_header(&packet) {
                             match header.kind {
                                 AtlasWireKind::Notify => {
-                                    if let Some(cb) = notify_handler.lock().await.as_ref() {
-                                        cb(header, packet);
+                                    let cb = {
+                                        notify_handler
+                                            .lock()
+                                            .await
+                                            .as_ref()
+                                            .cloned()
+                                    };
+                                    if let Some(cb) =cb{
+                                        cb(packet).await;
                                     }
                                 }
                                 _ => {

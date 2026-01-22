@@ -1,6 +1,7 @@
 mod http;
 mod ws;
 mod context;
+mod notify;
 
 use crate::http::http_index;
 use crate::ws::ws_handler;
@@ -15,6 +16,7 @@ use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::notifier::AtlasRegNodeId;
 use atlas_core::net::rpc::router::AtlasModuleId;
+use crate::notify::notify_handler;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）
@@ -24,9 +26,7 @@ pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Resu
     holdem_client.connect().await?;
 
 
-    auth_client.set_notify_handler(|header, msg| {
-        println!("auth_client notify: {:?}", msg);
-    }).await;
+    auth_client.set_notify_handler(notify_handler).await;
 
 
     let registry = RpcClientRegistry::new();
