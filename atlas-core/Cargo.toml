@@ -16,7 +16,8 @@ anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 rmp-serde = { workspace = true }
 serde-value = "0.7.0"
-bytes = { workspace = true ,features = ["serde"] }
+bytes = { workspace = true, features = ["serde"] }
 slab = { workspace = true }
 parking_lot = { workspace = true }
 tracing = { workspace = true }
+dashmap = { workspace = true }
