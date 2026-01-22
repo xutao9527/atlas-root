@@ -5,8 +5,6 @@ use atlas_core::net::rpc::server::AtlasRpcServer;
 pub mod rpc;
 pub mod context;
 
-
-
 pub async fn serve_auth(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 初始化数据库
     init_db("mysql://root:root@localhost:3306/atlas").await;
