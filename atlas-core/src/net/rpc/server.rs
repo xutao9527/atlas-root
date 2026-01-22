@@ -80,7 +80,7 @@ where
                                             }
                                             continue;
                                         }
-                                        // ===== 普通 RPC =====
+                                        // ===== RPC =====
                                         if msg.header.kind == AtlasWireKind::Request {
                                             let resp = dispatch_fn(msg).await;
                                             if framed.send(resp.into_wire_bytes()).await.is_err() {
