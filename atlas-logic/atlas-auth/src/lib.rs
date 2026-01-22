@@ -1,6 +1,5 @@
 use crate::context::{init_db, token_manager};
 use crate::rpc::module_dispatch::auth_bind::dispatch;
-use atlas_core::net::rpc::notifier::Notifier;
 use atlas_core::net::rpc::server::AtlasRpcServer;
 
 pub mod rpc;
