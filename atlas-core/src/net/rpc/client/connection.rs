@@ -129,6 +129,7 @@ impl AtlasConnection {
                 match result {
                     Ok(packet) => {
                         if let Ok(header) = AtlasWireHeader::read_wire_header(&packet) {
+                            debug!("receive packet: {:?} ", header);
                             if let Some(slot) = pending.remove(header.slot_index) {
                                 if header.id == slot.request_id {
                                     (slot.body)(packet).await;
