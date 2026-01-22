@@ -13,13 +13,14 @@ use tokio::net::TcpListener;
 use tracing::info;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
+use atlas_core::net::rpc::notifier::AtlasRegNodeId;
 use atlas_core::net::rpc::router::AtlasModuleId;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）
-    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), "gateway".into(),1);
+    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::AuthNode(1),1);
     auth_client.connect().await?;
-    let mut holdem_client = AtlasRpcClient::new("127.0.0.1:6677".into(), "gateway".into(),1);
+    let mut holdem_client = AtlasRpcClient::new("127.0.0.1:6677".into(), AtlasRegNodeId::HoldemNode(1),1);
     holdem_client.connect().await?;
 
 

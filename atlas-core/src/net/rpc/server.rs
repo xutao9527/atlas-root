@@ -7,7 +7,7 @@ use tokio::sync::mpsc;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
 use crate::net::rpc::codec::FrameWireCodec;
-use crate::net::rpc::notifier::Notifier;
+use crate::net::rpc::notifier::{AtlasRegNodeId, Notifier};
 use crate::net::rpc::packet_header::AtlasWireKind;
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 
@@ -24,7 +24,7 @@ where
     addr: String,
     dispatch_fn: DispatchFn,
     /// 保存所有连接，用来发通知
-    registry_node: Arc<DashMap<String, NotifyTx>>,
+    registry_node: Arc<DashMap<AtlasRegNodeId, NotifyTx>>,
 }
 
 impl<DispatchFn, Fut> AtlasRpcServer<DispatchFn, Fut>
@@ -62,7 +62,7 @@ where
 
             let dispatch_fn = self.dispatch_fn;
             let registry_node = self.registry_node.clone();
-            let mut logical_id: Option<String> = None;
+            let mut logical_id: Option<AtlasRegNodeId> = None;
             let mut is_owner = false;
 
             tokio::spawn(async move {
@@ -76,21 +76,29 @@ where
                             match result {
                                 Some(Ok(req)) => {
                                     if let Ok(msg) = AtlasRawMessage::from_wire_bytes(req) {
-                                         // ===== RegistryNode =====
+                                        // ===== RegistryNode =====
                                         if msg.header.kind == AtlasWireKind::RegistryNode {
-                                            let msg = AtlasWireMessage::<String>::from_raw(msg);
-                                            if let Ok(id) = std::str::from_utf8(msg.unwrap().payload.as_ref()) {
-                                                let id = id.to_string();
-                                                match registry_node.entry(id.clone()) {
-                                                    Entry::Vacant(e) => {
-                                                        e.insert(notify_tx.clone());
-                                                        logical_id = Some(id.clone());
-                                                        is_owner = true; // ⭐ 关键
-                                                        debug!("registry_node registered: {}", id);
+                                            match AtlasWireMessage::<AtlasRegNodeId>::from_raw(msg) {
+                                                Ok(msg) => {
+                                                    let reg_node_id = msg.payload; // ⭐ 强类型 NodeId
+
+                                                    match registry_node.entry(reg_node_id) {
+                                                        Entry::Vacant(e) => {
+                                                            e.insert(notify_tx.clone());
+                                                            logical_id = Some(reg_node_id);
+                                                            is_owner = true;
+                                                            debug!("registry_node registered: {:?}", reg_node_id);
+                                                        }
+                                                        Entry::Occupied(_) => {
+                                                            debug!(
+                                                                "registry_node already exists, ignore: {:?}",
+                                                                reg_node_id
+                                                            );
+                                                        }
                                                     }
-                                                    Entry::Occupied(_) => {
-                                                        debug!("registry_node already exists, ignore: {}", id);
-                                                    }
+                                                }
+                                                Err(e) => {
+                                                    warn!("invalid RegistryNode payload: {:?}", e);
                                                 }
                                             }
                                             continue;
@@ -126,9 +134,9 @@ where
                 }
                 // ===== 连接断开：只有 owner 才能 remove =====
                 if is_owner {
-                    if let Some(id) = logical_id {
-                        registry_node.remove(&id);
-                        debug!("registry_node removed: {}", id);
+                    if let Some(reg_node_id) = logical_id {
+                        registry_node.remove(&reg_node_id);
+                        debug!("registry_node removed: {:?}", reg_node_id);
                     }
                 }
             });
@@ -141,8 +149,8 @@ where
     DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,
 {
-    fn notify(&self, logical_id: &str, msg: AtlasRawMessage) -> bool {
-        if let Some(tx) = self.registry_node.get(logical_id) {
+    fn notify(&self, reg_node_id: &AtlasRegNodeId, msg: AtlasRawMessage) -> bool {
+        if let Some(tx) = self.registry_node.get(reg_node_id) {
             tx.send(msg).is_ok()
         } else {
             false

@@ -13,12 +13,13 @@ use tokio::sync::{Mutex, Notify, mpsc};
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
+use crate::net::rpc::notifier::AtlasRegNodeId;
 
 pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
 
 pub struct AtlasConnection {
     addr: String,
-    logical_id: String,
+    reg_node_id: AtlasRegNodeId,
     pending: Arc<PendingTable<AsyncCallback>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
     notify_connected: Arc<Notify>,
@@ -27,12 +28,12 @@ pub struct AtlasConnection {
 }
 
 impl AtlasConnection {
-    pub fn new(addr: String, logical_id: String) -> Self {
+    pub fn new(addr: String, logical_id: AtlasRegNodeId) -> Self {
         let pending = Arc::new(PendingTable::new(100 * 1024));
         let (channel_writer, _) = mpsc::channel::<Bytes>(100 * 1024);
         Self {
             addr,
-            logical_id,
+            reg_node_id: logical_id,
             pending,
             channel_writer: Mutex::new(channel_writer),
             notify_connected: Arc::new(Notify::new()),
@@ -102,7 +103,7 @@ impl AtlasConnection {
         // ===== 发送 RegistryNode =====
         let registry_node_msg = AtlasWireMessage {
             header: AtlasWireHeader::build_request(0).with_kind(AtlasWireKind::RegistryNode),
-            payload: self.logical_id.clone(),
+            payload: self.reg_node_id,
         }.into_raw().unwrap().into_wire_bytes();
         let writer = {
             let guard = self.channel_writer.lock().await;

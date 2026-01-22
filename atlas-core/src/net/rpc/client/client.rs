@@ -2,16 +2,17 @@ use crate::net::rpc::client::connection::AtlasConnection;
 use bytes::Bytes;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use crate::net::rpc::notifier::AtlasRegNodeId;
 
 pub struct AtlasRpcClient {
     addr: String,
-    logical_id: String,
+    logical_id: AtlasRegNodeId,
     next_req_id: AtomicU64,
     connections: Vec<Arc<AtlasConnection>>,
 }
 
 impl AtlasRpcClient {
-    pub fn new(addr: String, logical_id: String, con_num: usize) -> Self {
+    pub fn new(addr: String, logical_id: AtlasRegNodeId, con_num: usize) -> Self {
         Self {
             addr,
             logical_id,

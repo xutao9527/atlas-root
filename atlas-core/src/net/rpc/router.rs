@@ -2,15 +2,15 @@ use crate::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 use crate::net::rpc::packet_payload::{AtlasRpcPayload, AtlasRpcResult};
 use bytes::Bytes;
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum AtlasModuleId {
     Auth = 1,
-    Chat = 2,
-    Holdem = 3,
+    Holdem = 2,
+    Chat = 3,
 }
 
 impl AtlasModuleId {
@@ -18,8 +18,8 @@ impl AtlasModuleId {
     pub fn from_wire(wire: u32) -> Option<Self> {
         match (wire >> 16) as u16 {
             1 => Some(Self::Auth),
-            2 => Some(Self::Chat),
-            3 => Some(Self::Holdem),
+            2 => Some(Self::Holdem),
+            3 => Some(Self::Chat),
             _ => None,
         }
     }

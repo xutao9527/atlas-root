@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
+use atlas_core::net::rpc::notifier::AtlasRegNodeId;
 use atlas_scheme::proto::auth::rpc::BasicAuthReq;
 use atlas_scheme::module_method::auth_method::BasicAuthRpc;
 
@@ -56,7 +57,7 @@ async fn main() -> anyhow::Result<()> {
 
     let total_requests = 10_0000_0000; // 总共发多少次
 
-    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), "test_node".to_string(),4);
+    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::AuthNode(2),4);
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
             let success = success_counter.clone();
