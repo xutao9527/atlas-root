@@ -9,6 +9,7 @@ use atlas_scheme::proto::auth::rpc::AuthResp;
 use bytes::Bytes;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::debug;
 use ulid::Ulid;
 
 pub async fn handle_binary_message(
@@ -96,5 +97,6 @@ pub async fn process_auth_resp(resp: Bytes, ws_session: Arc<RwLock<WsSession>>) 
         }
         // === 2️⃣ 注册到全局 session_map ===
         session_map().insert(uid, ws_session);
+        debug!("session map insert:\n {:?}", session_map())
     }
 }

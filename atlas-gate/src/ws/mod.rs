@@ -12,7 +12,7 @@ use std::time::{Duration, SystemTime};
 use tokio::select;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::channel;
-use tracing::{info};
+use tracing::{debug, info};
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
 use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::proto::auth::rpc::{TokenAuthReq};
@@ -116,10 +116,12 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
         let guard = ws_session.read().await;
         if let Some(uid) = guard.uid.as_ref() {
             session_map().remove(uid);
+            debug!("session map remove:\n {:?}", session_map())
         }
     }
     drop(ws_session);
     let _ = writer.await;
+
     info!("WS disconnected");
 }
 

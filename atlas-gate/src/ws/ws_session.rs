@@ -2,6 +2,7 @@ use axum::extract::ws::{Message, Utf8Bytes};
 use bytes::Bytes;
 use tokio::sync::mpsc::Sender;
 
+#[derive(Debug, Clone)]
 pub struct WsSession {
     pub uid: Option<String>,
     pub token: Option<String>,
