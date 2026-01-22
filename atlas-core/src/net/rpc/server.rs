@@ -20,7 +20,7 @@ where
     Fut: Future<Output = AtlasRawMessage> + Send + 'static,
 
 {
-    pub fn new(addr: String,dispatch_fn: DispatchFn) -> Self {
+    pub fn new(addr: String, dispatch_fn: DispatchFn) -> Self {
         Self { addr, dispatch_fn }
     }
 
