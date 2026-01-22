@@ -11,6 +11,24 @@ pub enum AtlasWireKind {
     RegistryNode = 0b0001_0000,
 }
 
+impl TryFrom<u8> for AtlasWireKind {
+    type Error = String;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            x if x == AtlasWireKind::Request as u8      => Ok(Self::Request),
+            x if x == AtlasWireKind::ResponseOk as u8   => Ok(Self::ResponseOk),
+            x if x == AtlasWireKind::ResponseErr as u8  => Ok(Self::ResponseErr),
+            x if x == AtlasWireKind::Notify as u8       => Ok(Self::Notify),
+            x if x == AtlasWireKind::RegistryNode as u8 => Ok(Self::RegistryNode),
+            other => Err(format!(
+                "invalid AtlasWireKind: {:#010b}",
+                other
+            )),
+        }
+    }
+}
+
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AtlasWireHeader {
     pub id: u64,
@@ -52,27 +70,12 @@ impl AtlasWireHeader {
                 buf.len()
             ));
         }
-
         let mut p = &buf[..Self::WIRE_LEN];
-
         let id = p.get_u64();
         let slot_index = p.get_u32();
         let method = p.get_u32();
         let kind_u8 = p.get_u8();
-
-        let kind = match kind_u8 {
-            x if x == AtlasWireKind::Request as u8 => AtlasWireKind::Request,
-            x if x == AtlasWireKind::ResponseOk as u8 => AtlasWireKind::ResponseOk,
-            x if x == AtlasWireKind::ResponseErr as u8 => AtlasWireKind::ResponseErr,
-            x if x == AtlasWireKind::Notify as u8 => AtlasWireKind::Notify,
-            x if x == AtlasWireKind::RegistryNode as u8 => AtlasWireKind::RegistryNode,
-            other => {
-                return Err(format!(
-                    "invalid AtlasWireKind: {:#010b}",
-                    other
-                ))
-            }
-        };
+        let kind = AtlasWireKind::try_from(kind_u8)?;
         let mut uid = [0u8; 16];
         p.copy_to_slice(&mut uid);
         Ok(AtlasWireHeader {
