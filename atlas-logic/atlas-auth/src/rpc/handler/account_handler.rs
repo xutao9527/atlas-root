@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use crate::context::get_db;
 use crate::context::token_manager::{store_token, validate_token};
 use atlas_core::net::rpc::packet_message::{AtlasWireMessage};
@@ -11,7 +12,7 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
-use atlas_core::net::rpc::notifier::AtlasRegNodeId;
+use atlas_core::net::rpc::notifier::{AtlasNotify, AtlasNotifyTarget, AtlasRegNodeId};
 use atlas_core::net::rpc::packet_header::AtlasWireHeader;
 use atlas_core::net::rpc::server::{global_notifier};
 
@@ -64,14 +65,20 @@ pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<
             match store_token(token.as_str(), user.id.as_str()).await {
                 Ok(expire_at) => {
                     if let Some(notifier) = global_notifier() {
-                        let notify_message = AtlasWireMessage::<String> {
+                        let notify = AtlasNotify {
+                            targets: vec![
+                                AtlasNotifyTarget::Broadcast,
+                            ],
+                            notify_type_id: 1001, // scheme 定义的通知类型
+                            data: Bytes::from("login success"),
+                        };
+                        let notify_msg = AtlasWireMessage {
                             header: AtlasWireHeader::build_notify(),
-                            payload: "login success".into(),
-                        }.into_raw().unwrap();
-
+                            payload: notify,
+                        };
                         notifier.notify(
                             &AtlasRegNodeId::GateNode(1),
-                            notify_message,
+                            notify_msg,
                         );
                     }
                     AtlasRpcPayload::Ok(AuthResp {
