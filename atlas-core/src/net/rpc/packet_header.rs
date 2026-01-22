@@ -49,13 +49,24 @@ impl AtlasWireHeader {
         }
     }
 
-    /// 构造请求头
+    /// 构造请求
     pub fn build_request(method: u32) -> Self {
         Self {
             id: 0,
             slot_index: 0,
             method,
             kind: AtlasWireKind::Request,
+            uid: [0u8; 16],
+        }
+    }
+
+    /// 构造通知
+    pub fn build_notify() -> Self {
+        Self {
+            id: 0,
+            slot_index: 0,
+            method: 0,
+            kind: AtlasWireKind::Notify,
             uid: [0u8; 16],
         }
     }

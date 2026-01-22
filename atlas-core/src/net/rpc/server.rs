@@ -16,6 +16,14 @@ type NotifyTx = mpsc::UnboundedSender<AtlasRawMessage>;
 /// ⭐ 模块级 notifier（关键）
 static GLOBAL_NOTIFIER: OnceLock<Arc<dyn Notifier>> = OnceLock::new();
 
+pub fn set_global_notifier(n: Arc<dyn Notifier>) {
+    let _ = GLOBAL_NOTIFIER.set(n);
+}
+
+pub fn global_notifier() -> Option<&'static Arc<dyn Notifier>> {
+    GLOBAL_NOTIFIER.get()
+}
+
 pub struct AtlasRpcServer<DispatchFn, Fut>
 where
     DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
@@ -40,17 +48,10 @@ where
             registry_node: Arc::new(DashMap::new()),
         });
 
-        GLOBAL_NOTIFIER.set(server.clone() as Arc<dyn Notifier>)
-            .unwrap_or_else(|_| {
-                panic!("ATLAS_NOTIFIER already initialized");
-            });
+        // ⭐ 注册全局 notifier（只做一次）
+        set_global_notifier(server.clone() as Arc<dyn Notifier>);
 
         server
-    }
-
-    /// ⭐ 外部获取 notifier 的唯一入口
-    pub fn global_notifier() -> &'static OnceLock<Arc<dyn Notifier>> {
-        &GLOBAL_NOTIFIER
     }
 
     pub async fn run(&self) -> anyhow::Result<()> {

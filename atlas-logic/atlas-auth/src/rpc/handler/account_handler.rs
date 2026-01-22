@@ -1,6 +1,6 @@
 use crate::context::get_db;
 use crate::context::token_manager::{store_token, validate_token};
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
+use atlas_core::net::rpc::packet_message::{AtlasWireMessage};
 use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
@@ -11,6 +11,9 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
+use atlas_core::net::rpc::notifier::AtlasRegNodeId;
+use atlas_core::net::rpc::packet_header::AtlasWireHeader;
+use atlas_core::net::rpc::server::{global_notifier};
 
 pub async fn register(req: AtlasWireMessage<RegisterReq>) -> AtlasRpcPayload<RegisterResp> {
     let model = atlas_user::Model {
@@ -59,12 +62,25 @@ pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<
             }
             let token = Ulid::new().to_string();
             match store_token(token.as_str(), user.id.as_str()).await {
-                Ok(expire_at) => AtlasRpcPayload::Ok(AuthResp {
-                    ok: true,
-                    uid: Some(user.id),
-                    token: Some(token),
-                    expire_at: Some(expire_at),
-                }),
+                Ok(expire_at) => {
+                    if let Some(notifier) = global_notifier() {
+                        let notify_message = AtlasWireMessage::<String> {
+                            header: AtlasWireHeader::build_notify(),
+                            payload: "login success".into(),
+                        }.into_raw().unwrap();
+
+                        notifier.notify(
+                            &AtlasRegNodeId::GateNode(1),
+                            notify_message,
+                        );
+                    }
+                    AtlasRpcPayload::Ok(AuthResp {
+                        ok: true,
+                        uid: Some(user.id),
+                        token: Some(token),
+                        expire_at: Some(expire_at),
+                    })
+                },
                 Err(err) => AtlasRpcPayload::Err(AtlasWireError {
                     code: 500,
                     message: err.to_string(),

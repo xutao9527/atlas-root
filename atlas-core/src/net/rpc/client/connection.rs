@@ -13,6 +13,7 @@ use tokio::sync::{Mutex, Notify, mpsc};
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
+use crate::net::rpc::client::client::NotifyHandler;
 use crate::net::rpc::notifier::AtlasRegNodeId;
 
 pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
@@ -22,20 +23,26 @@ pub struct AtlasConnection {
     reg_node_id: AtlasRegNodeId,
     pending: Arc<PendingTable<AsyncCallback>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
+    notify_handler: Arc<Mutex<Option<NotifyHandler>>>,// ⭐ 来自 Client
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
     connected: Arc<AtomicBool>,
 }
 
 impl AtlasConnection {
-    pub fn new(addr: String, logical_id: AtlasRegNodeId) -> Self {
+    pub fn new(
+        addr: String,
+        reg_node_id: AtlasRegNodeId,
+        notify_handler: Arc<Mutex<Option<NotifyHandler>>>,
+    ) -> Self {
         let pending = Arc::new(PendingTable::new(100 * 1024));
         let (channel_writer, _) = mpsc::channel::<Bytes>(100 * 1024);
         Self {
             addr,
-            reg_node_id: logical_id,
+            reg_node_id,
             pending,
             channel_writer: Mutex::new(channel_writer),
+            notify_handler,
             notify_connected: Arc::new(Notify::new()),
             notify_disconnected: Arc::new(Notify::new()),
             connected: Arc::new(AtomicBool::new(false)),
@@ -124,17 +131,30 @@ impl AtlasConnection {
         let pending = self.pending.clone();
         let notify_disconnected = self.notify_disconnected.clone();
         let connected = self.connected.clone();
+        let notify_handler = self.notify_handler.clone();
         tokio::spawn(async move {
             while let Some(result) = socket_reader.next().await {
                 match result {
                     Ok(packet) => {
                         if let Ok(header) = AtlasWireHeader::read_wire_header(&packet) {
-                            debug!("receive packet: {:?} ", header);
-                            if let Some(slot) = pending.remove(header.slot_index) {
-                                if header.id == slot.request_id {
-                                    (slot.body)(packet).await;
+                            match header.kind {
+                                AtlasWireKind::Notify => {
+                                    debug!("receive Notify: {:?} ", header);
+                                    if let Some(cb) = notify_handler.lock().await.as_ref() {
+                                        debug!("callback Notify: {:?} ", header);
+                                        cb(header, packet);
+                                    }
+                                }
+                                _ => {
+                                    if let Some(slot) = pending.remove(header.slot_index) {
+                                        if header.id == slot.request_id {
+                                            (slot.body)(packet).await;
+                                        }
+                                    }
                                 }
                             }
+
+
                         }
                     }
                     Err(_) => break,

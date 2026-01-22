@@ -18,10 +18,15 @@ use atlas_core::net::rpc::router::AtlasModuleId;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）
-    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::AuthNode(1),1);
+    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::GateNode(1),1);
     auth_client.connect().await?;
-    let mut holdem_client = AtlasRpcClient::new("127.0.0.1:6677".into(), AtlasRegNodeId::HoldemNode(1),1);
+    let mut holdem_client = AtlasRpcClient::new("127.0.0.1:6677".into(), AtlasRegNodeId::GateNode(1),1);
     holdem_client.connect().await?;
+
+
+    auth_client.set_notify_handler(|header, msg| {
+        println!("auth_client notify: {:?}", msg);
+    }).await;
 
 
     let registry = RpcClientRegistry::new();
