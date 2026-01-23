@@ -14,7 +14,7 @@ use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
 use crate::net::rpc::client::client::NotifyHandler;
-use crate::net::rpc::notifier::AtlasRegNodeId;
+use crate::net::rpc::notify::AtlasRegNodeId;
 
 pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
 

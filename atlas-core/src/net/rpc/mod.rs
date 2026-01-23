@@ -7,4 +7,5 @@ pub mod router;
 pub mod server;
 pub mod client_registry;
 pub mod packet_payload;
-pub mod notifier;
+pub mod notify_body;
+pub mod notify;

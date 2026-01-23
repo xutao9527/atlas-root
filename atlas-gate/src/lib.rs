@@ -14,7 +14,7 @@ use tokio::net::TcpListener;
 use tracing::info;
 use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use atlas_core::net::rpc::client_registry::RpcClientRegistry;
-use atlas_core::net::rpc::notifier::AtlasRegNodeId;
+use atlas_core::net::rpc::notify::AtlasRegNodeId;
 use atlas_core::net::rpc::router::AtlasModuleId;
 use crate::notify::notify_handler;
 

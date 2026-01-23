@@ -1,10 +1,11 @@
 use crate::net::rpc::client::connection::AtlasConnection;
-use crate::net::rpc::notifier::AtlasRegNodeId;
+
 use bytes::Bytes;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use crate::net::rpc::notify::AtlasRegNodeId;
 
 pub type NotifyHandler = Arc<dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 

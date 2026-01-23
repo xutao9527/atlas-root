@@ -11,7 +11,8 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
-use atlas_core::net::rpc::notifier::{AtlasNotifyBuildExt, AtlasNotifyTarget, AtlasRegNodeId, NotifierExt};
+use atlas_core::net::rpc::notify::{AtlasRegNodeId, NotifierExt};
+use atlas_core::net::rpc::notify_body::{AtlasNotifyBuildExt, AtlasNotifyTarget};
 use atlas_core::net::rpc::server::{global_notifier};
 use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 
