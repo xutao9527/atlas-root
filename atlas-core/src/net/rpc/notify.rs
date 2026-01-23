@@ -1,6 +1,5 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-
 use crate::net::rpc::notify_body::AtlasNotify;
 use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
 
