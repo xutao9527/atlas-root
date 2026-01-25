@@ -9,7 +9,6 @@ impl Default for FrameWireCodec {
     }
 }
 
-
 impl Encoder<Bytes> for FrameWireCodec {
     type Error = anyhow::Error;
 

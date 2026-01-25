@@ -1,10 +1,10 @@
 use crate::ws_client::WsClient;
-use atlas_core::net::rpc::router::AtlasRpcSpec;
 use atlas_scheme::proto::auth::rpc::{BasicAuthReq, RegisterReq, TokenAuthReq};
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc, RegisterRpc, TokenAuthRpc};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::{io, select};
+use atlas_core::net::core::rpc::AtlasRpcSpec;
 
 pub struct CmdContext {
     pub ws_server_addr: String,
@@ -91,7 +91,7 @@ impl CmdContext {
                         nickname: nickname.to_string(),
                     }).unwrap();
 
-                    client.send_byte(req.into_wire_bytes()).await;
+                    client.send_byte(req.into_bytes()).await;
                 }
             },
             ["api","log",account, password] => {
@@ -101,7 +101,7 @@ impl CmdContext {
                         password: password.to_string(),
                     }).unwrap();
                     println!("Send: {:?}", req);
-                    let bytes = req.into_wire_bytes();
+                    let bytes = req.into_bytes();
                     client.send_byte(bytes).await;
                 }
             },
@@ -111,7 +111,7 @@ impl CmdContext {
                         token: token.to_string(),
                     }).unwrap();
                     println!("Send: {:?}", req);
-                    let bytes = req.into_wire_bytes();
+                    let bytes = req.into_bytes();
                     client.send_byte(bytes).await;
                 }
             }

@@ -1,9 +1,10 @@
-use crate::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
-use crate::net::rpc::packet_payload::{AtlasRpcPayload, AtlasRpcResult};
 use bytes::Bytes;
-use serde::de::DeserializeOwned;
+use crate::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
+use crate::net::protocol::frame_header::AtlasFrameHeader;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
+use crate::net::protocol::frame_body_rpc::{AtlasRpcPayload, AtlasRpcResult};
+use crate::net::protocol::frame_kind::AtlasFrameKind;
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -33,32 +34,33 @@ pub trait AtlasRpcSpec: Copy + 'static {
     type Response: Serialize + DeserializeOwned + Send + 'static;
 
     /// ⚡ 生成 RawMessage 的辅助方法
-    fn build_request(req: Self::Request) -> Result<AtlasRawMessage, String> {
-        AtlasWireMessage {
-            header: AtlasWireHeader::build_request(Self::WIRE),
-            payload: req,
+    fn build_request(req: Self::Request) -> Result<AtlasRawFrame, String> {
+        AtlasFrame {
+            header: AtlasFrameHeader::build_request(Self::WIRE),
+            body: req,
         }
         .into_raw()
         .map_err(|_| "build raw request failed".to_string())
     }
 }
 
+
 pub async fn handle<M, Fut>(
-    raw: AtlasRawMessage,
-    f: fn(AtlasWireMessage<M::Request>) -> Fut,
-) -> AtlasRawMessage
+    raw: AtlasRawFrame,
+    f: fn(AtlasFrame<M::Request>) -> Fut,
+) -> AtlasRawFrame
 where
     M: AtlasRpcSpec,
     AtlasRpcResult<M::Response>: Serialize + DeserializeOwned,
     M::Response: Serialize + DeserializeOwned,
     Fut: Future<Output=AtlasRpcPayload<M::Response>>,
 {
-    let req_msg = match AtlasWireMessage::<M::Request>::from_raw(raw.clone()) {
+    let req_msg = match AtlasFrame::<M::Request>::from_raw(raw.clone()) {
         Ok(r) => r,
         Err(_e) => {
-            return AtlasRawMessage {
+            return AtlasRawFrame {
                 header: raw.header,
-                payload: Bytes::new(),
+                body: Bytes::new(),
             };
         }
     };
@@ -68,15 +70,15 @@ where
     let payload = f(req_msg).await;
 
     let kind = match payload {
-        AtlasRpcPayload::Ok(_) => AtlasWireKind::ResponseOk,
-        AtlasRpcPayload::Err(_) => AtlasWireKind::ResponseErr,
+        AtlasRpcPayload::Ok(_) => AtlasFrameKind::ResponseOk,
+        AtlasRpcPayload::Err(_) => AtlasFrameKind::ResponseErr,
     };
 
-    AtlasWireMessage {
+    AtlasFrame {
         header: header.with_kind(kind),
-        payload,
-    }.into_raw().unwrap_or_else(|_| AtlasRawMessage {
+        body: payload,
+    }.into_raw().unwrap_or_else(|_| AtlasRawFrame {
         header: raw.header,
-        payload: Bytes::new(),
+        body: Bytes::new(),
     })
 }

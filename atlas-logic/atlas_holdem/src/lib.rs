@@ -1,5 +1,5 @@
 use crate::rpc::module_dispatch::holdem_bind::dispatch;
-use atlas_core::net::rpc::server::AtlasRpcServer;
+use atlas_core::net::server::server::AtlasNetServer;
 use crate::context::init_db;
 
 pub mod logic;
@@ -15,7 +15,7 @@ pub async fn serve_holdem(bind_addr: String, bind_port: String) -> anyhow::Resul
     //token_manager::start_token_cleaner();
     // 运行Rpc服务
     let serve_addr = format!("{}:{}", bind_addr,bind_port);
-    let server = AtlasRpcServer::new(serve_addr, dispatch);
+    let server = AtlasNetServer::new(serve_addr, dispatch);
     server.run().await?;
     Ok(())
 }

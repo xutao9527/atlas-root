@@ -1,7 +1,5 @@
 use crate::context::get_db;
 use crate::context::token_manager::{store_token, validate_token};
-use atlas_core::net::rpc::packet_message::{AtlasWireMessage};
-use atlas_core::net::rpc::packet_payload::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::model::atlas_user;
 use atlas_scheme::model::sea_orm_active_enums::UserType;
 use atlas_scheme::proto::auth::rpc::{
@@ -11,18 +9,20 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
-use atlas_core::net::rpc::notify::{AtlasRegNodeId, NotifierExt};
-use atlas_core::net::rpc::notify_body::{AtlasNotifyBuildExt, AtlasNotifyTarget};
-use atlas_core::net::rpc::server::{global_notifier};
+use atlas_core::net::core::notify::{global_notifier, NotifierExt};
+use atlas_core::net::core::reg::AtlasRegNodeId;
+use atlas_core::net::protocol::frame::AtlasFrame;
+use atlas_core::net::protocol::frame_body_notify::{AtlasNotifyBuildExt, AtlasNotifyTarget};
+use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcPayload, AtlasWireError};
 use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 
-pub async fn register(req: AtlasWireMessage<RegisterReq>) -> AtlasRpcPayload<RegisterResp> {
+pub async fn register(req: AtlasFrame<RegisterReq>) -> AtlasRpcPayload<RegisterResp> {
     let model = atlas_user::Model {
         id: Ulid::new().to_string(),
         user_type: Some(UserType::Normal),
-        account: req.payload.account,
-        password: req.payload.password,
-        name: req.payload.nickname,
+        account: req.body.account,
+        password: req.body.password,
+        name: req.body.nickname,
         balance: Default::default(),
         avatar: None,
         created_at: chrono::Utc::now(),
@@ -46,15 +46,15 @@ pub async fn register(req: AtlasWireMessage<RegisterReq>) -> AtlasRpcPayload<Reg
     }
 }
 
-pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<AuthResp> {
+pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcPayload<AuthResp> {
     let result = atlas_user::Entity::find()
-        .filter(atlas_user::Column::Account.eq(req.payload.account))
+        .filter(atlas_user::Column::Account.eq(req.body.account))
         .one(get_db())
         .await;
 
     match result {
         Ok(Some(user)) => {
-            if user.password != req.payload.password {
+            if user.password != req.body.password {
                 return AtlasRpcPayload::Err(AtlasWireError {
                     code: 401,
                     message: "Invalid password".into(),
@@ -108,12 +108,12 @@ pub async fn basic_auth(req: AtlasWireMessage<BasicAuthReq>) -> AtlasRpcPayload<
     }
 }
 
-pub async fn token_auth(req: AtlasWireMessage<TokenAuthReq>) -> AtlasRpcPayload<AuthResp> {
-    match validate_token(req.payload.token.as_str()).await {
+pub async fn token_auth(req: AtlasFrame<TokenAuthReq>) -> AtlasRpcPayload<AuthResp> {
+    match validate_token(req.body.token.as_str()).await {
         Ok((uid, expire_at)) => AtlasRpcPayload::Ok(AuthResp {
             ok: true,
             uid: Some(uid),
-            token: Some(req.payload.token),
+            token: Some(req.body.token),
             expire_at: Some(expire_at),
         }),
         Err(err) => AtlasRpcPayload::Err(AtlasWireError {

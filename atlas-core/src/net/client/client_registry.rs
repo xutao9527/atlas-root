@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::net::rpc::client::client::AtlasRpcClient;
-use crate::net::rpc::router::AtlasModuleId;
+use crate::net::client::client::AtlasNetClient;
+use crate::net::core::rpc::AtlasModuleId;
 
-pub type RpcClientRef = Arc<AtlasRpcClient>;
+pub type RpcClientRef = Arc<AtlasNetClient>;
 
 
 #[derive(Clone, Default)]
@@ -19,7 +19,7 @@ impl RpcClientRegistry {
         }
     }
 
-    pub async fn register(&self, module_id: AtlasModuleId, client: AtlasRpcClient) {
+    pub async fn register(&self, module_id: AtlasModuleId, client: AtlasNetClient) {
         let mut map = self.clients.write().await;
         map.insert(module_id, Arc::new(client));
     }

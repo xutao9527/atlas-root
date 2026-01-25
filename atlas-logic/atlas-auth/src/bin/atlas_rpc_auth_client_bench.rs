@@ -1,12 +1,13 @@
-use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
-use atlas_core::net::rpc::router::AtlasRpcSpec;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
-use atlas_core::net::rpc::notify::AtlasRegNodeId;
+use atlas_core::net::client::client::AtlasNetClient;
+use atlas_core::net::core::reg::AtlasRegNodeId;
+use atlas_core::net::core::rpc::AtlasRpcSpec;
+use atlas_core::net::protocol::frame::AtlasFrame;
+use atlas_core::net::protocol::frame_header::AtlasFrameHeader;
+use atlas_core::net::protocol::frame_kind::AtlasFrameKind;
 use atlas_scheme::proto::auth::rpc::BasicAuthReq;
 use atlas_scheme::module_method::auth_method::BasicAuthRpc;
 
@@ -39,25 +40,25 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
-    let request = AtlasWireMessage {
-        header: AtlasWireHeader {
+    let request = AtlasFrame {
+        header: AtlasFrameHeader {
             id: 0,
             slot_index: 0,
-            method: BasicAuthRpc::WIRE,
-            kind: AtlasWireKind::Request,
+            op_code: BasicAuthRpc::WIRE,
+            kind: AtlasFrameKind::Request,
             uid: [0; 16],
         },
-        payload: BasicAuthReq {
+        body: BasicAuthReq {
             account: "111".into(),
             password: "123123".into(),
         },
     };
 
-    let req_bytes = request.into_raw().unwrap().into_wire_bytes();
+    let req_bytes = request.into_raw().unwrap().into_bytes();
 
     let total_requests = 10_0000_0000; // 总共发多少次
 
-    let mut client = AtlasRpcClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::AuthNode(2),4);
+    let mut client = AtlasNetClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::AuthNode(2),4);
     if let Ok(_) = client.connect().await {
         for _i in 0..total_requests {
             let success = success_counter.clone();
@@ -69,9 +70,9 @@ async fn main() -> anyhow::Result<()> {
             client
                 .call_cb(req_clone, |resp| async move {
                     recv.fetch_add(1, Ordering::Relaxed);
-                    match AtlasWireHeader::read_wire_header(&resp) {
+                    match AtlasFrameHeader::read_wire_header(&resp) {
                         Ok(header) => {
-                            if header.kind == AtlasWireKind::ResponseOk {
+                            if header.kind == AtlasFrameKind::ResponseOk {
                                 success.fetch_add(1, Ordering::Relaxed);
                             } else {
                                 fail.fetch_add(1, Ordering::Relaxed);
@@ -82,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
                         }
                     };
                     // let raw_msg = AtlasRawMessage::from_wire_bytes(resp);
-                    // let resp_msg = AtlasWireMessage::<LoginResp>::from_raw(raw_msg.unwrap());
+                    // let resp_msg = AtlasFrame::<LoginResp>::from_raw(raw_msg.unwrap());
                     // println!("{:?}", resp_msg);
                 })
                 .await;

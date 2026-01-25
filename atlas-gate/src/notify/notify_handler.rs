@@ -1,13 +1,14 @@
 
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
+
 use bytes::Bytes;
-use atlas_core::net::rpc::notify_body::AtlasNotify;
+use atlas_core::net::protocol::frame::AtlasFrame;
+use atlas_core::net::protocol::frame_body_notify::AtlasNotifyBody;
 
 pub async fn notify_handler(notify_msg: Bytes) {
     println!("notify_handler: {:?}", notify_msg);
-    if let Ok(notify_raw_message) = AtlasWireMessage::from_wire_bytes(notify_msg.clone()) {
+    if let Ok(notify_raw_message) = AtlasFrame::from_bytes(notify_msg.clone()) {
         println!("notify_handler: {:?}", notify_raw_message);
-        match AtlasWireMessage::<AtlasNotify<Bytes>>::from_raw(notify_raw_message) {
+        match AtlasFrame::<AtlasNotifyBody<Bytes>>::from_raw(notify_raw_message) {
             Ok(notify_wire_message) => {
                 println!("notify_handler: {:?}", notify_wire_message);
             }

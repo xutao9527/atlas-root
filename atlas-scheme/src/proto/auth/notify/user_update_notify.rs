@@ -1,8 +1,9 @@
 use sea_orm::prelude::Decimal;
 
-use atlas_core::net::rpc::router::AtlasModuleId;
+
 use serde::{Deserialize, Serialize};
-use atlas_core::net::rpc::notify_body::AtlasNotifySpec;
+use atlas_core::net::core::rpc::AtlasModuleId;
+use atlas_core::net::protocol::frame_body_notify::AtlasNotifySpec;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserUpdateNotify {

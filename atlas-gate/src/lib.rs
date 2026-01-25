@@ -12,17 +12,17 @@ use axum::routing::get;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
-use atlas_core::net::rpc::client::client::AtlasRpcClient;
-use atlas_core::net::rpc::client_registry::RpcClientRegistry;
-use atlas_core::net::rpc::notify::AtlasRegNodeId;
-use atlas_core::net::rpc::router::AtlasModuleId;
+use atlas_core::net::client::client::AtlasNetClient;
+use atlas_core::net::client::client_registry::RpcClientRegistry;
+use atlas_core::net::core::reg::AtlasRegNodeId;
+use atlas_core::net::core::rpc::AtlasModuleId;
 use crate::notify::notify_handler;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）
-    let mut auth_client = AtlasRpcClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::GateNode(1),1);
+    let mut auth_client = AtlasNetClient::new("127.0.0.1:5566".into(), AtlasRegNodeId::GateNode(1),1);
     auth_client.connect().await?;
-    let mut holdem_client = AtlasRpcClient::new("127.0.0.1:6677".into(), AtlasRegNodeId::GateNode(1),1);
+    let mut holdem_client = AtlasNetClient::new("127.0.0.1:6677".into(), AtlasRegNodeId::GateNode(1),1);
     holdem_client.connect().await?;
 
 

@@ -1,7 +1,7 @@
-use crate::net::rpc::packet_message::AtlasWireMessage;
 use serde::{Deserialize, Serialize};
+use crate::net::protocol::frame::AtlasFrame;
 
-pub(crate) type AtlasRpcResult<T> = AtlasWireMessage<AtlasRpcPayload<T>>;
+pub(crate) type AtlasRpcResult<T> = AtlasFrame<AtlasRpcPayload<T>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]

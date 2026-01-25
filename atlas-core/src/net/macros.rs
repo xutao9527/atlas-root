@@ -10,7 +10,7 @@ macro_rules! atlas_rpc_module {
     ) => {
         pub mod $mod_name {
             use super::*;
-            use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
+            use atlas_core::net::core::rpc::{AtlasModuleId, AtlasRpcSpec};
 
             // ===== 编译期校验：method_id 不能重复 =====
             #[allow(non_camel_case_types)]
@@ -46,18 +46,18 @@ macro_rules! atlas_rpc_dispatch {
         pub mod $mod_name {
             use super::*;
             use bytes::Bytes;
-            use atlas_core::net::rpc::packet_message::AtlasRawMessage;
-            use atlas_core::net::rpc::router::{handle, AtlasRpcSpec};
+            use atlas_core::net::core::rpc::{handle, AtlasRpcSpec};
+            use atlas_core::net::protocol::frame::AtlasRawFrame;
 
 
-            pub async fn dispatch(raw: AtlasRawMessage) -> AtlasRawMessage {
-                match raw.header.method {
+            pub async fn dispatch(raw: AtlasRawFrame) -> AtlasRawFrame {
+                match raw.header.op_code {
                     $(
                         <$method_ty>::WIRE => handle::<$method_ty, _>(raw, $fn_name).await,
                     )*
-                    _ => AtlasRawMessage {
+                    _ => AtlasRawFrame {
                         header: raw.header,
-                        payload: Bytes::new(),
+                        body: Bytes::new(),
                     },
                 }
             }

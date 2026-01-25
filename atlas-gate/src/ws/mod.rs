@@ -2,7 +2,6 @@ mod binary_handle;
 pub mod ws_session;
 use crate::ws::binary_handle::{handle_binary_message, process_auth_resp};
 use crate::ws::ws_session::WsSession;
-use atlas_core::net::rpc::client::client::AtlasRpcClient;
 use axum::extract::WebSocketUpgrade;
 use axum::extract::ws::{Message, WebSocket};
 use axum::response::IntoResponse;
@@ -13,8 +12,9 @@ use tokio::select;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::channel;
 use tracing::{debug, info};
-use atlas_core::net::rpc::client_registry::RpcClientRegistry;
-use atlas_core::net::rpc::router::{AtlasModuleId, AtlasRpcSpec};
+use atlas_core::net::client::client::AtlasNetClient;
+use atlas_core::net::client::client_registry::RpcClientRegistry;
+use atlas_core::net::core::rpc::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::proto::auth::rpc::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 use crate::context::session_map;
@@ -128,13 +128,13 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
 // 续签 token
 async fn refresh_token_if_needed(
     token: &str,
-    auth_client: Arc<AtlasRpcClient>,
+    auth_client: Arc<AtlasNetClient>,
     ws_session: Arc<RwLock<WsSession>>,
 ) {
     let req = TokenAuthRpc::build_request(TokenAuthReq {
         token: token.to_string(),
     }).unwrap();
-    let bytes = req.into_wire_bytes();
+    let bytes = req.into_bytes();
 
     auth_client.call_cb(bytes, move |resp| {
         let ws_session = ws_session.clone();

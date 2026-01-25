@@ -1,5 +1,5 @@
 use serde_value::Value;
-use atlas_core::net::rpc::packet_payload::AtlasWireError;
+use atlas_core::net::protocol::frame_body_rpc::AtlasWireError;
 use crate::model::table_err::TableError;
 
 impl From<TableError> for AtlasWireError {

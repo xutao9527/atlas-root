@@ -1,8 +1,4 @@
 use std::pin::Pin;
-use crate::net::rpc::client::pending::{ PendingTable};
-use crate::net::rpc::codec::FrameWireCodec;
-use crate::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use crate::net::rpc::packet_message::AtlasWireMessage;
 use bytes::Bytes;
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
@@ -13,15 +9,19 @@ use tokio::sync::{Mutex, Notify, mpsc};
 use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
-use crate::net::rpc::client::client::NotifyHandler;
-use crate::net::rpc::notify::AtlasRegNodeId;
+use crate::net::client::client::NotifyHandler;
+use crate::net::client::pending::PendingTable;
+use crate::net::codec::frame_codec::FrameWireCodec;
+use crate::net::core::reg::AtlasRegNodeId;
+use crate::net::protocol::frame::AtlasFrame;
+use crate::net::protocol::frame_header::AtlasFrameHeader;
+use crate::net::protocol::frame_kind::AtlasFrameKind;
 
-pub type AsyncCallback = Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
 
 pub struct AtlasConnection {
     addr: String,
     reg_node_id: AtlasRegNodeId,
-    pending: Arc<PendingTable<AsyncCallback>>,
+    pending: Arc<PendingTable<Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
     notify_handler: Arc<Mutex<Option<NotifyHandler>>>,// ⭐ 来自 Client
     notify_connected: Arc<Notify>,
@@ -65,17 +65,17 @@ impl AtlasConnection {
                         }
                         let slots = this.pending.drain();
                         for slot in slots {
-                            let resp_msg = AtlasWireMessage {
-                                header: AtlasWireHeader {
+                            let resp_msg = AtlasFrame {
+                                header: AtlasFrameHeader {
                                     id: slot.request_id,
                                     slot_index: u32::MAX,
-                                    method: u32::MAX,
-                                    kind: AtlasWireKind::ResponseErr,
+                                    op_code: u32::MAX,
+                                    kind: AtlasFrameKind::ResponseErr,
                                     uid: [0u8; 16],
                                 },
-                                payload: Bytes::new(),
+                                body: Bytes::new(),
                             };
-                            let resp_bytes = resp_msg.into_raw().unwrap().into_wire_bytes();
+                            let resp_bytes = resp_msg.into_raw().unwrap().into_bytes();
                             (slot.body)(resp_bytes).await;
                         }
                     }
@@ -108,10 +108,10 @@ impl AtlasConnection {
         self.notify_connected.notify_waiters(); // 通知连接成功
 
         // ===== 发送 RegistryNode =====
-        let registry_node_msg = AtlasWireMessage {
-            header: AtlasWireHeader::build_request(0).with_kind(AtlasWireKind::RegistryNode),
-            payload: self.reg_node_id,
-        }.into_raw().unwrap().into_wire_bytes();
+        let registry_node_msg = AtlasFrame {
+            header: AtlasFrameHeader::build_request(0).with_kind(AtlasFrameKind::RegNode),
+            body: self.reg_node_id,
+        }.into_raw().unwrap().into_bytes();
         let writer = {
             let guard = self.channel_writer.lock().await;
             guard.clone()
@@ -136,9 +136,9 @@ impl AtlasConnection {
             while let Some(result) = socket_reader.next().await {
                 match result {
                     Ok(packet) => {
-                        if let Ok(header) = AtlasWireHeader::read_wire_header(&packet) {
+                        if let Ok(header) = AtlasFrameHeader::read_wire_header(&packet) {
                             match header.kind {
-                                AtlasWireKind::Notify => {
+                                AtlasFrameKind::Notify => {
                                     let cb = {
                                         notify_handler
                                             .lock()
@@ -178,26 +178,26 @@ impl AtlasConnection {
         F: FnOnce(Bytes) -> Fut + Send + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        if let Ok(header) = AtlasWireHeader::read_wire_header(&req) {
+        if let Ok(header) = AtlasFrameHeader::read_wire_header(&req) {
             if !self.connected.load(Ordering::Acquire) {
-                let resp_msg = AtlasWireMessage {
-                    header: AtlasWireHeader {
+                let resp_msg = AtlasFrame {
+                    header: AtlasFrameHeader {
                         id: header.id,
                         slot_index: u32::MAX,
-                        method: u32::MAX,
-                        kind: AtlasWireKind::ResponseErr,
+                        op_code: u32::MAX,
+                        kind: AtlasFrameKind::ResponseErr,
                         uid: [0u8; 16],
                     },
-                    payload: Bytes::new(),
+                    body: Bytes::new(),
                 };
-                let resp_bytes = resp_msg.into_raw().unwrap().into_wire_bytes();
+                let resp_bytes = resp_msg.into_raw().unwrap().into_bytes();
                 callback(resp_bytes);
                 return;
             }
             let slot_index = self
                 .pending
                 .insert(req_id, Box::new(move |resp| Box::pin(callback(resp))));
-            let req_msg = AtlasWireHeader::overwrite_request_meta(req, req_id, slot_index);
+            let req_msg = AtlasFrameHeader::overwrite_request_meta(req, req_id, slot_index);
             let channel_writer = {
                 let guard = self.channel_writer.lock().await;
                 guard.clone()

@@ -1,5 +1,4 @@
-use atlas_core::net::rpc::packet_header::{AtlasWireHeader, AtlasWireKind};
-use atlas_core::net::rpc::packet_message::AtlasWireMessage;
+
 use atlas_scheme::proto::auth::rpc::{BasicAuthReq};
 use atlas_scheme::module_method::auth_method::{BasicAuthRpc};
 use futures_util::{SinkExt, StreamExt};
@@ -10,7 +9,10 @@ use std::sync::{
 use tokio::time::{sleep, Duration};
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
-use atlas_core::net::rpc::router::AtlasRpcSpec;
+use atlas_core::net::core::rpc::AtlasRpcSpec;
+use atlas_core::net::protocol::frame::AtlasFrame;
+use atlas_core::net::protocol::frame_header::AtlasFrameHeader;
+use atlas_core::net::protocol::frame_kind::AtlasFrameKind;
 
 const CONNECTIONS: usize = 4;
 const INFLIGHT_PER_CONN: usize = 1024;
@@ -45,20 +47,20 @@ async fn main() {
     }
 
 
-    let request = AtlasWireMessage {
-        header: AtlasWireHeader {
+    let request = AtlasFrame {
+        header: AtlasFrameHeader {
             id: 0,
             slot_index: 0,
-            method: BasicAuthRpc::WIRE,
-            kind: AtlasWireKind::Request,
+            op_code: BasicAuthRpc::WIRE,
+            kind: AtlasFrameKind::Request,
             uid: [0; 16],
         },
-        payload: BasicAuthReq {
+        body: BasicAuthReq {
             account: "val".into(),
             password: "val".into(),
         },
     };
-    let _req_bytes = request.into_raw().unwrap().into_wire_bytes();
+    let _req_bytes = request.into_raw().unwrap().into_bytes();
 
     // ===== 启动连接 =====
     for conn_id in 0..CONNECTIONS  {

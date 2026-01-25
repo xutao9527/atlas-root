@@ -6,39 +6,27 @@ use tokio::select;
 use tokio::sync::mpsc;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
-use crate::net::rpc::codec::FrameWireCodec;
-use crate::net::rpc::notify::{AtlasRegNodeId, Notifier};
-use crate::net::rpc::packet_header::AtlasWireKind;
-use crate::net::rpc::packet_message::{AtlasRawMessage, AtlasWireMessage};
+use crate::net::codec::frame_codec::FrameWireCodec;
+use crate::net::core::notify::{set_global_notifier, Notifier};
+use crate::net::core::reg::AtlasRegNodeId;
+use crate::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
+use crate::net::protocol::frame_kind::AtlasFrameKind;
 
-type NotifyTx = mpsc::UnboundedSender<AtlasRawMessage>;
-
-/// ⭐ 模块级 notifier（关键）
-static GLOBAL_NOTIFIER: OnceLock<Arc<dyn Notifier>> = OnceLock::new();
-
-pub fn set_global_notifier(n: Arc<dyn Notifier>) {
-    let _ = GLOBAL_NOTIFIER.set(n);
-}
-
-pub fn global_notifier() -> Option<&'static Arc<dyn Notifier>> {
-    GLOBAL_NOTIFIER.get()
-}
-
-pub struct AtlasRpcServer<DispatchFn, Fut>
+pub struct AtlasNetServer<DispatchFn, Fut>
 where
-    DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
-    Fut: Future<Output = AtlasRawMessage> + Send + 'static,
+    DispatchFn: Fn(AtlasRawFrame) -> Fut + Send + Sync + 'static + Copy,
+    Fut: Future<Output = AtlasRawFrame> + Send + 'static,
 {
     addr: String,
     dispatch_fn: DispatchFn,
     /// 保存所有连接，用来发通知
-    registry_node: Arc<DashMap<AtlasRegNodeId, NotifyTx>>,
+    registry_node: Arc<DashMap<AtlasRegNodeId, mpsc::UnboundedSender<AtlasRawFrame>>>,
 }
 
-impl<DispatchFn, Fut> AtlasRpcServer<DispatchFn, Fut>
+impl<DispatchFn, Fut> AtlasNetServer<DispatchFn, Fut>
 where
-    DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
-    Fut: Future<Output = AtlasRawMessage> + Send + 'static,
+    DispatchFn: Fn(AtlasRawFrame) -> Fut + Send + Sync + 'static + Copy,
+    Fut: Future<Output = AtlasRawFrame> + Send + 'static,
 
 {
     pub fn new(addr: String, dispatch_fn: DispatchFn) -> Arc<Self> {
@@ -69,20 +57,19 @@ where
             tokio::spawn(async move {
                 let mut framed = Framed::new(stream, FrameWireCodec::default());
                 // === 每个连接一个 notify channel ===
-                let (notify_tx, mut notify_rx) = mpsc::unbounded_channel::<AtlasRawMessage>();
+                let (notify_tx, mut notify_rx) = mpsc::unbounded_channel::<AtlasRawFrame>();
                 loop {
                     select! {
                         // ===== 客户端 RPC 请求 =====
                         result = framed.next() => {
                             match result {
                                 Some(Ok(req)) => {
-                                    if let Ok(msg) = AtlasRawMessage::from_wire_bytes(req) {
-                                        // ===== RegistryNode =====
-                                        if msg.header.kind == AtlasWireKind::RegistryNode {
-                                            match AtlasWireMessage::<AtlasRegNodeId>::from_raw(msg) {
+                                    if let Ok(msg) = AtlasRawFrame::from_bytes(req) {
+                                        // ===== RegNode =====
+                                        if msg.header.kind == AtlasFrameKind::RegNode {
+                                            match AtlasFrame::<AtlasRegNodeId>::from_raw(msg) {
                                                 Ok(msg) => {
-                                                    let reg_node_id = msg.payload; // ⭐ 强类型 NodeId
-
+                                                    let reg_node_id = msg.body; // ⭐ 强类型 NodeId
                                                     match registry_node.entry(reg_node_id) {
                                                         Entry::Vacant(e) => {
                                                             e.insert(notify_tx.clone());
@@ -105,9 +92,9 @@ where
                                             continue;
                                         }
                                         // ===== RPC =====
-                                        if msg.header.kind == AtlasWireKind::Request {
+                                        if msg.header.kind == AtlasFrameKind::Request {
                                             let resp = dispatch_fn(msg).await;
-                                            if framed.send(resp.into_wire_bytes()).await.is_err() {
+                                            if framed.send(resp.into_bytes()).await.is_err() {
                                                 break;
                                             }
                                         }
@@ -127,7 +114,7 @@ where
                         }
                         // ===== 服务器主动通知 =====
                         Some(notify) = notify_rx.recv() => {
-                            if framed.send(notify.into_wire_bytes()).await.is_err() {
+                            if framed.send(notify.into_bytes()).await.is_err() {
                                 break;
                             }
                         }
@@ -145,16 +132,16 @@ where
     }
 }
 
-impl<DispatchFn, Fut> Notifier for AtlasRpcServer<DispatchFn, Fut>
+impl<DispatchFn, Fut> Notifier for AtlasNetServer<DispatchFn, Fut>
 where
-    DispatchFn: Fn(AtlasRawMessage) -> Fut + Send + Sync + 'static + Copy,
-    Fut: Future<Output = AtlasRawMessage> + Send + 'static,
+    DispatchFn: Fn(AtlasRawFrame) -> Fut + Send + Sync + 'static + Copy,
+    Fut: Future<Output = AtlasRawFrame> + Send + 'static,
 {
 
     fn notify_raw(
         &self,
         reg_node_id: &AtlasRegNodeId,
-        raw_notify_msg: AtlasRawMessage,
+        raw_notify_msg: AtlasRawFrame,
     ) -> bool {
         let Some(tx) = self.registry_node.get(reg_node_id) else {
             return false;

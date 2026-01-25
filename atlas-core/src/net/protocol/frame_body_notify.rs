@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use crate::net::rpc::packet_header::AtlasWireHeader;
-use crate::net::rpc::packet_message::AtlasWireMessage;
-use crate::net::rpc::router::AtlasModuleId;
+use crate::net::core::rpc::AtlasModuleId;
+use crate::net::protocol::frame::AtlasFrame;
+use crate::net::protocol::frame_header::AtlasFrameHeader;
 
 /// ================== 通知目标 ==================
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,15 +20,12 @@ pub enum AtlasNotifyTarget {
 
 /// ================== 通知载体 ==================
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AtlasNotify<T> {
+pub struct AtlasNotifyBody<T> {
     /// 通知目标
     pub targets: Vec<AtlasNotifyTarget>,
-    /// 通知类型 ID（由 scheme 定义）
-    pub notify_type_id: u32,
     /// 通知数据
     pub data: T,
 }
-
 
 /// ================== Notify Spec（scheme 用） ==================
 pub trait AtlasNotifySpec: 'static {
@@ -42,12 +39,11 @@ pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
     fn build_notify(
         self,
         targets: Vec<AtlasNotifyTarget>,
-    ) -> AtlasWireMessage<AtlasNotify<Self>> {
-        AtlasWireMessage {
-            header: AtlasWireHeader::build_notify(),
-            payload: AtlasNotify {
+    ) -> AtlasFrame<AtlasNotifyBody<Self>> {
+        AtlasFrame {
+            header: AtlasFrameHeader::build_notify(),
+            body: AtlasNotifyBody {
                 targets,
-                notify_type_id: Self::WIRE,
                 data: self,
             },
         }

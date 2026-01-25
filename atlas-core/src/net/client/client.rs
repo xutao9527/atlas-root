@@ -1,15 +1,14 @@
-use crate::net::rpc::client::connection::AtlasConnection;
-
 use bytes::Bytes;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::net::rpc::notify::AtlasRegNodeId;
+use crate::net::client::connection::AtlasConnection;
+use crate::net::core::reg::AtlasRegNodeId;
 
 pub type NotifyHandler = Arc<dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 
-pub struct AtlasRpcClient {
+pub struct AtlasNetClient {
     addr: String,
     logical_id: AtlasRegNodeId,
     next_req_id: AtomicU64,
@@ -17,7 +16,7 @@ pub struct AtlasRpcClient {
     notify_handler: Arc<Mutex<Option<NotifyHandler>>>,
 }
 
-impl AtlasRpcClient {
+impl AtlasNetClient {
     pub fn new(addr: String, logical_id: AtlasRegNodeId, con_num: usize) -> Self {
         Self {
             addr,
