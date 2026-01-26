@@ -39,13 +39,15 @@ async fn main() -> anyhow::Result<()> {
             uid: [0; 16],
         },
         body: BasicAuthReq {
-            account: "val".into(),
-            password: "val".into(),
+            account: "111".into(),
+            password: "123123".into(),
         },
     };
 
     let request_bytes = request.into_raw().unwrap().into_bytes();
     socket_writer.send(request_bytes).await?;
+    // loop {
     sleep(Duration::from_secs(3)).await;
+    // }
     Ok(())
 }
