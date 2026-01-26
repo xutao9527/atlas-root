@@ -25,7 +25,7 @@ pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Resu
     let mut holdem_client = AtlasNetClient::new("127.0.0.1:6677".into(), AtlasRegNodeId::GateNode(1),1);
     holdem_client.connect().await?;
 
-    auth_client.set_notify_handler(Some(notify_handler),Some(notify_dispatcher)).await;
+    auth_client.set_notify_handler(notify_handler, notify_dispatcher).await;
 
     let registry = RpcClientRegistry::new();
     registry.register(AtlasModuleId::Auth, auth_client).await;

@@ -65,8 +65,8 @@ impl AtlasNetClient {
 
     pub async fn set_notify_handler<F1, Fut1, F2, Fut2>(
         &self,
-        handler: Option<F1>,
-        dispatcher: Option<F2>,
+        handler: F1,
+        dispatcher: F2,
     ) where
         F1: Fn(Vec<AtlasNotifyTarget>, AtlasRawFrame) -> Fut1 + Send + Sync + 'static,
         Fut1: Future<Output = ()> + Send + 'static,
@@ -74,17 +74,12 @@ impl AtlasNetClient {
         Fut2: Future<Output = ()> + Send + 'static,
     {
         // notify_handler
-        if let Some(f) = handler {
-            let mut guard = self.notify_handler.lock().await;
-            *guard = Some(Arc::new(move |targets, raw| Box::pin(f(targets, raw))));
-        }
-
+        let mut guard = self.notify_handler.lock().await;
+        *guard = Some(Arc::new(move |targets, raw| Box::pin(handler(targets, raw))));
         // notify_dispatcher
-        if let Some(f) = dispatcher {
-            let mut guard = self.notify_dispatcher.lock().await;
-            *guard = Some(Arc::new(move |bytes, notify_handler| {
-                Box::pin(f(bytes, notify_handler))
-            }));
-        }
+        let mut guard = self.notify_dispatcher.lock().await;
+        *guard = Some(Arc::new(move |bytes, notify_handler| {
+            Box::pin(dispatcher(bytes, notify_handler))
+        }));
     }
 }
