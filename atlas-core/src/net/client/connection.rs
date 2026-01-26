@@ -23,7 +23,7 @@ pub struct AtlasConnection {
     reg_node_id: AtlasRegNodeId,
     pending: Arc<PendingTable<Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
-    notify_handler: Arc<Mutex<Option<NotifyHandler>>>,// ⭐ 来自 Client
+    notify_handler: Arc<Mutex<Option<NotifyHandler>>>,// 来自 Client
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
     connected: Arc<AtomicBool>,

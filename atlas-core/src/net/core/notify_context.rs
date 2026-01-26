@@ -21,7 +21,7 @@ pub trait Notifier: Send + Sync {
     fn notify_raw(
         &self,
         reg_node_id: &AtlasRegNodeId,
-        raw_notify_msg: AtlasRawFrame,
+        notify_frame: AtlasRawFrame,
     ) -> bool;
 }
 
@@ -30,12 +30,12 @@ pub trait NotifierExt: Notifier {
     fn notify<T>(
         &self,
         reg_node_id: &AtlasRegNodeId,
-        wire_notify_msg: AtlasFrame<AtlasNotifyInternal<T>>,
+        notify_frame: AtlasFrame<AtlasNotifyInternal<T>>,
     ) -> bool
     where
         T: Serialize + DeserializeOwned + Send + 'static,
     {
-        let raw = match wire_notify_msg.into_raw() {
+        let raw = match notify_frame.into_raw() {
             Ok(r) => r,
             Err(_) => return false,
         };

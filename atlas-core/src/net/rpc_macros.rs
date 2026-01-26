@@ -47,14 +47,14 @@ macro_rules! atlas_rpc_dispatch {
         pub mod $mod_name {
             use super::*;
             use bytes::Bytes;
-            use atlas_core::net::core::rpc::{handle, AtlasRpcSpec};
+            use atlas_core::net::core::{handle_rpc, AtlasRpcSpec};
             use atlas_core::net::protocol::frame::AtlasRawFrame;
 
 
             pub async fn dispatch(raw: AtlasRawFrame) -> AtlasRawFrame {
                 match raw.header.op_code {
                     $(
-                        <$method_ty>::OP_CODE => handle::<$method_ty, _>(raw, $fn_name).await,
+                        <$method_ty>::OP_CODE => handle_rpc::<$method_ty, _>(raw, $fn_name).await,
                     )*
                     _ => AtlasRawFrame {
                         header: raw.header,

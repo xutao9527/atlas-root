@@ -27,7 +27,7 @@ pub trait AtlasRpcSpec: Copy + 'static {
 }
 
 
-pub async fn handle<M, Fut>(
+pub async fn handle_rpc<M, Fut>(
     raw: AtlasRawFrame,
     f: fn(AtlasFrame<M::Request>) -> Fut,
 ) -> AtlasRawFrame

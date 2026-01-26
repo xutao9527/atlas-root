@@ -1,3 +1,6 @@
+use bytes::Bytes;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use crate::net::core::module_id::AtlasModuleId;
 use crate::net::protocol::frame::AtlasFrame;
 use crate::net::protocol::frame_body_notify::{AtlasNotifyInternal, AtlasNotifyTarget};
@@ -25,3 +28,11 @@ pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
 
 /// 自动给所有满足条件的类型实现
 impl<T> AtlasNotifyBuildExt for T where T: AtlasNotifySpec {}
+
+
+pub async fn handle_notify<T>(notify_frame: Bytes)
+where
+    T: Serialize + DeserializeOwned + AtlasNotifySpec,
+{
+
+}
