@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use tracing::debug;
 use ulid::Ulid;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
-use atlas_core::net::core::rpc::{AtlasModuleId, AtlasRpcSpec};
+use atlas_core::net::core::{AtlasModuleId, AtlasRpcSpec};
 use atlas_core::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
 use atlas_core::net::protocol::frame_header::AtlasFrameHeader;
 use atlas_core::net::protocol::frame_kind::AtlasFrameKind;

@@ -10,7 +10,8 @@ macro_rules! atlas_rpc_module {
     ) => {
         pub mod $mod_name {
             use super::*;
-            use atlas_core::net::core::rpc::{AtlasModuleId, AtlasRpcSpec};
+
+            use atlas_core::net::core::{AtlasModuleId, AtlasRpcSpec};
 
             // ===== 编译期校验：method_id 不能重复 =====
             #[allow(non_camel_case_types)]

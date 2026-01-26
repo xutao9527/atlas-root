@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::net::client::client::AtlasNetClient;
-use crate::net::core::rpc::AtlasModuleId;
+use crate::net::core::module_id::AtlasModuleId;
 
 pub type RpcClientRef = Arc<AtlasNetClient>;
 

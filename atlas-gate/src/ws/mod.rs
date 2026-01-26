@@ -14,7 +14,7 @@ use tokio::sync::mpsc::channel;
 use tracing::{debug, info};
 use atlas_core::net::client::client::AtlasNetClient;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
-use atlas_core::net::core::rpc::{AtlasModuleId, AtlasRpcSpec};
+use atlas_core::net::core::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::proto::auth::rpc::{TokenAuthReq};
 use atlas_scheme::module_method::auth_method::TokenAuthRpc;
 use crate::context::session_map;

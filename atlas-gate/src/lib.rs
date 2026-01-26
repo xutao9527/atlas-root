@@ -14,8 +14,7 @@ use tokio::net::TcpListener;
 use tracing::info;
 use atlas_core::net::client::client::AtlasNetClient;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
-use atlas_core::net::core::reg::AtlasRegNodeId;
-use atlas_core::net::core::rpc::AtlasModuleId;
+use atlas_core::net::core::{AtlasModuleId,AtlasRegNodeId};
 use crate::notify::notify_handler;
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {

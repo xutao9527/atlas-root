@@ -9,10 +9,10 @@ use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel};
 use tracing::log;
 use ulid::Ulid;
-use atlas_core::net::core::notify::{global_notifier, NotifierExt};
-use atlas_core::net::core::reg::AtlasRegNodeId;
+use atlas_core::net::core::{global_notifier, AtlasNotifyBuildExt, NotifierExt};
+use atlas_core::net::core::reg_node::AtlasRegNodeId;
 use atlas_core::net::protocol::frame::AtlasFrame;
-use atlas_core::net::protocol::frame_body_notify::{AtlasNotifyBuildExt, AtlasNotifyTarget};
+use atlas_core::net::protocol::frame_body_notify::{AtlasNotifyTarget};
 use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcBody, AtlasWireError};
 use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 

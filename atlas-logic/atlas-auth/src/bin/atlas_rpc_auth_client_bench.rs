@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
 use atlas_core::net::client::client::AtlasNetClient;
-use atlas_core::net::core::reg::AtlasRegNodeId;
+use atlas_core::net::core::reg_node::AtlasRegNodeId;
 use atlas_core::net::core::rpc::AtlasRpcSpec;
 use atlas_core::net::protocol::frame::AtlasFrame;
 use atlas_core::net::protocol::frame_header::AtlasFrameHeader;

@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use crate::net::client::connection::AtlasConnection;
-use crate::net::core::reg::AtlasRegNodeId;
+use crate::net::core::reg_node::AtlasRegNodeId;
 
 pub type NotifyHandler = Arc<dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 

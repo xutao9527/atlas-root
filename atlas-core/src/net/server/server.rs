@@ -7,8 +7,8 @@ use tokio::sync::mpsc;
 use tokio_util::codec::Framed;
 use tracing::{debug, warn};
 use crate::net::codec::frame_codec::FrameWireCodec;
-use crate::net::core::notify::{set_global_notifier, Notifier};
-use crate::net::core::reg::AtlasRegNodeId;
+use crate::net::core::notify_context::{set_global_notifier, Notifier};
+use crate::net::core::reg_node::AtlasRegNodeId;
 use crate::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
 use crate::net::protocol::frame_kind::AtlasFrameKind;
 

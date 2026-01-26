@@ -1,50 +1,34 @@
-use std::sync::{Arc, OnceLock};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use crate::net::core::reg::AtlasRegNodeId;
-use crate::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
-use crate::net::protocol::frame_body_notify::AtlasNotifyBody;
+use crate::net::core::module_id::AtlasModuleId;
+use crate::net::protocol::frame::AtlasFrame;
+use crate::net::protocol::frame_body_notify::{AtlasNotifyBody, AtlasNotifyTarget};
+use crate::net::protocol::frame_header::AtlasFrameHeader;
 
-/// ⭐ 模块级 notifier（关键）
-static GLOBAL_NOTIFIER: OnceLock<Arc<dyn Notifier>> = OnceLock::new();
 
-pub fn set_global_notifier(n: Arc<dyn Notifier>) {
-    let _ = GLOBAL_NOTIFIER.set(n);
+/// ================== Notify Spec（scheme 用） ==================
+pub trait AtlasNotifySpec: 'static {
+    const MODULE_ID: AtlasModuleId;
+    const NOTIFY_TYPE_ID: u16;
+    const WIRE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::NOTIFY_TYPE_ID as u32);
 }
 
-pub fn global_notifier() -> Option<&'static Arc<dyn Notifier>> {
-    GLOBAL_NOTIFIER.get()
-}
-
-/// ================== 核心 Notifier（对象安全） ==================
-pub trait Notifier: Send + Sync {
-    fn notify_raw(
-        &self,
-        reg_node_id: &AtlasRegNodeId,
-        raw_notify_msg: AtlasRawFrame,
-    ) -> bool;
-}
-
-
-/// ================== 泛型扩展（你真正用的） ==================
-pub trait NotifierExt: Notifier {
-    fn notify<T>(
-        &self,
-        reg_node_id: &AtlasRegNodeId,
-        wire_notify_msg: AtlasFrame<AtlasNotifyBody<T>>,
-    ) -> bool
-    where
-        T: Serialize + DeserializeOwned + Send + 'static,
-    {
-        let raw = match wire_notify_msg.into_raw() {
-            Ok(r) => r,
-            Err(_) => return false,
-        };
-
-        self.notify_raw(reg_node_id, raw)
+/// ================== Notify Builder（真正的 glue） ==================
+pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
+    fn build_notify(
+        self,
+        targets: Vec<AtlasNotifyTarget>,
+    ) -> AtlasFrame<AtlasNotifyBody<Self>> {
+        AtlasFrame {
+            header: AtlasFrameHeader::build_notify(),
+            body: AtlasNotifyBody {
+                targets,
+                data: self,
+            },
+        }
     }
 }
 
-
-/// 所有 Notifier 自动获得 notify<T>
-impl<T: Notifier + ?Sized> NotifierExt for T {}
+/// 自动给所有满足条件的类型实现
+impl<T> AtlasNotifyBuildExt for T
+where
+    T: AtlasNotifySpec,
+{}

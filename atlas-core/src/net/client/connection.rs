@@ -12,7 +12,7 @@ use tracing::{debug, info, warn};
 use crate::net::client::client::NotifyHandler;
 use crate::net::client::pending::PendingTable;
 use crate::net::codec::frame_codec::FrameWireCodec;
-use crate::net::core::reg::AtlasRegNodeId;
+use crate::net::core::reg_node::AtlasRegNodeId;
 use crate::net::protocol::frame::AtlasFrame;
 use crate::net::protocol::frame_header::AtlasFrameHeader;
 use crate::net::protocol::frame_kind::AtlasFrameKind;
