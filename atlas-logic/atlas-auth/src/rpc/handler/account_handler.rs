@@ -65,21 +65,19 @@ pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcBody<AuthResp>
             match store_token(token.as_str(), user.id.as_str()).await {
                 Ok(expire_at) => {
                     if let Some(notifier) = global_notifier() {
-                        let notify  = UserUpdateNotify {
+                        let notify_msg  = UserUpdateNotify {
                             id: "".to_string(),
                             account: "".to_string(),
                             name: "".to_string(),
                             balance: Default::default(),
                             avatar: None,
-                        };
-                        let notify_msg = notify.build_notify(vec![
+                        }.build_notify(vec![
                             AtlasNotifyTarget::Broadcast,
                         ]);
                         notifier.notify(
                             &AtlasRegNodeId::GateNode(1),
                             notify_msg,
                         );
-
                     }
                     AtlasRpcBody::Ok(AuthResp {
                         ok: true,

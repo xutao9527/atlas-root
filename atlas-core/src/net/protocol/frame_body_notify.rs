@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// ================== 通知目标 ==================
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum AtlasNotifyTarget {
     /// 全体广播
     Broadcast,
@@ -16,7 +17,12 @@ pub enum AtlasNotifyTarget {
 }
 
 /// ================== 通知载体 ==================
+
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(bound(
+    serialize = "T: Serialize",
+    deserialize = "T: Deserialize<'de>"
+))]
 pub struct AtlasNotifyBody<T> {
     /// 通知目标
     pub targets: Vec<AtlasNotifyTarget>,
