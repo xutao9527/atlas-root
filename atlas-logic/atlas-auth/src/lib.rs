@@ -1,6 +1,6 @@
 use atlas_core::net::server::server::AtlasNetServer;
 use crate::context::{init_db, token_manager};
-use crate::rpc::module_dispatch::auth_bind::dispatch;
+use crate::rpc::rpc_dispatch_def::auth_bind::dispatch;
 
 
 pub mod rpc;

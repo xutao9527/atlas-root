@@ -1,6 +1,6 @@
 pub mod auth;
 pub mod holdem;
 pub mod notify;
-pub mod module_rpc;
-pub mod module_notify;
+pub mod rpc_def;
+pub mod notify_def;
 

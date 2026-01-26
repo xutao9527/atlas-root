@@ -15,7 +15,7 @@ use tracing::info;
 use atlas_core::net::client::client::AtlasNetClient;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
 use atlas_core::net::core::{AtlasModuleId,AtlasRegNodeId};
-use atlas_scheme::proto::module_notify::notify::notify_dispatcher;
+use atlas_scheme::proto::notify_def::notify::notify_dispatcher;
 use crate::notify::{notify_handler};
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {

@@ -1,2 +1,2 @@
-pub mod module_dispatch;
+pub mod rpc_dispatch_def;
 pub mod handler;

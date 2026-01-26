@@ -1,6 +1,6 @@
 
 use atlas_scheme::proto::auth::rpc::{BasicAuthReq};
-use atlas_scheme::proto::module_rpc::auth_method::{BasicAuthRpc};
+use atlas_scheme::proto::rpc_def::auth_method::{BasicAuthRpc};
 use futures_util::{SinkExt, StreamExt};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
