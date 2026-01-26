@@ -27,8 +27,6 @@ impl AtlasNetClient {
         }
     }
 
-
-
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         for _ in 0..self.connections.capacity() {
             let connection = Arc::new(AtlasConnection::new(
