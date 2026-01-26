@@ -15,7 +15,7 @@ use tracing::info;
 use atlas_core::net::client::client::AtlasNetClient;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
 use atlas_core::net::core::{AtlasModuleId,AtlasRegNodeId};
-use crate::notify::notify_handler;
+use crate::notify::{dispatch_notify};
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）
@@ -25,7 +25,7 @@ pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Resu
     holdem_client.connect().await?;
 
 
-    auth_client.set_notify_handler(notify_handler).await;
+    auth_client.set_notify_handler(dispatch_notify).await;
 
 
     let registry = RpcClientRegistry::new();

@@ -14,5 +14,5 @@ pub struct UserUpdateNotify {
 
 impl AtlasNotifySpec for UserUpdateNotify {
     const MODULE_ID: AtlasModuleId = AtlasModuleId::Auth;
-    const NOTIFY_TYPE_ID: u16 = 1;
+    const NOTIFY_ID: u16 = 1;
 }

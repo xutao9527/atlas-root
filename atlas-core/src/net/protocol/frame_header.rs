@@ -38,11 +38,11 @@ impl AtlasFrameHeader {
 
     /// 构造通知
     #[inline]
-    pub fn build_notify() -> Self {
+    pub fn build_notify(op_code: u32) -> Self {
         Self {
             id: 0,
             slot_index: 0,
-            op_code: 0,
+            op_code,
             kind: AtlasFrameKind::Notify,
             uid: [0u8; 16],
         }
