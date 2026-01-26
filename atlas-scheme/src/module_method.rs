@@ -2,7 +2,6 @@ use atlas_core::atlas_rpc_module;
 use crate::proto::auth::rpc::*;
 use crate::proto::holdem::rpc::*;
 
-
 atlas_rpc_module! {
     module auth_method {
         ModuleId = AtlasModuleId::Auth;
