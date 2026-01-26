@@ -13,10 +13,10 @@ use atlas_core::net::core::notify::{global_notifier, NotifierExt};
 use atlas_core::net::core::reg::AtlasRegNodeId;
 use atlas_core::net::protocol::frame::AtlasFrame;
 use atlas_core::net::protocol::frame_body_notify::{AtlasNotifyBuildExt, AtlasNotifyTarget};
-use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcPayload, AtlasWireError};
+use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcBody, AtlasWireError};
 use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 
-pub async fn register(req: AtlasFrame<RegisterReq>) -> AtlasRpcPayload<RegisterResp> {
+pub async fn register(req: AtlasFrame<RegisterReq>) -> AtlasRpcBody<RegisterResp> {
     let model = atlas_user::Model {
         id: Ulid::new().to_string(),
         user_type: Some(UserType::Normal),
@@ -31,13 +31,13 @@ pub async fn register(req: AtlasFrame<RegisterReq>) -> AtlasRpcPayload<RegisterR
     let active_model = model.into_active_model();
     let res = active_model.insert(get_db()).await;
     match res {
-        Ok(_) => AtlasRpcPayload::Ok(RegisterResp {
+        Ok(_) => AtlasRpcBody::Ok(RegisterResp {
             ok: true,
             message: Some("register success".into()),
         }),
         Err(e) => {
             log::error!("register error: {:?}", e);
-            AtlasRpcPayload::Err(AtlasWireError {
+            AtlasRpcBody::Err(AtlasWireError {
                 code: 500,
                 message: format!("register failed: {}", e),
                 data: None,
@@ -46,7 +46,7 @@ pub async fn register(req: AtlasFrame<RegisterReq>) -> AtlasRpcPayload<RegisterR
     }
 }
 
-pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcPayload<AuthResp> {
+pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcBody<AuthResp> {
     let result = atlas_user::Entity::find()
         .filter(atlas_user::Column::Account.eq(req.body.account))
         .one(get_db())
@@ -55,7 +55,7 @@ pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcPayload<AuthRe
     match result {
         Ok(Some(user)) => {
             if user.password != req.body.password {
-                return AtlasRpcPayload::Err(AtlasWireError {
+                return AtlasRpcBody::Err(AtlasWireError {
                     code: 401,
                     message: "Invalid password".into(),
                     data: None,
@@ -81,26 +81,26 @@ pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcPayload<AuthRe
                         );
 
                     }
-                    AtlasRpcPayload::Ok(AuthResp {
+                    AtlasRpcBody::Ok(AuthResp {
                         ok: true,
                         uid: Some(user.id),
                         token: Some(token),
                         expire_at: Some(expire_at),
                     })
                 },
-                Err(err) => AtlasRpcPayload::Err(AtlasWireError {
+                Err(err) => AtlasRpcBody::Err(AtlasWireError {
                     code: 500,
                     message: err.to_string(),
                     data: None,
                 }),
             }
         }
-        Ok(None) => AtlasRpcPayload::Err(AtlasWireError {
+        Ok(None) => AtlasRpcBody::Err(AtlasWireError {
             code: 404,
             message: "account not found".into(),
             data: None,
         }),
-        Err(e) => AtlasRpcPayload::Err(AtlasWireError {
+        Err(e) => AtlasRpcBody::Err(AtlasWireError {
             code: 500,
             message: format!("auth failed: {}", e),
             data: None,
@@ -108,15 +108,15 @@ pub async fn basic_auth(req: AtlasFrame<BasicAuthReq>) -> AtlasRpcPayload<AuthRe
     }
 }
 
-pub async fn token_auth(req: AtlasFrame<TokenAuthReq>) -> AtlasRpcPayload<AuthResp> {
+pub async fn token_auth(req: AtlasFrame<TokenAuthReq>) -> AtlasRpcBody<AuthResp> {
     match validate_token(req.body.token.as_str()).await {
-        Ok((uid, expire_at)) => AtlasRpcPayload::Ok(AuthResp {
+        Ok((uid, expire_at)) => AtlasRpcBody::Ok(AuthResp {
             ok: true,
             uid: Some(uid),
             token: Some(req.body.token),
             expire_at: Some(expire_at),
         }),
-        Err(err) => AtlasRpcPayload::Err(AtlasWireError {
+        Err(err) => AtlasRpcBody::Err(AtlasWireError {
             code: 401,
             message: err.to_string(),
             data: None,

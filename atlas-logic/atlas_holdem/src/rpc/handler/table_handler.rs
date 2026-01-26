@@ -8,9 +8,9 @@ use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
 use ulid::Ulid;
 use atlas_core::net::protocol::frame::AtlasFrame;
-use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcPayload, AtlasWireError};
+use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcBody, AtlasWireError};
 
-pub async fn get_table_list(_req: AtlasFrame<GetTableListReq>) -> AtlasRpcPayload<GetTableListResp> {
+pub async fn get_table_list(_req: AtlasFrame<GetTableListReq>) -> AtlasRpcBody<GetTableListResp> {
     let mut table_views = Vec::new();
     for table in table_manager().all() {
         let table = table.read().await;
@@ -25,12 +25,12 @@ pub async fn get_table_list(_req: AtlasFrame<GetTableListReq>) -> AtlasRpcPayloa
         };
         table_views.push(table_view);
     }
-    AtlasRpcPayload::Ok(GetTableListResp {
+    AtlasRpcBody::Ok(GetTableListResp {
         tables: table_views,
     })
 }
 
-pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcPayload<GetTableInfoResp> {
+pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcBody<GetTableInfoResp> {
     let uid = Ulid::from_bytes(req.header.uid).to_string();
 
     let resp = match table_manager().get(&req.body.table_id) {
@@ -40,7 +40,7 @@ pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcPayload
             let seat_index = match table.find_seat_index_by_player_id(&uid) {
                 Some(i) => i,
                 None => {
-                    return AtlasRpcPayload::Err(AtlasWireError {
+                    return AtlasRpcBody::Err(AtlasWireError {
                         code: 403,
                         message: "player not seated at this table".into(),
                         data: None,
@@ -51,7 +51,7 @@ pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcPayload
             let player = match table.seats.get(seat_index).and_then(|s| s.as_ref()) {
                 Some(player) => player,
                 None => {
-                    return AtlasRpcPayload::Err(AtlasWireError {
+                    return AtlasRpcBody::Err(AtlasWireError {
                         code: 500,
                         message: "seat exists but player missing".into(),
                         data: None,
@@ -59,7 +59,7 @@ pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcPayload
                 }
             };
             // 3️⃣ 构造响应
-            AtlasRpcPayload::Ok(GetTableInfoResp {
+            AtlasRpcBody::Ok(GetTableInfoResp {
                 id: table.id.clone(),
                 seats: table.seats.iter().map(|p|p.as_ref().map(Into::into)).collect(),
                 state: table.state.into(),
@@ -87,7 +87,7 @@ pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcPayload
             })
         }
         None => {
-            return AtlasRpcPayload::Err(AtlasWireError {
+            return AtlasRpcBody::Err(AtlasWireError {
                 code: 404,
                 message: "table not found".into(),
                 data: None,
@@ -97,7 +97,7 @@ pub async fn get_table_info(req: AtlasFrame<GetTableInfoReq>) -> AtlasRpcPayload
     resp
 }
 
-pub async fn sit_table(req: AtlasFrame<SitTableReq>) -> AtlasRpcPayload<SitTableResp> {
+pub async fn sit_table(req: AtlasFrame<SitTableReq>) -> AtlasRpcBody<SitTableResp> {
     //  ===== 0. 获得自己 =====
     let user = match atlas_user::Entity::find()
         .filter(atlas_user::Column::Id.eq(Ulid::from_bytes(req.header.uid).to_string()))
@@ -105,7 +105,7 @@ pub async fn sit_table(req: AtlasFrame<SitTableReq>) -> AtlasRpcPayload<SitTable
         .await {
         Ok(Some(u)) => { u }
         _ => {
-            return AtlasRpcPayload::Err(AtlasWireError {
+            return AtlasRpcBody::Err(AtlasWireError {
                 code: 404,
                 message: "user not found".into(),
                 data: None,
@@ -118,7 +118,7 @@ pub async fn sit_table(req: AtlasFrame<SitTableReq>) -> AtlasRpcPayload<SitTable
             table
         }
         None => {
-            return AtlasRpcPayload::Err(AtlasWireError {
+            return AtlasRpcBody::Err(AtlasWireError {
                 code: 404,
                 message: "table not found".into(),
                 data: None,
@@ -147,26 +147,26 @@ pub async fn sit_table(req: AtlasFrame<SitTableReq>) -> AtlasRpcPayload<SitTable
     // ===== 4. 放入桌子 =====
     match table.sit(seat_index, player) {
         Ok(_) => {
-            AtlasRpcPayload::Ok(SitTableResp {
+            AtlasRpcBody::Ok(SitTableResp {
                 ok: true,
                 table_id: table.id.clone(),
                 message: Some("sit table success".into()),
             })
         }
         Err(e) => {
-            AtlasRpcPayload::Err(e.into())
+            AtlasRpcBody::Err(e.into())
         }
     }
 }
 
-pub async fn leave_table(req: AtlasFrame<LeaveTableReq>) -> AtlasRpcPayload<LeaveTableResp> {
+pub async fn leave_table(req: AtlasFrame<LeaveTableReq>) -> AtlasRpcBody<LeaveTableResp> {
     //  ===== 0. 获得自己ID =====
     let user_id = Ulid::from_bytes(req.header.uid).to_string();
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.body.table_id) {
         Some(t) => t,
         None => {
-            return AtlasRpcPayload::Err(AtlasWireError {
+            return AtlasRpcBody::Err(AtlasWireError {
                 code: 404,
                 message: "table not found".into(),
                 data: None,
@@ -177,22 +177,22 @@ pub async fn leave_table(req: AtlasFrame<LeaveTableReq>) -> AtlasRpcPayload<Leav
     let mut table = table.write().await;
 
     match table.leave(&user_id) {
-        Ok(_) => AtlasRpcPayload::Ok(LeaveTableResp {
+        Ok(_) => AtlasRpcBody::Ok(LeaveTableResp {
             ok: true,
             message: Some("leave table success".into()),
         }),
-        Err(e) => AtlasRpcPayload::Err(e.into()),
+        Err(e) => AtlasRpcBody::Err(e.into()),
     }
 }
 
-pub async fn game_act(req: AtlasFrame<GameActReq>) -> AtlasRpcPayload<GameActResp> {
+pub async fn game_act(req: AtlasFrame<GameActReq>) -> AtlasRpcBody<GameActResp> {
     //  ===== 0. 获得自己ID =====
     let uid = Ulid::from_bytes(req.header.uid).to_string();
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.body.table_id) {
         Some(t) => t,
         None => {
-            return AtlasRpcPayload::Err(AtlasWireError {
+            return AtlasRpcBody::Err(AtlasWireError {
                 code: 404,
                 message: "table not found".into(),
                 data: None,
@@ -203,21 +203,21 @@ pub async fn game_act(req: AtlasFrame<GameActReq>) -> AtlasRpcPayload<GameActRes
     let mut table = table.write().await;
     // ===== 3. 调用 =====
     match table.act(uid, req.body.act.into()) {
-        Ok(_) => AtlasRpcPayload::Ok(GameActResp {
+        Ok(_) => AtlasRpcBody::Ok(GameActResp {
             ok: true,
             message: Some("player act success".into()),
         }),
-        Err(e) => AtlasRpcPayload::Err(e.into()),
+        Err(e) => AtlasRpcBody::Err(e.into()),
     }
 
 }
 
-pub async fn game_start(req: AtlasFrame<GameStartReq>) -> AtlasRpcPayload<GameStartResp> {
+pub async fn game_start(req: AtlasFrame<GameStartReq>) -> AtlasRpcBody<GameStartResp> {
     // ===== 1. 获取桌子 =====
     let table = match table_manager().get(&req.body.table_id) {
         Some(t) => t,
         None => {
-            return AtlasRpcPayload::Err(AtlasWireError {
+            return AtlasRpcBody::Err(AtlasWireError {
                 code: 404,
                 message: "table not found".into(),
                 data: None,
@@ -229,11 +229,11 @@ pub async fn game_start(req: AtlasFrame<GameStartReq>) -> AtlasRpcPayload<GameSt
 
     // ===== 3. 调用 =====
     match table.start() {
-        Ok(_) => AtlasRpcPayload::Ok(GameStartResp {
+        Ok(_) => AtlasRpcBody::Ok(GameStartResp {
             ok: true,
             message: Some("start game success".into()),
         }),
-        Err(e) => AtlasRpcPayload::Err(e.into()),
+        Err(e) => AtlasRpcBody::Err(e.into()),
     }
 
 }

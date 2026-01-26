@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::net::protocol::frame::AtlasFrame;
 
-pub(crate) type AtlasRpcResult<T> = AtlasFrame<AtlasRpcPayload<T>>;
+pub(crate) type AtlasRpcFrame<T> = AtlasFrame<AtlasRpcBody<T>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -9,7 +9,7 @@ pub(crate) type AtlasRpcResult<T> = AtlasFrame<AtlasRpcPayload<T>>;
     serialize = "T: Serialize",
     deserialize = "T: Deserialize<'de>"
 ))]
-pub enum AtlasRpcPayload<T>
+pub enum AtlasRpcBody<T>
 {
     Ok(T),
     Err(AtlasWireError),

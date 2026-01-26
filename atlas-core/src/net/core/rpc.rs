@@ -3,7 +3,7 @@ use crate::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
 use crate::net::protocol::frame_header::AtlasFrameHeader;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use crate::net::protocol::frame_body_rpc::{AtlasRpcPayload, AtlasRpcResult};
+use crate::net::protocol::frame_body_rpc::{AtlasRpcBody, AtlasRpcFrame};
 use crate::net::protocol::frame_kind::AtlasFrameKind;
 
 #[repr(u16)]
@@ -51,9 +51,9 @@ pub async fn handle<M, Fut>(
 ) -> AtlasRawFrame
 where
     M: AtlasRpcSpec,
-    AtlasRpcResult<M::Response>: Serialize + DeserializeOwned,
+    AtlasRpcFrame<M::Response>: Serialize + DeserializeOwned,
     M::Response: Serialize + DeserializeOwned,
-    Fut: Future<Output=AtlasRpcPayload<M::Response>>,
+    Fut: Future<Output=AtlasRpcBody<M::Response>>,
 {
     let req_msg = match AtlasFrame::<M::Request>::from_raw(raw.clone()) {
         Ok(r) => r,
@@ -70,8 +70,8 @@ where
     let payload = f(req_msg).await;
 
     let kind = match payload {
-        AtlasRpcPayload::Ok(_) => AtlasFrameKind::ResponseOk,
-        AtlasRpcPayload::Err(_) => AtlasFrameKind::ResponseErr,
+        AtlasRpcBody::Ok(_) => AtlasFrameKind::ResponseOk,
+        AtlasRpcBody::Err(_) => AtlasFrameKind::ResponseErr,
     };
 
     AtlasFrame {
