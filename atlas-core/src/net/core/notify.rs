@@ -3,7 +3,6 @@ use crate::net::protocol::frame::AtlasFrame;
 use crate::net::protocol::frame_body_notify::{AtlasNotifyBody, AtlasNotifyTarget};
 use crate::net::protocol::frame_header::AtlasFrameHeader;
 
-
 /// ================== Notify Spec（scheme 用） ==================
 pub trait AtlasNotifySpec: 'static {
     const MODULE_ID: AtlasModuleId;
@@ -13,10 +12,7 @@ pub trait AtlasNotifySpec: 'static {
 
 /// ================== Notify Builder（真正的 glue） ==================
 pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
-    fn build_notify(
-        self,
-        targets: Vec<AtlasNotifyTarget>,
-    ) -> AtlasFrame<AtlasNotifyBody<Self>> {
+    fn build_notify(self, targets: Vec<AtlasNotifyTarget>) -> AtlasFrame<AtlasNotifyBody<Self>> {
         AtlasFrame {
             header: AtlasFrameHeader::build_notify(),
             body: AtlasNotifyBody {
@@ -28,7 +24,4 @@ pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
 }
 
 /// 自动给所有满足条件的类型实现
-impl<T> AtlasNotifyBuildExt for T
-where
-    T: AtlasNotifySpec,
-{}
+impl<T> AtlasNotifyBuildExt for T where T: AtlasNotifySpec {}

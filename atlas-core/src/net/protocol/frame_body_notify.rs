@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 /// ================== 通知目标 ==================
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
 pub enum AtlasNotifyTarget {
     /// 全体广播
     Broadcast,
