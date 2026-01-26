@@ -15,7 +15,8 @@ use tracing::info;
 use atlas_core::net::client::client::AtlasNetClient;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
 use atlas_core::net::core::{AtlasModuleId,AtlasRegNodeId};
-use crate::notify::{notify_dispatcher, notify_handler};
+use atlas_scheme::proto::module_notify::notify::notify_dispatcher;
+use crate::notify::{notify_handler};
 
 pub async fn serve_gateway(bind_addr: String, bind_port: String) -> anyhow::Result<()> {
     // 1️⃣ 创建并连接 RPC Client（只做一次）

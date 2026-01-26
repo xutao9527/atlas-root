@@ -1,7 +1,5 @@
 use sea_orm::prelude::Decimal;
 use serde::{Deserialize, Serialize};
-use atlas_core::net::core::module_id::AtlasModuleId;
-use atlas_core::net::core::notify::AtlasNotifySpec;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserUpdateNotify {
@@ -12,7 +10,11 @@ pub struct UserUpdateNotify {
     pub avatar: Option<String>,
 }
 
-impl AtlasNotifySpec for UserUpdateNotify {
-    const MODULE_ID: AtlasModuleId = AtlasModuleId::Auth;
-    const NOTIFY_ID: u16 = 1;
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserUpdateNotify2 {
+    pub id: String,
+    pub account: String,
+    pub name: String,
+    pub balance: Decimal,
+    pub avatar: Option<String>,
 }

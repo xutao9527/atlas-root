@@ -399,6 +399,7 @@ name = "atlas-scheme"
 version = "0.1.0"
 dependencies = [
  "atlas-core",
+ "bytes",
  "sea-orm",
  "serde",
 ]

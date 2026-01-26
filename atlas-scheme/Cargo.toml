@@ -9,3 +9,4 @@ atlas-core = { workspace = true }
 
 sea-orm = { workspace = true }
 serde = { workspace = true, features = ["derive", "rc"] }
+bytes = {workspace = true}
