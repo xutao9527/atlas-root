@@ -1,16 +1,20 @@
 
 
 use bytes::Bytes;
+use atlas_core::net::protocol::{AtlasNotifyInternal, AtlasNotifyPublic};
 use atlas_core::net::protocol::frame::AtlasFrame;
-use atlas_core::net::protocol::frame_body_notify::AtlasNotifyBody;
+
 use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
 
 pub async fn notify_handler(notify_msg: Bytes) {
 
     if let Ok(notify_raw_message) = AtlasFrame::from_bytes(notify_msg.clone()) {
-        match AtlasFrame::<AtlasNotifyBody<UserUpdateNotify>>::from_raw(notify_raw_message) {
-            Ok(notify_wire_message) => {
-                println!("notify_handler: \n{:?}", notify_wire_message);
+        match AtlasFrame::<AtlasNotifyInternal<UserUpdateNotify>>::from_raw(notify_raw_message) {
+            Ok(notify_internal_frame) => {
+                println!("notify_handler: \n{:?}", notify_internal_frame);
+                let notify_internal = notify_internal_frame.body;
+                let _targets = notify_internal.targets.clone();
+                let _notify_public: AtlasNotifyPublic<UserUpdateNotify> = notify_internal.into();
             }
             Err(e) => {
                 println!("notify_handler err: \n{:?}", e);

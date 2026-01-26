@@ -1,6 +1,6 @@
 use crate::net::core::module_id::AtlasModuleId;
 use crate::net::protocol::frame::AtlasFrame;
-use crate::net::protocol::frame_body_notify::{AtlasNotifyBody, AtlasNotifyTarget};
+use crate::net::protocol::frame_body_notify::{AtlasNotifyInternal, AtlasNotifyTarget};
 use crate::net::protocol::frame_header::AtlasFrameHeader;
 
 /// ================== Notify Spec（scheme 用） ==================
@@ -12,10 +12,10 @@ pub trait AtlasNotifySpec: 'static {
 
 /// ================== Notify Builder（真正的 glue） ==================
 pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
-    fn build_notify(self, targets: Vec<AtlasNotifyTarget>) -> AtlasFrame<AtlasNotifyBody<Self>> {
+    fn build_notify(self, targets: Vec<AtlasNotifyTarget>) -> AtlasFrame<AtlasNotifyInternal<Self>> {
         AtlasFrame {
             header: AtlasFrameHeader::build_notify(),
-            body: AtlasNotifyBody {
+            body: AtlasNotifyInternal {
                 targets,
                 data: self,
             },

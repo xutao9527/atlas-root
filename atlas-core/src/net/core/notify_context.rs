@@ -2,8 +2,9 @@ use std::sync::{Arc, OnceLock};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use crate::net::core::reg_node::AtlasRegNodeId;
+use crate::net::protocol::AtlasNotifyInternal;
 use crate::net::protocol::frame::{AtlasFrame, AtlasRawFrame};
-use crate::net::protocol::frame_body_notify::AtlasNotifyBody;
+
 
 static GLOBAL_NOTIFIER: OnceLock<Arc<dyn Notifier>> = OnceLock::new();
 
@@ -29,7 +30,7 @@ pub trait NotifierExt: Notifier {
     fn notify<T>(
         &self,
         reg_node_id: &AtlasRegNodeId,
-        wire_notify_msg: AtlasFrame<AtlasNotifyBody<T>>,
+        wire_notify_msg: AtlasFrame<AtlasNotifyInternal<T>>,
     ) -> bool
     where
         T: Serialize + DeserializeOwned + Send + 'static,

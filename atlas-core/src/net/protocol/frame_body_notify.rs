@@ -15,16 +15,35 @@ pub enum AtlasNotifyTarget {
     },
 }
 
-/// ================== 通知载体 ==================
 
+/// ================== 内部通知载体（服务器用） ==================
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(bound(
     serialize = "T: Serialize",
     deserialize = "T: Deserialize<'de>"
 ))]
-pub struct AtlasNotifyBody<T> {
+pub struct AtlasNotifyInternal<T> {
     /// 通知目标
     pub targets: Vec<AtlasNotifyTarget>,
+    /// 通知数据
+    pub data: T,
+}
+
+impl<T> From<AtlasNotifyInternal<T>> for AtlasNotifyPublic<T> {
+    fn from(internal: AtlasNotifyInternal<T>) -> Self {
+        AtlasNotifyPublic {
+            data: internal.data,
+        }
+    }
+}
+
+/// ================== 对外通知载体（前端用） ==================
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(bound(
+    serialize = "T: Serialize",
+    deserialize = "T: Deserialize<'de>"
+))]
+pub struct AtlasNotifyPublic<T> {
     /// 通知数据
     pub data: T,
 }
