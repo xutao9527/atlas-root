@@ -14,7 +14,7 @@ use atlas_core::net::core::reg_node::AtlasRegNodeId;
 use atlas_core::net::protocol::frame::AtlasFrame;
 use atlas_core::net::protocol::frame_body_notify::{AtlasNotifyTarget};
 use atlas_core::net::protocol::frame_body_rpc::{AtlasRpcBody, AtlasWireError};
-use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
+use atlas_scheme::proto::notify::user_update_notify::UserUpdateNotify;
 
 pub async fn register(req: AtlasFrame<RegisterReq>) -> AtlasRpcBody<RegisterResp> {
     let model = atlas_user::Model {

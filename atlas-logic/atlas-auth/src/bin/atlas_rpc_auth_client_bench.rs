@@ -9,7 +9,7 @@ use atlas_core::net::protocol::frame::AtlasFrame;
 use atlas_core::net::protocol::frame_header::AtlasFrameHeader;
 use atlas_core::net::protocol::frame_kind::AtlasFrameKind;
 use atlas_scheme::proto::auth::rpc::BasicAuthReq;
-use atlas_scheme::module_method::auth_method::BasicAuthRpc;
+use atlas_scheme::module_rpc::auth_method::BasicAuthRpc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

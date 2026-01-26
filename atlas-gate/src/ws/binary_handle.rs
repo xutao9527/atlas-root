@@ -1,7 +1,7 @@
 use crate::context::session_map;
 use crate::ws::ws_session::WsSession;
 
-use atlas_scheme::module_method::auth_method::{BasicAuthRpc, TokenAuthRpc};
+use atlas_scheme::module_rpc::auth_method::{BasicAuthRpc, TokenAuthRpc};
 use atlas_scheme::proto::auth::rpc::AuthResp;
 use bytes::Bytes;
 use std::sync::Arc;

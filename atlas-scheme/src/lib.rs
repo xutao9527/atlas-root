@@ -1,3 +1,3 @@
 pub mod proto;
 pub mod model;
-pub mod module_method;
+pub mod module_rpc;

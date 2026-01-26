@@ -1,7 +1,7 @@
 use atlas_core::net::core::{AtlasNotifySpec, handle_notify};
 use atlas_core::net::protocol::frame::AtlasFrame;
 use atlas_core::net::protocol::{AtlasNotifyTarget, AtlasRawFrame};
-use atlas_scheme::proto::auth::notify::user_update_notify::UserUpdateNotify;
+use atlas_scheme::proto::notify::user_update_notify::UserUpdateNotify;
 use bytes::Bytes;
 use atlas_core::net::client::NotifyHandler;
 
