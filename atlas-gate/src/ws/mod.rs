@@ -16,7 +16,7 @@ use atlas_core::net::client::client::AtlasNetClient;
 use atlas_core::net::client::client_registry::RpcClientRegistry;
 use atlas_core::net::core::{AtlasModuleId, AtlasRpcSpec};
 use atlas_scheme::proto::auth::rpc::{TokenAuthReq};
-use atlas_scheme::module_rpc::auth_method::TokenAuthRpc;
+use atlas_scheme::proto::module_rpc::auth_method::TokenAuthRpc;
 use crate::context::session_map;
 
 pub async fn ws_handler(

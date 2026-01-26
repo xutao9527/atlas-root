@@ -1,6 +1,6 @@
 use crate::rpc::handler::table_handler;
 use atlas_core::atlas_rpc_dispatch;
-use atlas_scheme::module_rpc::holdem_method;
+use atlas_scheme::proto::module_rpc::holdem_method;
 
 atlas_rpc_dispatch! {
     module holdem_bind {

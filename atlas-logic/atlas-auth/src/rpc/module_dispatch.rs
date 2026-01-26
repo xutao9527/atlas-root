@@ -1,6 +1,6 @@
 use crate::rpc::handler::account_handler;
 use atlas_core::atlas_rpc_dispatch;
-use atlas_scheme::module_rpc::auth_method;
+use atlas_scheme::proto::module_rpc::auth_method;
 
 atlas_rpc_dispatch! {
     module auth_bind {
