@@ -53,7 +53,7 @@ macro_rules! atlas_rpc_dispatch {
             pub async fn dispatch(raw: AtlasRawFrame) -> AtlasRawFrame {
                 match raw.header.op_code {
                     $(
-                        <$method_ty>::WIRE => handle::<$method_ty, _>(raw, $fn_name).await,
+                        <$method_ty>::OP_CODE => handle::<$method_ty, _>(raw, $fn_name).await,
                     )*
                     _ => AtlasRawFrame {
                         header: raw.header,

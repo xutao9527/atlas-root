@@ -29,14 +29,14 @@ impl AtlasModuleId {
 pub trait AtlasRpcSpec: Copy + 'static {
     const MODULE_ID: AtlasModuleId;
     const METHOD_ID: u16;
-    const WIRE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::METHOD_ID as u32);
+    const OP_CODE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::METHOD_ID as u32);
     type Request: Serialize + DeserializeOwned + Send + 'static;
     type Response: Serialize + DeserializeOwned + Send + 'static;
 
     /// ⚡ 生成 RawMessage 的辅助方法
     fn build_request(req: Self::Request) -> Result<AtlasRawFrame, String> {
         AtlasFrame {
-            header: AtlasFrameHeader::build_request(Self::WIRE),
+            header: AtlasFrameHeader::build_request(Self::OP_CODE),
             body: req,
         }
         .into_raw()

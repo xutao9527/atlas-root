@@ -4,4 +4,4 @@ pub mod protocol;
 pub mod server;
 pub mod core;
 pub mod client;
-pub mod macros;
+pub mod macros_rpc;

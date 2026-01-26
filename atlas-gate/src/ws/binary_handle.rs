@@ -50,7 +50,7 @@ pub async fn handle_binary_message(
         Err(_) => return,
     };
 
-    let is_auth_rpc = header.op_code == BasicAuthRpc::WIRE || header.op_code == TokenAuthRpc::WIRE;
+    let is_auth_rpc = header.op_code == BasicAuthRpc::OP_CODE || header.op_code == TokenAuthRpc::OP_CODE;
 
     if let Some(client) = client_registry.get(module).await {
         let _ = client

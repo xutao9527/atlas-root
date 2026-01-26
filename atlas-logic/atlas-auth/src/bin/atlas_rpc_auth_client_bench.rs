@@ -44,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
         header: AtlasFrameHeader {
             id: 0,
             slot_index: 0,
-            op_code: BasicAuthRpc::WIRE,
+            op_code: BasicAuthRpc::OP_CODE,
             kind: AtlasFrameKind::Request,
             uid: [0; 16],
         },
