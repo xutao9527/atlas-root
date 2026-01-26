@@ -1,4 +1,7 @@
 pub mod client;
-pub mod connection;
-pub mod pending;
 pub mod client_registry;
+mod connection;
+mod pending;
+
+pub use client::*;
+pub use client_registry::*;
