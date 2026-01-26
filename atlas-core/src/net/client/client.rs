@@ -1,12 +1,20 @@
-use bytes::Bytes;
-use std::pin::Pin;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use crate::net::client::connection::AtlasConnection;
 use crate::net::core::reg_node::AtlasRegNodeId;
+use crate::net::protocol::{AtlasNotifyTarget, AtlasRawFrame};
+use bytes::Bytes;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
+use tokio::sync::Mutex;
 
-pub type NotifyHandler = Arc<dyn Fn(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
+pub type NotifyHandler = Arc<
+    dyn Fn(Vec<AtlasNotifyTarget>, AtlasRawFrame) -> Pin<Box<dyn Future<Output = ()> + Send>>
+        + Send
+        + Sync,
+>;
+
+pub type NotifyDispatch =
+    Arc<dyn Fn(Bytes, NotifyHandler) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 
 pub struct AtlasNetClient {
     addr: String,
@@ -14,6 +22,7 @@ pub struct AtlasNetClient {
     next_req_id: AtomicU64,
     connections: Vec<Arc<AtlasConnection>>,
     notify_handler: Arc<Mutex<Option<NotifyHandler>>>,
+    notify_dispatcher: Arc<Mutex<Option<NotifyDispatch>>>,
 }
 
 impl AtlasNetClient {
@@ -24,6 +33,7 @@ impl AtlasNetClient {
             next_req_id: AtomicU64::new(1),
             connections: Vec::with_capacity(con_num),
             notify_handler: Arc::new(Mutex::new(None)),
+            notify_dispatcher: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -32,7 +42,8 @@ impl AtlasNetClient {
             let connection = Arc::new(AtlasConnection::new(
                 self.addr.clone(),
                 self.logical_id.clone(),
-                self.notify_handler.clone()
+                self.notify_handler.clone(),
+                self.notify_dispatcher.clone(),
             ));
             connection.clone().connect().await;
             self.connections.push(connection);
@@ -52,14 +63,28 @@ impl AtlasNetClient {
             .await;
     }
 
-    pub async fn set_notify_handler<F, Fut>(&self, f: F)
-    where
-        F: Fn(Bytes) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = ()> + Send + 'static,
+    pub async fn set_notify_handler<F1, Fut1, F2, Fut2>(
+        &self,
+        handler: Option<F1>,
+        dispatcher: Option<F2>,
+    ) where
+        F1: Fn(Vec<AtlasNotifyTarget>, AtlasRawFrame) -> Fut1 + Send + Sync + 'static,
+        Fut1: Future<Output = ()> + Send + 'static,
+        F2: Fn(Bytes, NotifyHandler) -> Fut2 + Send + Sync + 'static,
+        Fut2: Future<Output = ()> + Send + 'static,
     {
-        let mut guard = self.notify_handler.lock().await;
-        *guard = Some(Arc::new(move |msg: Bytes| {
-            Box::pin(f(msg))
-        }));
+        // notify_handler
+        if let Some(f) = handler {
+            let mut guard = self.notify_handler.lock().await;
+            *guard = Some(Arc::new(move |targets, raw| Box::pin(f(targets, raw))));
+        }
+
+        // notify_dispatcher
+        if let Some(f) = dispatcher {
+            let mut guard = self.notify_dispatcher.lock().await;
+            *guard = Some(Arc::new(move |bytes, notify_handler| {
+                Box::pin(f(bytes, notify_handler))
+            }));
+        }
     }
 }

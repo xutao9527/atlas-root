@@ -10,6 +10,7 @@ use tokio::time::sleep;
 use tokio_util::codec::Framed;
 use tracing::{debug, info, warn};
 use crate::net::client::client::NotifyHandler;
+use crate::net::client::NotifyDispatch;
 use crate::net::client::pending::PendingTable;
 use crate::net::codec::frame_codec::FrameWireCodec;
 use crate::net::core::reg_node::AtlasRegNodeId;
@@ -23,7 +24,8 @@ pub struct AtlasConnection {
     reg_node_id: AtlasRegNodeId,
     pending: Arc<PendingTable<Box<dyn FnOnce(Bytes) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>>>,
     channel_writer: Mutex<mpsc::Sender<Bytes>>,
-    notify_handler: Arc<Mutex<Option<NotifyHandler>>>,// 来自 Client
+    notify_handler: Arc<Mutex<Option<NotifyHandler>>>,
+    notify_dispatcher: Arc<Mutex<Option<NotifyDispatch>>>,
     notify_connected: Arc<Notify>,
     notify_disconnected: Arc<Notify>,
     connected: Arc<AtomicBool>,
@@ -34,6 +36,7 @@ impl AtlasConnection {
         addr: String,
         reg_node_id: AtlasRegNodeId,
         notify_handler: Arc<Mutex<Option<NotifyHandler>>>,
+        notify_dispatcher: Arc<Mutex<Option<NotifyDispatch>>>,
     ) -> Self {
         let pending = Arc::new(PendingTable::new(100 * 1024));
         let (channel_writer, _) = mpsc::channel::<Bytes>(100 * 1024);
@@ -43,6 +46,7 @@ impl AtlasConnection {
             pending,
             channel_writer: Mutex::new(channel_writer),
             notify_handler,
+            notify_dispatcher,
             notify_connected: Arc::new(Notify::new()),
             notify_disconnected: Arc::new(Notify::new()),
             connected: Arc::new(AtomicBool::new(false)),
@@ -131,6 +135,7 @@ impl AtlasConnection {
         let pending = self.pending.clone();
         let notify_disconnected = self.notify_disconnected.clone();
         let connected = self.connected.clone();
+        let notify_dispatcher = self.notify_dispatcher.clone();
         let notify_handler = self.notify_handler.clone();
         tokio::spawn(async move {
             while let Some(result) = socket_reader.next().await {
@@ -139,15 +144,23 @@ impl AtlasConnection {
                         if let Ok(header) = AtlasFrameHeader::read_wire_header(&packet) {
                             match header.kind {
                                 AtlasFrameKind::Notify => {
-                                    let cb = {
+                                    let notify_dispatcher = {
+                                        notify_dispatcher
+                                            .lock()
+                                            .await
+                                            .as_ref()
+                                            .cloned()
+                                    };
+
+                                    let notify_handler = {
                                         notify_handler
                                             .lock()
                                             .await
                                             .as_ref()
                                             .cloned()
                                     };
-                                    if let Some(cb) =cb{
-                                        cb(packet).await;
+                                    if let (Some(dispatcher), Some(handler)) = (notify_dispatcher, notify_handler) {
+                                        dispatcher(packet, handler).await;
                                     }
                                 }
                                 _ => {

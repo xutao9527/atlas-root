@@ -31,17 +31,27 @@ pub trait AtlasNotifyBuildExt: AtlasNotifySpec + Sized {
 impl<T> AtlasNotifyBuildExt for T where T: AtlasNotifySpec {}
 
 
-pub async fn handle_notify<T>(raw: AtlasRawFrame)
+pub async fn handle_notify<T>(raw: AtlasRawFrame) -> anyhow::Result<(Vec<AtlasNotifyTarget>, AtlasRawFrame)>
 where
-    T: Serialize + DeserializeOwned + AtlasNotifySpec+ Debug,
+    T: Serialize + DeserializeOwned + AtlasNotifySpec + Debug,
 {
-    if let Ok(notify_frame) = AtlasFrame::<AtlasNotifyInternal<T>>::from_raw(raw) {
-        // notify_frame.body.into()
+    // 1️⃣ raw → AtlasFrame<AtlasNotifyInternal<T>>
+    let notify_frame =
+        AtlasFrame::<AtlasNotifyInternal<T>>::from_raw(raw)
+            .map_err(|e| anyhow::anyhow!("decode internal notify failed: {:?}", e))?;
+    // 2️⃣ 拆 targets
+    let AtlasNotifyInternal { targets, data } = notify_frame.body;
+    // 3️⃣ Internal<T> → Public<T>
+    let notify_public = AtlasNotifyPublic { data };
+    // 4️⃣ 重新组 frame（header 原样复用）
+    let public_frame = AtlasFrame {
+        header: notify_frame.header,
+        body: notify_public,
+    };
+    let public_raw = public_frame
+        .into_raw()
+        .map_err(|e| anyhow::anyhow!("encode public notify failed: {:?}", e))?;
 
-        let notify_internal = notify_frame.body;
-        let targets = notify_internal.targets.clone();
-        let notify_public: AtlasNotifyPublic<T> = notify_internal.into();
-        println!("targets: \n{:?}", targets);
-        println!("notify_public: \n{:?}", notify_public);
-    }
+    // 6️⃣ 返回
+    Ok((targets, public_raw))
 }
