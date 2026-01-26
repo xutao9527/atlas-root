@@ -14,9 +14,7 @@ pub async fn notify_dispatcher(notify_frame: Bytes, notify_handler: NotifyHandle
     if let Ok(notify_raw_frame) = AtlasFrame::from_bytes(notify_frame.clone()) {
         match notify_raw_frame.header.op_code {
             UserUpdateNotify::OP_CODE => {
-                if let Ok((targets,public_notify_frame)) = handle_notify::<UserUpdateNotify>(notify_raw_frame).await {
-                    notify_handler(targets,public_notify_frame).await;
-                }
+                handle_notify::<UserUpdateNotify>(notify_raw_frame,notify_handler).await
             }
             _ => {}
         }
