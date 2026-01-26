@@ -116,7 +116,7 @@ async fn handle_ws(socket: WebSocket, client_registry: Arc<RpcClientRegistry>) {
         let guard = ws_session.read().await;
         if let Some(uid) = guard.uid.as_ref() {
             session_map().remove(&uid.clone());
-            debug!("session map remove:\n {:?}", uid)
+            debug!("session map delete: {:?}", uid)
         }
     }
     drop(ws_session);
