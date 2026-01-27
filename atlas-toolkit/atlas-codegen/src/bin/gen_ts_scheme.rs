@@ -7,16 +7,16 @@ fn main() {
     create_dir_all(&ts_out_dir).unwrap();
     println!("TS output dir: {}", ts_out_dir.display());
 
-    let mut rs_files = Vec::new();
-    collect_rs_files(&src_dir, &mut rs_files);
+    let mut rs_file_vec = Vec::new();
+    collect_rs_files(&src_dir, &mut rs_file_vec);
 
     println!("Found Rust files:");
-    for file in &rs_files {
+    for file in &rs_file_vec {
         println!("{}", file.display());
     }
 
     let mut rpc_info_vec = Vec::new();
-    for file in &rs_files {
+    for file in &rs_file_vec {
         rpc_info_vec.extend(rpc_info_collect(file));
     }
 
@@ -28,5 +28,5 @@ fn main() {
         );
     }
 
-    rpc_info_generate(&rs_files, &rpc_info_vec, &ts_out_dir);
+    rpc_info_generate(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
 }
