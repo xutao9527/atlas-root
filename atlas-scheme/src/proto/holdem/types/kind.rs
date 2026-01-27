@@ -17,6 +17,7 @@ pub enum TableStreetKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "amount")]
 pub enum PlayerActionKind {
     Fold,
     Call,

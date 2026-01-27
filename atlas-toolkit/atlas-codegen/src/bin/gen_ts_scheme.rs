@@ -10,10 +10,10 @@ fn main() {
     let mut rs_file_vec = Vec::new();
     collect_rs_files(&src_dir, &mut rs_file_vec);
 
-    println!("Found Rust files:");
-    for file in &rs_file_vec {
-        println!("{}", file.display());
-    }
+    // println!("Found Rust files:");
+    // for file in &rs_file_vec {
+    //     println!("{}", file.display());
+    // }
 
     let mut rpc_info_vec = Vec::new();
     for file in &rs_file_vec {
@@ -25,21 +25,22 @@ fn main() {
         notify_info_vec.extend(collect_notify_info(file));
     }
 
-    println!("collected rpc info:");
-    for rpc in &rpc_info_vec {
-        println!(
-            "module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
-            rpc.module_id, rpc.rpc_id, rpc.rpc_name, rpc.request, rpc.response
-        );
-    }
+    // println!("collected rpc info:");
+    // for rpc in &rpc_info_vec {
+    //     println!(
+    //         "module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
+    //         rpc.module_id, rpc.rpc_id, rpc.rpc_name, rpc.request, rpc.response
+    //     );
+    // }
+    //
+    // println!("collected notify info:");
+    // for notify in &notify_info_vec {
+    //     println!(
+    //         "module_id: {}, notify_id: {}, notify: {}",
+    //         notify.module_id, notify.notify_id, notify.notify
+    //     );
+    // }
 
-    println!("collected notify info:");
-    for notify in &notify_info_vec {
-        println!(
-            "module_id: {}, notify_id: {}, notify: {}",
-            notify.module_id, notify.notify_id, notify.notify
-        );
-    }
-    
-    generate_rpc_info(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
+    generate_rpc_info(&rs_file_vec, &rpc_info_vec, &ts_out_dir.join("rpc"));
+    generate_type_info(&rs_file_vec, &ts_out_dir.join("type"))
 }

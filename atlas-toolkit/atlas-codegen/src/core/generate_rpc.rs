@@ -1,11 +1,11 @@
-use crate::core::rust_type_to_ts;
+use crate::core::{load_tera, rust_type_to_ts};
+use crate::model::{RpcInfo, TeraFieldCtx};
 use std::fs;
 use std::path::Path;
 use syn::{Fields, File, Item, ItemStruct};
-use tera::{Context, Tera};
-use crate::model::{RpcInfo, TeraFieldCtx};
+use tera::Context;
 
-/// 生成 TS 文件
+/// 生成 rpc TS 文件
 pub fn generate_rpc_info(rs_file_vec: &[std::path::PathBuf], rpc_info_vec: &[RpcInfo], out_dir: &Path) {
     fs::create_dir_all(out_dir).unwrap();
     for file in rs_file_vec {
@@ -73,10 +73,3 @@ fn generate_rpc_ts_struct(
     // println!("Generated TS: {}", struct_name);
 }
 
-fn load_tera() -> Tera {
-    let glob = format!(
-        "{}/templates/**/*",
-        env!("CARGO_MANIFEST_DIR")
-    );
-    Tera::new(&glob).expect("load tera templates failed")
-}

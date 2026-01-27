@@ -7,7 +7,7 @@ pub fn rust_type_to_ts(ty: &Type) -> String {
         Type::Path(TypePath { path, .. }) => {
             let seg = path.segments.last().unwrap();
             let ident = seg.ident.to_string();
-            println!("{}", ident.as_str());
+            // println!("{}", ident.as_str());
             match ident.as_str() {
                 // ===== 原始类型 =====
                 "String" | "str" => "string".to_string(),
@@ -39,6 +39,7 @@ pub fn rust_type_to_ts(ty: &Type) -> String {
                 // ===== 👇 关键：自定义复合类型 =====
                 _ => {
                     type_collector().lock().unwrap().add(ident.to_string());
+                    // println!("type_collector {}", ident.as_str());
                     ident
                 }
             }
