@@ -1,7 +1,6 @@
 use crate::core::rust_type_to_ts;
 use crate::entity::RpcInfo;
 use std::fs;
-use std::io::Write;
 use std::path::Path;
 use syn::{Fields, File, Item, ItemStruct};
 
