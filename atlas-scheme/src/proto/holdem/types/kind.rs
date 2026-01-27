@@ -33,7 +33,6 @@ pub enum AtlasSuitKind {
     Diamond = 3, // 方块
 }
 
-
 /// 点数（AtlasValue）枚举
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum AtlasValueKind {
