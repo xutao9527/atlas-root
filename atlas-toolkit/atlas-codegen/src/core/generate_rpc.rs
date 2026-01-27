@@ -72,4 +72,3 @@ fn generate_rpc_ts_struct(
 
     // println!("Generated TS: {}", struct_name);
 }
-
