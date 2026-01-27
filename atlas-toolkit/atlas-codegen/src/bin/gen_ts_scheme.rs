@@ -28,5 +28,5 @@ fn main() {
         );
     }
 
-    //rpc_info_generate(&rs_files, &rpc_info_vec, &ts_out_dir);
+    rpc_info_generate(&rs_files, &rpc_info_vec, &ts_out_dir);
 }

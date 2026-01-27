@@ -5,7 +5,6 @@ use std::io::Write;
 use std::path::Path;
 use syn::{Fields, File, Item};
 
-
 /// 生成 TS 文件
 pub fn rpc_info_generate(rs_files: &[std::path::PathBuf], all_rpcs: &[RpcInfo], out_dir: &Path) {
     fs::create_dir_all(out_dir).unwrap();
@@ -36,16 +35,6 @@ pub fn rpc_info_generate(rs_files: &[std::path::PathBuf], all_rpcs: &[RpcInfo], 
                     for f in fields_named.named.iter() {
                         let name = f.ident.as_ref().unwrap().to_string();
                         let ty_ts = rust_type_to_ts(&f.ty);
-
-                        // 输出字段日志，方便检查
-                        // println!(
-                        //     "cargo:warning=Struct {} Field {} -> Rust type: {:?}, TS type: {}",
-                        //     struct_name,
-                        //     name,
-                        //     f.ty,
-                        //     ty_ts
-                        // );
-
                         fields_vec.push((name, ty_ts));
                     }
                 }
