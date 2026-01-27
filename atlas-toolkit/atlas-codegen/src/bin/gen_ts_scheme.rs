@@ -1,5 +1,5 @@
 use std::fs::create_dir_all;
-use atlas_codegen::core::{rpc_info_collect, rpc_info_generate};
+use atlas_codegen::core::*;
 use atlas_codegen::utils::{collect_rs_files, get_work_path};
 
 fn main() {
@@ -23,10 +23,10 @@ fn main() {
     println!("warning=Collected RPCs:");
     for rpc in &rpc_info_vec {
         println!(
-            ":warning=module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
+            "module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
             rpc.module_id, rpc.method_id, rpc._rpc_name, rpc.request, rpc.response
         );
     }
 
-    rpc_info_generate(&rs_files, &rpc_info_vec, &ts_out_dir);
+    //rpc_info_generate(&rs_files, &rpc_info_vec, &ts_out_dir);
 }
