@@ -1,73 +1,55 @@
 use crate::core::{load_tera, rust_type_to_ts};
-use crate::model::{RpcInfo, TeraFieldCtx};
+use crate::model::{RpcInfo, TeraFieldCtx, TypeRegistry};
 use std::fs;
-use std::path::Path;
-use syn::{Fields, File, Item, ItemStruct};
+use std::fs::create_dir_all;
+use syn::{Fields, ItemStruct};
 use tera::Context;
 
-/// 生成 rpc TS 文件
-pub fn generate_rpc_info(rs_file_vec: &[std::path::PathBuf], rpc_info_vec: &[RpcInfo], out_dir: &Path) {
-    fs::create_dir_all(out_dir).unwrap();
-    for file in rs_file_vec {
-        let src = match fs::read_to_string(file) {
-            Ok(c) => c,
-            Err(_) => continue,
-        };
-        let syntax: File = match syn::parse_file(&src) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
-        for item in syntax.items {
-            if let Item::Struct(s) = item {
-                let struct_name = s.ident.to_string();
-                // 只处理 RPC 相关结构体
-                let rpc_info_opt = rpc_info_vec.iter().find(|r| r.request == struct_name || r.response == struct_name);
-                match rpc_info_opt {
-                    None => {}
-                    Some(rpc_info) => {
-                        generate_rpc_ts_struct(
-                            &struct_name,
-                            &s,
-                            rpc_info,
-                            out_dir,
-                        );
-                    }
-                }
-            }
+
+pub fn generate_rpc(type_registry: &TypeRegistry) {
+    for rpc_info in type_registry.rpc_infos.iter() {
+        if let Some(req_struct) = type_registry.structs.get(&rpc_info.request) {
+            generate_rpc_struct(type_registry, &rpc_info.request, req_struct, rpc_info);
         }
     }
 }
 
-fn generate_rpc_ts_struct(
+fn generate_rpc_struct(
+    type_registry: &TypeRegistry,
     struct_name: &str,
     s: &ItemStruct,
     rpc_info: &RpcInfo,
-    out_dir: &Path,
 ) {
+    // ===== 3️⃣ 构建上下文 =====
+    let mut ctx = Context::new();
+    ctx.insert("name", struct_name);
+    ctx.insert("module_id", &rpc_info.module_id);
+    ctx.insert("rpc_id", &rpc_info.rpc_id);
+
     // ===== 1️⃣ 解析字段 =====
     let mut fields = Vec::new();
+    let mut import: Vec<String> = Vec::new();
 
     if let Fields::Named(fields_named) = &s.fields {
         for f in &fields_named.named {
             let name = f.ident.as_ref().unwrap().to_string();
-            let ts_type = rust_type_to_ts(&f.ty);
+            let (is_composite, ts_type) = rust_type_to_ts(&f.ty, type_registry);
+            if is_composite {
+                import.insert(0, format!("import {{ {} }} from '../type/{}'", ts_type, ts_type));
+            }
             fields.push(TeraFieldCtx { name, ts_type });
         }
     }
     let tera = load_tera();
-
-    // ===== 3️⃣ 构建上下文 =====
-    let mut ctx = Context::new();
-    ctx.insert("name", struct_name);
     ctx.insert("fields", &fields);
-    ctx.insert("module_id", &rpc_info.module_id);
-    ctx.insert("rpc_id", &rpc_info.rpc_id);
+    ctx.insert("imports", &import);
 
     // ===== 4️⃣ 渲染 =====
     let code = tera.render("rpc_struct.ts.tera", &ctx).unwrap();
 
     // ===== 5️⃣ 写文件 =====
-    let ts_file_path = out_dir.join(format!("{}.ts", struct_name));
+    let _ = create_dir_all(type_registry.out_dir.join("rpc"));
+    let ts_file_path = type_registry.out_dir.join("rpc").join(format!("{}.ts", struct_name));
     fs::write(ts_file_path, code).unwrap();
 
     // println!("Generated TS: {}", struct_name);

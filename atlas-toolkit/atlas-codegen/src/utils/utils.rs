@@ -15,7 +15,8 @@ pub fn get_work_path() ->  Result<(PathBuf, PathBuf), String>  {
 
     let src_dir = workspace_root
         .join("atlas-scheme")
-        .join("src");
+        .join("src")
+        .join("proto");
 
     let ts_out_dir = workspace_root
         .join("atlas-toolkit")

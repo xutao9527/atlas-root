@@ -342,6 +342,7 @@ dependencies = [
 name = "atlas-codegen"
 version = "0.1.0"
 dependencies = [
+ "proc-macro2",
  "serde",
  "syn 2.0.114",
  "tera",

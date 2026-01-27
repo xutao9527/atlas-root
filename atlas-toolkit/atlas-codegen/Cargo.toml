@@ -7,3 +7,4 @@ edition = "2024"
 syn = { version = "2", features = ["full"] }
 serde = { workspace = true, features = ["derive", "rc"] }
 tera = "1.20.1"
+proc-macro2 = "1"

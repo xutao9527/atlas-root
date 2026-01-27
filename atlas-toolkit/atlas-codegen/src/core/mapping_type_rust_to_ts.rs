@@ -1,8 +1,9 @@
 use syn::{PathArguments, Type, TypePath};
-use crate::core::type_collector;
+use crate::core::generate_ts_enum;
+use crate::model::TypeRegistry;
 
 /// 将 Rust 类型转换为 TS 类型
-pub fn rust_type_to_ts(ty: &Type) -> String {
+pub fn rust_type_to_ts(ty: &Type,type_registry: &TypeRegistry) -> (bool, String) {
     match ty {
         Type::Path(TypePath { path, .. }) => {
             let seg = path.segments.last().unwrap();
@@ -10,40 +11,49 @@ pub fn rust_type_to_ts(ty: &Type) -> String {
             // println!("{}", ident.as_str());
             match ident.as_str() {
                 // ===== 原始类型 =====
-                "String" | "str" => "string".to_string(),
+                "String" | "str" => (false, "string".to_string()),
                 "u8" | "u16" | "u32" | "u64" |
                 "i8" | "i16" | "i32" | "i64" |
                 "usize" |
-                "f32" | "f64" => "number".to_string(),
-                "bool" => "boolean".to_string(),
+                "f32" | "f64" => (false, "number".to_string()),
+                "bool" => (false, "boolean".to_string()),
                 // ===== Option<T> =====
                 "Option" => {
                     // 递归解析 Option<T>
                     if let PathArguments::AngleBracketed(args) = &seg.arguments {
                         if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
-                            return format!("{} | null", rust_type_to_ts(inner_ty));
+                            let (is_composite,type_value) = rust_type_to_ts(inner_ty,type_registry);
+                            return (is_composite, format!("{}[]", type_value));
                         }
                     }
-                    "any | null".to_string()
+                    (false, "any | null".to_string())
                 },
                 // ===== Vec<T> =====
                 "Vec" => {
                     // 递归解析 Vec<T>
                     if let PathArguments::AngleBracketed(args) = &seg.arguments {
                         if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
-                            return format!("{}[]", rust_type_to_ts(inner_ty));
+                            let (is_composite,type_value) = rust_type_to_ts(inner_ty,type_registry);
+                            return (is_composite, format!("{}[]", type_value));
                         }
                     }
-                    "any[]".to_string()
+                    (false, "any[]".to_string())
                 },
                 // ===== 👇 关键：自定义复合类型 =====
                 _ => {
-                    type_collector().lock().unwrap().add(ident.to_string());
-                    // println!("type_collector {}", ident.as_str());
-                    ident
+                    println!("{}", ident);
+                    if let Some(e) = type_registry.enums.get(ident.as_str()){
+                        generate_ts_enum(type_registry, ident.as_str(), e);
+                        (true, ident.to_string())
+                    }else if let Some(_e) = type_registry.structs.get(ident.as_str()) {
+                        (true, ident.to_string())
+                    }else{
+                        (false, "any".to_string())
+
+                    }
                 }
             }
         }
-        _ => "any".to_string(),
+        _ => (false,"any".to_string()),
     }
 }
