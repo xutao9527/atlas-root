@@ -40,7 +40,6 @@ fn main() {
             notify.module_id, notify.notify_id, notify.notify
         );
     }
-
-
+    
     generate_rpc_info(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
 }

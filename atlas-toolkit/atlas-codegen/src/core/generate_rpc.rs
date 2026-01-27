@@ -70,7 +70,7 @@ fn generate_rpc_ts_struct(
     let ts_file_path = out_dir.join(format!("{}.ts", struct_name));
     fs::write(ts_file_path, code).unwrap();
 
-    println!("Generated TS: {}", struct_name);
+    // println!("Generated TS: {}", struct_name);
 }
 
 fn load_tera() -> Tera {

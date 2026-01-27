@@ -6,6 +6,7 @@ pub fn rust_type_to_ts(ty: &Type) -> String {
         Type::Path(TypePath { path, .. }) => {
             let seg = path.segments.last().unwrap();
             let ident = seg.ident.to_string();
+            println!("{}", ident.as_str());
             match ident.as_str() {
                 "String" | "str" => "string".to_string(),
                 "u8" | "u16" | "u32" | "u64" |
