@@ -17,12 +17,12 @@ fn main() {
 
     let mut rpc_info_vec = Vec::new();
     for file in &rs_file_vec {
-        rpc_info_vec.extend(rpc_info_collect(file));
+        rpc_info_vec.extend(collect_rpc_info(file));
     }
 
     let mut notify_info_vec = Vec::new();
     for file in &rs_file_vec {
-        notify_info_vec.extend(notify_info_collect(file));
+        notify_info_vec.extend(collect_notify_info(file));
     }
 
     println!("collected rpc info:");

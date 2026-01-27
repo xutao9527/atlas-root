@@ -1,9 +1,9 @@
 mod rpc_generation;
-mod rpc_collect;
+mod collect_rpc;
 mod rust_ts_type_mapping;
-mod notify_collect;
+mod collect_notify;
 
 pub use rpc_generation::*;
-pub use rpc_collect::*;
+pub use collect_rpc::*;
 pub use rust_ts_type_mapping::*;
-pub use notify_collect::*;
+pub use collect_notify::*;
