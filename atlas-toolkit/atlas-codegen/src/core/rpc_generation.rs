@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 use syn::{Fields, File, Item, ItemStruct};
 use tera::{Context, Tera};
-use crate::model::{RpcInfo, TsFieldCtx};
+use crate::model::{RpcInfo, TeraFieldCtx};
 
 /// 生成 TS 文件
 pub fn rpc_info_generate(rs_file_vec: &[std::path::PathBuf], rpc_info_vec: &[RpcInfo], out_dir: &Path) {
@@ -51,7 +51,7 @@ fn generate_rpc_ts_struct(
         for f in &fields_named.named {
             let name = f.ident.as_ref().unwrap().to_string();
             let ts_type = rust_type_to_ts(&f.ty);
-            fields.push(TsFieldCtx { name, ts_type });
+            fields.push(TeraFieldCtx { name, ts_type });
         }
     }
     let tera = load_tera();
