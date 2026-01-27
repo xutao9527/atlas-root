@@ -38,6 +38,24 @@ pub fn rpc_info_generate(rs_file_vec: &[std::path::PathBuf], rpc_info_vec: &[Rpc
     }
 }
 
+const RPC_STRUCT_TS_TEMPLATE: &str = r#"
+// @ts-ignore
+import { WirePayload } from "db://assets/scripts/wire/base/Message";
+
+export interface {{struct_name}}Props {
+{{fields_interface}}
+}
+
+export class {{struct_name}} extends WirePayload {
+    static readonly METHOD = {{module_id}} << 16 | {{method_id}};
+
+{{fields_decl}}
+    constructor(props: {{struct_name}}Props) {
+        super();
+{{fields_assign}}
+    }
+}
+"#;
 
 fn generate_rpc_ts_struct(
     struct_name: &str,
@@ -45,57 +63,37 @@ fn generate_rpc_ts_struct(
     rpc_info: &RpcInfo,
     out_dir: &Path,
 ) {
+
+    // ===== 1. 解析字段 =====
+    let mut fields_interface = String::new();
+    let mut fields_decl = String::new();
+    let mut fields_assign = String::new();
+
     // 解析字段
-    let mut fields_vec = Vec::new();
     if let Fields::Named(fields_named) = &s.fields {
         for f in fields_named.named.iter() {
             let name = f.ident.as_ref().unwrap().to_string();
             let ty_ts = rust_type_to_ts(&f.ty);
-            fields_vec.push((name, ty_ts));
+            fields_interface.push_str(&format!("    {}: {};\n", name, ty_ts));
+            fields_decl.push_str(&format!("    {}: {};\n", name, ty_ts));
+            fields_assign.push_str(&format!("        this.{0} = props.{0};\n", name));
         }
     }
 
-    // 生成 TS 文件
+    // ===== 2. 渲染模板 =====
+    let mut code = RPC_STRUCT_TS_TEMPLATE.to_string();
+    code = code.replace("{{struct_name}}", struct_name);
+    code = code.replace("{{module_id}}", &rpc_info.module_id.to_string());
+    code = code.replace("{{method_id}}", &rpc_info.method_id.to_string());
+    code = code.replace("{{fields_interface}}", &fields_interface);
+    code = code.replace("{{fields_decl}}", &fields_decl);
+    code = code.replace("{{fields_assign}}", &fields_assign);
+
+    // ===== 3. 写文件 =====
     let ts_file_path = out_dir.join(format!("{}.ts", struct_name));
-    let mut ts_file = fs::File::create(ts_file_path).unwrap();
+    fs::write(&ts_file_path, code).unwrap();
 
-    let mut code = String::new();
-    code.push_str("// @ts-ignore\n");
-    code.push_str("import {WirePayload} from \"db://assets/scripts/wire/base/Message\";\n\n");
 
-    // interface
-    code.push_str(&format!("export interface {}Props {{\n", struct_name));
-    for (name, ty) in &fields_vec {
-        code.push_str(&format!("    {}: {};\n", name, ty));
-    }
-    code.push_str("}\n\n");
 
-    // class
-    code.push_str(&format!("export class {} extends WirePayload {{\n", struct_name));
-    code.push_str(&format!(
-        "    static readonly METHOD = {} << 16 | {};\n\n",
-        rpc_info.module_id,
-        rpc_info.method_id
-    ));
-
-    // 字段声明
-    for (name, ty) in &fields_vec {
-        code.push_str(&format!("    {}: {};\n", name, ty));
-    }
-    code.push('\n');
-
-    // constructor
-    code.push_str(&format!(
-        "    constructor(props: {}Props) {{\n",
-        struct_name
-    ));
-    code.push_str("        super();\n");
-    for (name, _) in &fields_vec {
-        code.push_str(&format!("        this.{0} = props.{0};\n", name));
-    }
-    code.push_str("    }\n");
-    code.push_str("}\n");
-
-    ts_file.write_all(code.as_bytes()).unwrap();
     println!("Generated TS: {}", struct_name);
 }
