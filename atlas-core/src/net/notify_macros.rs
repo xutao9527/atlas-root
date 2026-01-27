@@ -3,7 +3,7 @@ macro_rules! atlas_notify_specs {
     (
         module $mod_name:ident {
             $(
-                $ty:ident => ($module:expr, $notify_id:expr)
+                $ty:ident = ($module:expr, $notify_id:expr)
             ),+ $(,)?
         }
     ) => {

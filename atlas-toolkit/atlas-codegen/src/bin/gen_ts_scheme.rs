@@ -20,7 +20,12 @@ fn main() {
         rpc_info_vec.extend(rpc_info_collect(file));
     }
 
-    println!("Collected rpc info:");
+    let mut notify_info_vec = Vec::new();
+    for file in &rs_file_vec {
+        notify_info_vec.extend(notify_info_collect(file));
+    }
+
+    println!("collected rpc info:");
     for rpc in &rpc_info_vec {
         println!(
             "module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
@@ -28,5 +33,14 @@ fn main() {
         );
     }
 
-    rpc_info_generate(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
+    println!("collected notify info:");
+    for notify in &notify_info_vec {
+        println!(
+            "module_id: {}, notify_id: {}, notify: {}",
+            notify.module_id, notify.notify_id, notify.notify
+        );
+    }
+
+
+    // rpc_info_generate(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
 }
