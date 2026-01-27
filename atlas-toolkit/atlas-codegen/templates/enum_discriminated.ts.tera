@@ -1,5 +1,4 @@
 export type {{ name }} =
 {% for v in variants -%}
     | { kind: "{{ v.name }}"{% if v.payload %}; amount: {{ v.payload }}{% endif %} }
-{% endfor -%}
-;
+{% endfor -%};
