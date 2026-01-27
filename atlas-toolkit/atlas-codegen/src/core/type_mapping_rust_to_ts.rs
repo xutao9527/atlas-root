@@ -1,4 +1,5 @@
 use syn::{PathArguments, Type, TypePath};
+use crate::core::type_collector;
 
 /// 将 Rust 类型转换为 TS 类型
 pub fn rust_type_to_ts(ty: &Type) -> String {
@@ -37,6 +38,7 @@ pub fn rust_type_to_ts(ty: &Type) -> String {
                 },
                 // ===== 👇 关键：自定义复合类型 =====
                 _ => {
+                    type_collector().lock().unwrap().add(ident.to_string());
                     ident
                 }
             }
