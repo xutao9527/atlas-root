@@ -2,7 +2,7 @@ use std::fs;
 use std::io::Write;
 use std::path::Path;
 use syn::{Fields, File, Item, PathArguments, Type, TypePath};
-use crate::utils::RpcInfo;
+use crate::entity::RpcInfo;
 
 /// 将 Rust 类型转换为 TS 类型
 fn rust_type_to_ts(ty: &Type) -> String {

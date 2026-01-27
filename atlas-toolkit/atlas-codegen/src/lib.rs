@@ -1,2 +1,4 @@
 pub mod utils;
-pub mod ts_code_gen;
+
+pub mod core;
+mod entity;

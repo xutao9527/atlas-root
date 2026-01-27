@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 use std::path::PathBuf;
-use atlas_codegen::ts_code_gen::generate_ts_from_structs;
+use atlas_codegen::core::generate_ts_from_structs;
 use atlas_codegen::utils::{collect_rpcs_from_file, visit_rs_files};
 
 fn main() {
@@ -44,14 +44,15 @@ fn get_ts_scheme_path() ->  Result<(PathBuf, PathBuf), String>  {
         .and_then(|p| p.parent())
         .ok_or_else(|| "failed to get workspace root".to_string())?;
 
+    let src_dir = workspace_root
+        .join("atlas-scheme")
+        .join("src");
+
     let ts_out_dir = workspace_root
         .join("atlas-toolkit")
         .join("atlas-codegen")
         .join("ts_generated");
 
-    let src_dir = workspace_root
-        .join("atlas-scheme")
-        .join("src");
 
     Ok((src_dir, ts_out_dir))
 }
