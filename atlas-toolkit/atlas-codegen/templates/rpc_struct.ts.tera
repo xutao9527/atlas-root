@@ -1,0 +1,23 @@
+// @ts-ignore
+import { WirePayload } from "db://assets/scripts/wire/base/Message";
+
+export interface {{ name }}Props {
+{%- for f in fields %}
+    {{ f.name }}: {{ f.ts_type }};
+{%- endfor %}
+}
+
+export class {{ name }} extends WirePayload {
+    static readonly METHOD = {{ module_id }} << 16 | {{ method_id }};
+
+{%- for f in fields %}
+    {{ f.name }}: {{ f.ts_type }};
+{%- endfor %}
+
+    constructor(props: {{ name }}Props) {
+        super();
+{%- for f in fields %}
+        this.{{ f.name }} = props.{{ f.name }};
+{%- endfor %}
+    }
+}

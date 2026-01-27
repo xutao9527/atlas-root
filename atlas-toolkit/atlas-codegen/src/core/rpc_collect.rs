@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use crate::entity::{module_id_to_u16, RpcInfo};
+use crate::model::{module_id_to_u16, RpcInfo};
 
 pub fn rpc_info_collect(path: &Path) -> Vec<RpcInfo> {
     let mut rpc_vec = Vec::new();
