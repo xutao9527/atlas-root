@@ -1,5 +1,6 @@
-mod rpc_info;
+mod collect_info;
 mod tera_model;
 
-pub use rpc_info::*;
+
+pub use collect_info::*;
 pub use tera_model::*;

@@ -20,7 +20,7 @@ fn main() {
         rpc_info_vec.extend(rpc_info_collect(file));
     }
 
-    println!("warning=Collected RPCs:");
+    println!("Collected rpc info:");
     for rpc in &rpc_info_vec {
         println!(
             "module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",

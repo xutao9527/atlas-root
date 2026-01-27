@@ -7,6 +7,15 @@ pub struct RpcInfo {
     pub response: String,
 }
 
+#[derive(Debug)]
+pub struct NotifyInfo {
+    pub module_id: u16,
+    pub notify_id: u16,
+    pub notify: String,
+}
+
+
+
 // 转 ModuleId 字符串到 u16
 pub fn module_id_to_u16(s: &str) -> u16 {
     match s {
