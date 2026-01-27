@@ -7,7 +7,6 @@ pub fn rust_type_to_ts(ty: &Type,type_registry: &TypeRegistry) -> TsTypeInfo {
     match ty {
         Type::Array(arr) => {
             let inner = rust_type_to_ts(&arr.elem, type_registry);
-
             let ts = if inner.ts_type.contains('|') {
                 format!("({})[]", inner.ts_type)
             } else {

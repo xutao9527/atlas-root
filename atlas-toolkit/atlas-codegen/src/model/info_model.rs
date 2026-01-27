@@ -1,9 +1,8 @@
-use crate::model::module_id_to_u16;
 use proc_macro2::{Delimiter, TokenTree};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use syn::{ItemEnum, ItemMacro, ItemStruct};
-
+use crate::core::module_id_to_u16;
 
 #[derive(Debug)]
 pub struct RpcInfo {
