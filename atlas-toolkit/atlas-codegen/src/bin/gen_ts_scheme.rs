@@ -24,7 +24,7 @@ fn main() {
     for rpc in &rpc_info_vec {
         println!(
             "module_id: {}, method_id: {}, rpc_name: {}, request: {}, response: {}",
-            rpc.module_id, rpc.method_id, rpc.rpc_name, rpc.request, rpc.response
+            rpc.module_id, rpc.rpc_id, rpc.rpc_name, rpc.request, rpc.response
         );
     }
 

@@ -61,7 +61,7 @@ fn generate_rpc_ts_struct(
     ctx.insert("name", struct_name);
     ctx.insert("fields", &fields);
     ctx.insert("module_id", &rpc_info.module_id);
-    ctx.insert("method_id", &rpc_info.method_id);
+    ctx.insert("rpc_id", &rpc_info.rpc_id);
 
     // ===== 4️⃣ 渲染 =====
     let code = tera.render("rpc_struct.ts.tera", &ctx).unwrap();

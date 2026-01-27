@@ -26,7 +26,7 @@ macro_rules! atlas_rpc_module {
                 pub struct $method_ty;
                 impl AtlasRpcSpec for $method_ty {
                     const MODULE_ID: AtlasModuleId = $module_id;
-                    const METHOD_ID: u16 = $method_id;
+                    const RPC_ID: u16 = $method_id;
                     type Request = $req_ty;
                     type Response = $resp_ty;
                 }

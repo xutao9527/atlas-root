@@ -10,8 +10,8 @@ use crate::net::protocol::frame_kind::AtlasFrameKind;
 
 pub trait AtlasRpcSpec: Copy + 'static {
     const MODULE_ID: AtlasModuleId;
-    const METHOD_ID: u16;
-    const OP_CODE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::METHOD_ID as u32);
+    const RPC_ID: u16;
+    const OP_CODE: u32 = ((Self::MODULE_ID as u32) << 16) | (Self::RPC_ID as u32);
     type Request: Serialize + DeserializeOwned + Send + 'static;
     type Response: Serialize + DeserializeOwned + Send + 'static;
 

@@ -58,14 +58,14 @@ pub fn rpc_info_collect(path: &Path) -> Vec<RpcInfo> {
                     let elems: Vec<&str> = inner.split(',').map(|s| s.trim()).collect();
 
                     if elems.len() == 3 {
-                        let method_id: u16 = elems[0].parse().unwrap_or(0);
+                        let rpc_id: u16 = elems[0].parse().unwrap_or(0);
                         let request = elems[1].to_string();
                         let response = elems[2].to_string();
 
                         rpc_vec.push(RpcInfo {
                             module_id: module_id_val,
                             rpc_name: rpc_name.to_string(),
-                            method_id,
+                            rpc_id,
                             request,
                             response,
                         });

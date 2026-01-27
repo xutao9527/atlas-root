@@ -8,7 +8,7 @@ export interface {{ name }}Props {
 }
 
 export class {{ name }} extends WirePayload {
-    static readonly METHOD = {{ module_id }} << 16 | {{ method_id }};
+    static readonly OP_CODE = {{ module_id }} << 16 | {{ rpc_id }};
 
 {%- for f in fields %}
     {{ f.name }}: {{ f.ts_type }};

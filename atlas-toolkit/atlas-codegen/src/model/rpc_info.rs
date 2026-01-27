@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub struct RpcInfo {
     pub module_id: u16,
-    pub method_id: u16,
+    pub rpc_id: u16,
     pub rpc_name: String,
     pub request: String,
     pub response: String,
