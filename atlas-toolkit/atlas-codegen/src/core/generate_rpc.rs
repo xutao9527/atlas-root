@@ -6,7 +6,7 @@ use tera::{Context, Tera};
 use crate::model::{RpcInfo, TeraFieldCtx};
 
 /// 生成 TS 文件
-pub fn rpc_info_generate(rs_file_vec: &[std::path::PathBuf], rpc_info_vec: &[RpcInfo], out_dir: &Path) {
+pub fn generate_rpc_info(rs_file_vec: &[std::path::PathBuf], rpc_info_vec: &[RpcInfo], out_dir: &Path) {
     fs::create_dir_all(out_dir).unwrap();
     for file in rs_file_vec {
         let src = match fs::read_to_string(file) {

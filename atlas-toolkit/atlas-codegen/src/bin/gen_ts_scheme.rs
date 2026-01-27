@@ -42,5 +42,5 @@ fn main() {
     }
 
 
-    // rpc_info_generate(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
+    generate_rpc_info(&rs_file_vec, &rpc_info_vec, &ts_out_dir);
 }
