@@ -1,8 +1,7 @@
 use crate::core::{load_tera, rust_type_to_ts};
-use crate::model::{TsEnumNumberVariant, TsEnumVariant, TypeRegistry};
+use crate::model::{TsEnumNumberVariant, TsEnumVariant, TsFieldCtx, TypeRegistry};
 use std::fs;
 use std::fs::create_dir_all;
-use std::path::Path;
 use syn::__private::quote;
 use syn::{Fields, ItemEnum, ItemStruct};
 use tera::Context;
@@ -28,8 +27,8 @@ pub fn generate_ts_enum(type_registry: &TypeRegistry, name: &str, e: &ItemEnum) 
                 let payload = match &v.fields {
                     Fields::Unnamed(fields) => {
                         let ty = &fields.unnamed.first().unwrap().ty;
-                        let (_is_composite,type_value) = rust_type_to_ts(ty, type_registry);
-                        Some(type_value)
+                        let inner = rust_type_to_ts(ty, type_registry);
+                        Some(inner.ts_type)
                     }
                     _ => None,
                 };
@@ -80,6 +79,49 @@ pub fn generate_ts_enum(type_registry: &TypeRegistry, name: &str, e: &ItemEnum) 
     .unwrap();
 }
 
-fn _generate_ts_struct(_name: &str, _s: &ItemStruct, _out_dir: &Path) {
-    // println!("  -> emit TS struct {}", name);
+pub fn generate_ts_struct(type_registry: &TypeRegistry,name: &str, s: &ItemStruct) {
+    let tera = load_tera();
+
+    let mut ctx = Context::new();
+    ctx.insert("name", name);
+
+    let mut fields: Vec<TsFieldCtx> = Vec::new();
+    let mut imports: Vec<String> = Vec::new();
+
+    if let Fields::Named(fields_named) = &s.fields {
+        for f in &fields_named.named {
+            let field_name = f.ident.as_ref().unwrap().to_string();
+
+            let ts_type_info = rust_type_to_ts(&f.ty, type_registry);
+
+            // 收集 imports（去重）
+            for imp in ts_type_info.imports {
+                if !imports.contains(&imp) {
+                    imports.push(imp);
+                }
+            }
+
+            fields.push(TsFieldCtx {
+                name: field_name,
+                ts_type: ts_type_info.ts_type,
+            });
+        }
+    }
+
+    ctx.insert("fields", &fields);
+    ctx.insert("imports", &imports);
+
+    let rendered = tera
+        .render("struct.ts.tera", &ctx)
+        .expect("render struct template failed");
+
+    let _ = create_dir_all(type_registry.out_dir.join("type"));
+    fs::write(
+        type_registry
+            .out_dir
+            .join("type")
+            .join(format!("{}.ts", name)),
+        rendered,
+    )
+        .unwrap();
 }

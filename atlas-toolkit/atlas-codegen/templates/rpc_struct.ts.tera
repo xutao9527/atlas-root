@@ -1,7 +1,7 @@
 // @ts-ignore
 import { WirePayload } from "db://assets/scripts/wire/base/Message";
-{%- for imp in imports %}
-{{ imp }};
+{%- for i in imports %}
+import { {{ i }} } from "../type/{{ i }}";
 {%- endfor %}
 
 export interface {{ name }}Props {

@@ -34,7 +34,6 @@ pub struct TypeRegistry {
 }
 
 
-
 impl TypeRegistry {
     pub fn parse_macro(&mut self)  {
         for m in &self.macros {
