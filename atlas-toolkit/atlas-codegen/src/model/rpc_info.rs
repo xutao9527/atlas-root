@@ -2,7 +2,7 @@
 pub struct RpcInfo {
     pub module_id: u16,
     pub method_id: u16,
-    pub _rpc_name: String,
+    pub rpc_name: String,
     pub request: String,
     pub response: String,
 }

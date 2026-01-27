@@ -64,7 +64,7 @@ pub fn rpc_info_collect(path: &Path) -> Vec<RpcInfo> {
 
                         rpc_vec.push(RpcInfo {
                             module_id: module_id_val,
-                            _rpc_name: rpc_name.to_string(),
+                            rpc_name: rpc_name.to_string(),
                             method_id,
                             request,
                             response,
