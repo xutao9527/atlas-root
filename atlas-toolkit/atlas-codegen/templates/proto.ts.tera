@@ -1,5 +1,5 @@
 // @ts-ignore
-import { WirePayload } from "db://assets/scripts/wire/base/Message";
+import { AtlasFrameBody } from "db://assets/scripts/proto/base/Message";
 {%- for i in imports %}
 import { {{ i }} } from "../type/{{ i }}";
 {%- endfor %}
@@ -10,7 +10,7 @@ export interface {{ name }}Props {
 {%- endfor %}
 }
 
-export class {{ name }} extends WirePayload {
+export class {{ name }} extends AtlasFrameBody {
     static readonly OP_CODE = {{ module_id }} << 16 | {{ rpc_id }};
 
 {%- for f in fields %}
