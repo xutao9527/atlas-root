@@ -1,7 +1,6 @@
-{%- for i in imports %}
+{%- for i in imports -%}
 import { {{ i }} } from "./{{ i }}";
-{%- endfor %}
-
+{% endfor %}
 export interface {{ name }} {
 {%- for f in fields %}
     {{ f.name }}: {{ f.ts_type }};
